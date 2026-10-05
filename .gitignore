@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.html-preview-build/
+.env
+.env.*
+!.env.example
+.DS_Store
+coverage/
+*.tsbuildinfo
+supabase/.temp/
+supabase/.branches/
+.local-data/
+.pnpm-store/
+.pnpm-cache/
+.pnpm-state/
+test-results/
+*.log

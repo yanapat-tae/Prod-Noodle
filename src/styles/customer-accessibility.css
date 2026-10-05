@@ -1,0 +1,139 @@
+/* Starter CSS for customer screens. Import when the React frontend is built.
+   Defaults use rem so browser text settings remain effective. */
+.customer-app {
+  --customer-text: 1.25rem;
+  --customer-small: 1.125rem;
+  --customer-heading: 1.75rem;
+  --customer-menu-title: 1.5rem;
+  --customer-target: 3.5rem;
+  --customer-gap: 0.75rem;
+  --customer-bg: #fffdf7;
+  --customer-ink: #242018;
+  --customer-muted: #544c43;
+  --customer-primary: #6e2917;
+  --customer-selected-bg: #fff1e7;
+  --customer-border: #8b705d;
+  color: var(--customer-ink);
+  background: var(--customer-bg);
+  font-family: "Noto Sans Thai", Tahoma, "Leelawadee UI", system-ui, sans-serif;
+  font-size: var(--customer-text);
+  line-height: 1.65;
+}
+
+.customer-app *,
+.customer-app *::before,
+.customer-app *::after {
+  box-sizing: border-box;
+}
+
+.customer-app h1,
+.customer-app h2 {
+  font-size: var(--customer-heading);
+  line-height: 1.5;
+}
+
+.customer-app .menu-title,
+.customer-app .menu-price {
+  font-size: var(--customer-menu-title);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.customer-app .supporting-text {
+  color: var(--customer-muted);
+  font-size: var(--customer-small);
+}
+
+.customer-app button,
+.customer-app input,
+.customer-app select,
+.customer-app textarea {
+  font: inherit;
+}
+
+.customer-app button,
+.customer-app .option-control {
+  min-block-size: max(56px, var(--customer-target));
+  min-inline-size: max(56px, var(--customer-target));
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--customer-border);
+  border-radius: 0.75rem;
+  color: var(--customer-ink);
+  background: var(--customer-bg);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.customer-app .menu-list,
+.customer-app .option-list,
+.customer-app .quantity-controls {
+  display: grid;
+  gap: max(12px, var(--customer-gap));
+}
+
+.customer-app .menu-list,
+.customer-app .option-list {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.customer-app .option-control {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--customer-gap);
+}
+
+.customer-app .option-control input {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  margin: 0;
+  accent-color: var(--customer-primary);
+}
+
+.customer-app .option-control[data-selected="true"] {
+  border-color: var(--customer-primary);
+  background: var(--customer-selected-bg);
+  font-weight: 700;
+}
+
+.customer-app .primary-action {
+  border-color: var(--customer-primary);
+  color: #fff;
+  background: var(--customer-primary);
+  font-weight: 700;
+}
+
+.customer-app :focus-visible {
+  outline: 3px solid var(--customer-primary);
+  outline-offset: 4px;
+}
+
+.customer-app .menu-placeholder {
+  font-size: 2rem;
+  line-height: 1.5;
+}
+
+.customer-app .sticky-cart {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  padding: 0.75rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  border-top: 2px solid var(--customer-border);
+  background: var(--customer-bg);
+}
+
+.customer-app .sticky-cart button {
+  inline-size: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customer-app *,
+  .customer-app *::before,
+  .customer-app *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

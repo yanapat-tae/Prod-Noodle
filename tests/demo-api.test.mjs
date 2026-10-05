@@ -1,0 +1,46 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp,rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { once } from 'node:events';
+import { createDemoServer } from '../server/demo.mjs';
+test('Demo HTTP: shared state, retries, authorization, burst queues, price snapshots and payment lifecycle',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'prod-pos-test-')); const server=createDemoServer({dataPath:join(dir,'state.json')});
+ try {
+  server.listen(0,'127.0.0.1'); await once(server,'listening'); const base='http://127.0.0.1:'+server.address().port;
+  const call=async(path,body,token,key)=>{ const res=await fetch(base+'/api'+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{}),...(key?{'Idempotency-Key':key}:{})},body:body===undefined?undefined:JSON.stringify(body)}); return {status:res.status,data:await res.json()}; };
+  const owner=(await call('/staff/login',{account:'demo-1',pin:'1234'})).data;
+  const staff=(await call('/staff/login',{account:'demo-2',pin:'1234'})).data;
+  assert.equal((await call('/staff/state')).status,401);
+  const a=(await call('/customer/session',{entry:'1'})).data;
+  const b=(await call('/customer/session',{entry:'2'})).data;
+  const payload={lines:[{itemCode:'soft-pork-noodles',variantCode:'normal',quantity:1,options:[{groupCode:'noodle',optionCode:'mama',quantity:1},{groupCode:'broth',optionCode:'clear',quantity:1}],notes:[]}],expectedTotalSatang:5500};
+  const key=randomUUID(); const [first,retry]=await Promise.all([call('/orders',payload,a.token,key),call('/orders',payload,a.token,key)]);
+  assert.equal(first.status,201); assert.equal(first.data.id,retry.data.id);
+  assert.deepEqual((await call('/orders',undefined,b.token)).data,[]);
+  assert.equal((await call('/orders',payload,b.token,key)).status,409);
+  assert.equal((await call('/staff/menu',{code:'water',prices:{normal:1000},available:true},staff.token)).status,403);
+  const invalid=await call('/staff/menu',{code:'water',prices:{normal:-1},available:false},owner.token); assert.equal(invalid.status,400);
+  assert.equal((await call('/menu')).data.find(m=>m.code==='water').available,true,'Failed update must not change availability');
+  await call('/staff/menu',{code:'soft-pork-noodles',prices:{normal:6000,special:7000},available:true},owner.token);
+  assert.equal((await call('/orders',payload,a.token,randomUUID())).status,409);
+  const state=(await call('/staff/state',undefined,staff.token)).data; assert.equal(state.orders.length,1); assert.equal(state.orders[0].totalSatang,5500);
+  const take=(await call('/customer/session',{entry:'takeaway'})).data;
+  const water={lines:[{itemCode:'water',variantCode:'normal',quantity:1,options:[],notes:[]}],expectedTotalSatang:1000};
+  const start=performance.now(); const orders=await Promise.all(Array.from({length:40},()=>call('/orders',water,take.token,randomUUID())));
+  assert.ok(orders.every(o=>o.status===201)); assert.equal(new Set(orders.map(o=>o.data.queueNumber)).size,40);
+  console.log(`Local demo burst: 40 requests completed in ${Math.round(performance.now()-start)} ms; not a Supabase capacity benchmark.`);
+  const id=first.data.id;
+  assert.equal((await call('/staff/tables/1/close',{},staff.token)).status,400);
+  for (const status of ['preparing','ready','served']) assert.equal((await call(`/staff/orders/${id}/status`,{status},staff.token)).status,200);
+  const pay=await call(`/staff/orders/${id}/pay`,{method:'cash'},staff.token); const again=await call(`/staff/orders/${id}/pay`,{method:'cash'},staff.token); assert.equal(pay.data.paidAt,again.data.paidAt);
+  assert.equal((await call(`/staff/orders/${id}/refund`,{},staff.token)).status,403);
+  const refund=await call(`/staff/orders/${id}/refund`,{},owner.token); assert.equal(refund.data.refundedSatang,5500);
+  assert.equal((await call('/staff/tables/1/close',{},staff.token)).status,200);
+  assert.equal((await call('/orders',undefined,a.token)).status,401);
+  const next=(await call('/customer/session',{entry:'1'})).data; assert.notEqual(next.visitId,a.visitId);
+  assert.deepEqual((await call('/orders',undefined,next.token)).data,[]);
+ } finally { await new Promise(resolve=>server.close(resolve)); await rm(dir,{recursive:true,force:true}); }
+});

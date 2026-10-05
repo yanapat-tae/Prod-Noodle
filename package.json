@@ -1,0 +1,43 @@
+{
+  "name": "prod-noodle-pos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "demo:server": "node server/demo.mjs",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --test tests/domain.test.ts tests/demo-api.test.mjs tests/database.test.mjs",
+    "test:db": "node --test tests/database.test.mjs",
+    "check:edge": "tsc -p tsconfig.edge.json",
+    "preview:html": "node scripts/build-html-preview.mjs",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.edge.json",
+    "lint": "eslint . --max-warnings 0",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm preview:html"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "qrcode": "^1.5.4",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@eslint/js": "^10.0.1",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-eslint": "^8.71.0",
+    "vite": "^8.3.2"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@11.25.0"
+}

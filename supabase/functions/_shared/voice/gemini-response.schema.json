@@ -1,0 +1,137 @@
+{
+  "title": "ThaiVoiceOrderDraft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "items",
+    "unresolved"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ready",
+        "needs_clarification",
+        "no_order"
+      ]
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "menu_item_code",
+          "variant_code",
+          "quantity",
+          "options",
+          "notes"
+        ],
+        "properties": {
+          "menu_item_code": {
+            "type": "string"
+          },
+          "variant_code": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "options": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "group_code",
+                "option_code",
+                "quantity"
+              ],
+              "properties": {
+                "group_code": {
+                  "type": "string"
+                },
+                "option_code": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 20
+                }
+              }
+            }
+          },
+          "notes": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "unresolved": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_text",
+          "reason",
+          "candidate_menu_codes",
+          "missing_fields",
+          "question"
+        ],
+        "properties": {
+          "source_text": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "ambiguous_menu",
+              "missing_option",
+              "unavailable_item",
+              "unsupported_request",
+              "ambiguous_quantity",
+              "ambiguous_reference",
+              "invalid_quantity"
+            ]
+          },
+          "candidate_menu_codes": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "type": "string"
+            }
+          },
+          "missing_fields": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "type": "string"
+            }
+          },
+          "question": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+.html-preview-bar { color: #fff; background: #2d4a3d; display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 10px max(18px, calc((100vw - 1180px)/2)); font-size: 1rem; flex-wrap: wrap; }
+.html-preview-bar > span { font-weight: 600; }
+.html-preview-bar details { min-width: 0; }
+.html-preview-bar summary { cursor: pointer; padding: 6px 2px; text-decoration: underline; text-underline-offset: 4px; }
+.html-preview-controls { margin-top: 12px; padding: 18px; max-width: 500px; background: #fffdf7; color: #242018; border-radius: 14px; display: grid; gap: 12px; }
+.html-preview-controls p { margin: 0; }
+.html-preview-controls label { display: grid; gap: 8px; }
+.html-preview-controls .link-button { color: #6e2917; border: 1.5px solid #8b705d; }
+.html-preview-controls button { text-align: left; }
+.html-preview-bar summary:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.html-preview-bar summary::marker { color: #fff; }
+@media (max-width: 600px) { .html-preview-bar { padding: 10px 16px; } .html-preview-controls { padding: 16px; } }

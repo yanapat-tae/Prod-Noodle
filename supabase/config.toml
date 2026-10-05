@@ -1,0 +1,10 @@
+project_id = "prod-noodle-pos"
+
+# These handlers perform their own authentication. Customer tokens are opaque,
+# staff JWTs are verified with Auth getUser, then checked against active admins.
+[functions.public-api]
+verify_jwt = false
+[functions.customer-api]
+verify_jwt = false
+[functions.staff-api]
+verify_jwt = false

@@ -9,7 +9,8 @@
 - Production output: customer JS gzip 77.39 KB; staff/chart/QR chunk gzip 123.27 KB. Standalone preview remains approximately 689 KB.
 - Fresh staged-source export into a separate directory with an empty dependency store: `bash scripts/cloud-setup.sh` and `pnpm check` both passed. The lockfile and regenerated HTML match byte for byte. This is a clean-copy check on this Mac, not a GitHub clone or Linux Cloud run.
 - Staged audit: 77 files, approximately 1.36 MB total; largest file preview.html is 705,857 bytes. No credential-pattern matches or real .env/local-sales/cache/build files staged. All migrations/seeds and source/doc files are in the index. Whitespace and local documentation links passed.
-- No GitHub push, Cloud environment execution, real Supabase/Deno deployment or new device/browser validation is implied by these checks.
+- GitHub publication verified: `main` at `99b9657` matched the local commit. A fresh GitHub clone with an empty dependency store passed `bash scripts/cloud-setup.sh` and `pnpm check`; all 77 files and required SQL/environment/docs were present, without tracked private/cache/build data. Later commits only record handoff verification.
+- Actual Linux Cloud execution, real Supabase/Deno deployment and new device/browser validation remain unverified.
 
 ## ผ่านในเครื่อง
 

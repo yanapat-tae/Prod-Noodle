@@ -2,7 +2,7 @@
 
 Web app ภาษาไทยสำหรับร้าน 8 โต๊ะและสั่งกลับบ้าน ใช้ 🍜 แทนรูปอาหาร ไม่มีค่า Voice/AI ในรุ่นนี้
 
-**Current milestone:** local MVP + standalone HTML preview. Supabase integration is implemented but not deployed. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md) when continuing from another machine or Codex Cloud. This is a web/PWA project, not an App Store app.
+**Current milestone:** local MVP + standalone HTML preview, validated in Linux Cloud with dashboard period/export regression coverage. Supabase integration is implemented but not deployed. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md) when continuing from another machine or Codex Cloud. This is a web/PWA project, not an App Store app.
 
 GitHub repository: [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`.
 
@@ -61,6 +61,15 @@ pnpm preview:html
 ```
 
 ชุดทดสอบครอบคลุมราคา/ตัวเลือก, retry ซ้ำ, ข้าม session, สิทธิ์ Owner/Admin, เปลี่ยนราคาโดยรักษาบิลเดิม, รับเงิน/คืนเงิน/ปิดโต๊ะ, ยอด Delivery และ reporting grain ทดสอบ SQL ด้วย PostgreSQL ผ่าน PGlite ที่จำลองส่วน Auth/Roles ของ Supabase
+
+ทดสอบ dashboard ใน Chromium เพิ่มเติม (ติดตั้ง browser ครั้งแรก):
+
+```sh
+pnpm exec playwright install chromium --only-shell
+pnpm test:browser
+```
+
+ชุด browser tests เปิด Vite ที่ `127.0.0.1:5175` และใช้ข้อมูล API จำลอง ไม่ต้องใช้บัญชีหรือฐานข้อมูลจริง ตรวจวัน/เดือนใน CSV, โหลดล้มเหลว/ลองใหม่, วันที่ว่าง และผลตอบกลับที่มาผิดลำดับ รายงานและปุ่มส่งออกจะรอข้อมูลของช่วงที่เลือก แทนการใช้ยอดจากช่วงก่อนหน้า ชุดนี้แยกจาก `pnpm check` เพราะต้องติดตั้ง browser ก่อน; ใช้ทั้งสองคำสั่งเมื่อตรวจการแก้ dashboard
 
 ทดสอบ burst 40 คำขอพร้อมกันผ่าน HTTP **บนเครื่อง** ตรวจออเดอร์/คิวไม่ซ้ำ ไม่ใช่หลักฐานว่า Supabase Free รองรับช่วงเที่ยงแล้ว ดู [ผลและข้อจำกัด](docs/validation.md) และใช้ `scripts/load-pilot.mjs` บน project ทดลองแยกเพื่อเก็บ p50/p95/error หลัง deploy
 
@@ -131,10 +140,11 @@ All four files belong in Git. Apply migrations once; add a new migration for fut
 | `pnpm lint` | ESLint JS/TS/TSX with zero warnings |
 | `pnpm test` | Five existing domain, HTTP and PostgreSQL test groups |
 | `pnpm test:db` | PGlite migration/RPC tests only |
+| `pnpm test:browser` | Seven Chromium dashboard/CSV regressions using controlled API responses |
 | `pnpm build` | Frontend typecheck and build `dist/` |
 | `pnpm preview` | Static build preview; use `pnpm dev` for complete demo interaction |
 | `pnpm preview:html` | Rebuild the committed standalone HTML artifact |
-| `pnpm check` | All checks, production build and HTML regeneration |
+| `pnpm check` | Typecheck, lint, Node/PGlite tests, production build and HTML regeneration; browser tests run separately |
 | `node scripts/generate-menu-seed.mjs` | Regenerate starter SQL from catalog; review diff |
 | `node scripts/load-pilot.mjs` | Opt-in test writes on an isolated trial database |
 

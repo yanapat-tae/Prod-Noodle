@@ -1,10 +1,10 @@
 # Handoff: prod-noodle-pos
 
-Snapshot date: **5 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
+Snapshot date: **6 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
 
 ## Current project status
 
-The completed milestone is a local QR ordering/POS MVP plus a single-file HTML design preview for **โปรด ก๋วยเตี๋ยวหมูโบราณ**, eight tables and takeaway. The online Supabase path is implemented but not deployed or connected to external accounts. No App Store application is being built. No feature task remains in progress; this handoff is limited to validation, tooling, documentation and Git preparation.
+The completed milestone is a local QR ordering/POS MVP plus a single-file HTML design preview for **โปรด ก๋วยเตี๋ยวหมูโบราณ**, eight tables and takeaway. Linux Cloud baseline validation and dashboard reporting fixes are now complete. The online Supabase path is implemented but not deployed or connected to external accounts. The user has a Supabase account; the trial project URL and whether its database is empty are still needed. No App Store application is being built.
 
 This folder originally had no `.git`, remote or commit author. The project is now committed and published to [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`, with the user-provided author email. The remote was initially empty; no history was rewritten or force-pushed. Application and handoff work are separated into logical commits. Remote revision was verified and the GitHub repository was cloned successfully for independent checks. Use `git status --short --branch`, `git log -1 --oneline`, and `git ls-remote origin refs/heads/main` to verify the latest revision. The repository is ready for Cloud continuation; creating/publishing a Cloud environment and deploying the restaurant remain separate tasks.
 
@@ -19,6 +19,7 @@ This folder originally had no `.git`, remote or commit author. The project is no
 - PWA shell, manifest/icons, hosting routing/headers and guarded online API source.
 - Two SQL migrations, two seed files, RLS/grants, transaction RPCs, ledger/reporting, opaque customer tokens and staff Auth guards.
 - Existing five test groups covering domain calculations, HTTP/session authorization/retries, 40 concurrent local requests, and PostgreSQL/RLS/transaction/reporting behavior.
+- Seven Chromium browser regressions for dashboard date/month changes, CSV content, errors/retry, empty dates, returning to a previous date and stale refresh responses.
 - Handoff tooling: pinned Node/pnpm, full typecheck/lint/check scripts, ESLint configuration, portable dependency installer and secret-safe example environment.
 
 ## Partially completed / intentionally deferred
@@ -34,14 +35,24 @@ This folder originally had no `.git`, remote or commit author. The project is no
 - `preview.html` is a mock, with synthetic sales and browser storage, never a shared database. Its direct `file:` opening has not been tested by Codex's browser tooling. Generated JS syntax and mock API behavior were checked previously. Use a modern browser supporting `crypto.randomUUID` and `structuredClone`.
 - Demo API binds localhost only. PIN `1234` is public demo data, not a production credential. Persistent `.local-data/demo.json` stays on the original machine; it contains previous fake test sales and must not be published or treated as actual shop revenue. Fresh clones start empty.
 - API does not auto-reload; restart `pnpm dev` after server edits. Node does not read Vite's `.env.local`.
-- Dashboard updates when opened or manually refreshed. Delivery summaries cannot supply hourly/item-level breakdowns; missing order count is reported as incomplete.
+- Dashboard updates when opened or manually refreshed. Figures/export are unavailable while loading or after failure; late responses cannot overwrite another period. Delivery summaries cannot supply hourly/item-level breakdowns; missing order count is reported as incomplete.
 - A single short SQL advisory lock serializes mutations for one restaurant. No real shared-CPU or lunch-load measurement exists; do not infer free-tier capacity from localhost tests.
 - Staff active-order reads fail at 1,000 rows to avoid silent truncation. Long-running operation may need pagination/archive work later.
 - Source typechecking uses a Deno shim; PGlite emulates Supabase Auth/roles. These checks are not a hosted integration test.
 - `pnpm preview` is a static build preview, not a complete demo backend. Use `pnpm dev` for demo interaction; online builds require correctly configured Supabase services.
 - SQL Editor installation does not record CLI migration history. Reconcile history before adopting `supabase db push`; do not rerun migrations against an existing schema blindly.
 
-## Validation during handoff
+## Linux continuation · 6 October 2026
+
+The repository was inspected before code changes, including all three remote commits and the only remote branch, `main` at `2c03809`. A fresh Git clone had a clean working tree. Node 24.19.0 and pinned pnpm 11.25.0 installed from the lockfile, and the complete existing `pnpm check` passed before development. Work continues on `fix/dashboard-report-period`; verify local/remote Git state rather than assuming that branch has been pushed.
+
+The dashboard previously kept prior-period totals exportable under the new date/month, and a late manual refresh could overwrite the selected report or display an obsolete error. Report data/errors are now tied to the selected staff identity, period and refresh; one effect guards every response and clears previous results. Empty dates prompt for a date without requesting data. No pricing, database, migration or API behavior changed. The shared HTML preview was regenerated.
+
+After the fix, `pnpm check` passed again and `pnpm test:browser --workers=2` passed all seven Chromium tests. The original failures were reproduced before the fix, including a separate regression for returning to the previous date. Browser tests use the actual React app with controlled API responses and assert downloaded CSV content; they do not prove hosted Supabase integration or real-device PWA behavior. Independent code review reported no actionable findings.
+
+Run `pnpm exec playwright install chromium --only-shell` once, then `pnpm test:browser`; port 5175 must be free. This suite is separate from `pnpm check`. In restricted Cloud environments, use a writable `PLAYWRIGHT_BROWSERS_PATH` for both browser installation and tests. Shell network permission was needed for Git/npm/browser downloads and localhost HTTP/browser tests. Initial EPERM failures were environment restrictions, not application defects or missing Supabase secrets.
+
+## Historical handoff validation · 5 October 2026
 
 `pnpm check` passed: frontend/preview and Edge typechecks, lint with zero warnings, all five existing tests, production build and HTML regeneration. A fresh source export and a clean local Git clone both passed setup/checks. After publishing, a fresh clone from GitHub at `99b9657` independently installed all dependencies from an empty store with `bash scripts/cloud-setup.sh` and passed `pnpm check`. All 77 files, migrations/seeds, environment example and documentation links were present, with no private data or generated/cache directories tracked. This verifies GitHub clone/setup on this Mac; actual Linux Cloud execution remains unverified. Subsequent handoff edits document these results without changing application code.
 
@@ -49,11 +60,11 @@ The 77 project files total approximately 1.36 MB; the largest is the required st
 
 ## Next recommended task and milestone
 
-First run the same checks in the Cloud environment, then review the existing HTML interface and confirm menu/prices with the owner. The following milestone is an **isolated Supabase + Cloudflare online pilot**, validated on multiple real phones and kitchen/POS tabs, followed by an opt-in free-tier lunch-load measurement. Keep voice, photos and delivery APIs deferred. This handoff does not authorize starting that deployment phase.
+Linux baseline checks are now verified. Review the existing HTML interface and confirm menu/prices with the owner, then proceed toward an **isolated Supabase + Cloudflare online pilot**, validated on multiple real phones and kitchen/POS tabs, followed by an opt-in free-tier lunch-load measurement. First identify the trial Supabase project and inspect its existing schema/migration history; do not blindly apply the initial migrations to a populated database. Account ownership alone does not provide project access. Hosting configuration and four staff Auth/profile accounts remain needed. Keep voice, photos and delivery APIs deferred.
 
 Suggested continuation prompt:
 
-> Read HANDOFF.md, README.md and AGENTS.md. Run pnpm check. Continue review/fixes of the existing Thai HTML interface only, retaining large controls and emoji menus. Do not start cloud deployment or new major features until requested. Clearly distinguish demo results from real Supabase/device validation.
+> Read HANDOFF.md, README.md and AGENTS.md. Check branch/status and run pnpm check; run pnpm test:browser for dashboard UI work. Continue the isolated online pilot after the user identifies the trial Supabase project and its data state. Preserve the architecture, large Thai controls and emoji menus. Clearly distinguish demo/Chromium results from real Supabase/device validation.
 
 ## Exact commands after cloning
 

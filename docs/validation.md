@@ -1,6 +1,15 @@
-# ผลตรวจรุ่นทดลอง · 5 ตุลาคม 2026
+# ผลตรวจรุ่นทดลอง
 
-## Handoff verification · 5 October 2026
+## Linux Cloud continuation · 6 October 2026
+
+- Clean GitHub clone of `main` at `2c03809`; no newer remote branch. Node 24.19.0, pnpm 11.25.0, frozen-lockfile install and the full existing `pnpm check` passed before code changes.
+- Reproduced dashboard defects in Chromium before fixing: previous-period CSV export, stale manual refresh totals/errors, empty date handling and returning to a previous period while loading.
+- After the fix: `pnpm check` passed frontend/preview/Edge typechecks, zero-warning lint, all five Node/PGlite tests, production build and HTML regeneration. `pnpm test:browser --workers=2` passed all seven dashboard regressions. Independent code review found no actionable issues.
+- Browser tests use the real React UI with controlled API responses, including delayed/error responses, and inspect CSV filenames/content. They use no live sales data or Supabase credentials. Install Chromium with `pnpm exec playwright install chromium --only-shell` before running `pnpm test:browser`; Vite uses localhost port 5175. Browser tests run separately from `pnpm check`.
+- Initial Git/npm and HTTP checks failed with network/socket EPERM until per-command sandbox network permission was available. These were environment failures. Restricted environments may need a writable `PLAYWRIGHT_BROWSERS_PATH` shared by installation and test commands.
+- Supabase hosted Auth/PostgREST/Realtime/Deno, deployment, real phones/PWA installation and free-tier load remain unverified. Existing migrations/seeds and reporting calculations were preserved. The user has a Supabase account; no trial project has been identified or modified by this continuation.
+
+## Historical handoff verification · 5 October 2026
 
 - `pnpm install --frozen-lockfile --store-dir .pnpm-store` passed against the updated lockfile.
 - `pnpm check` passed: strict frontend/preview and Edge source typechecks, ESLint with zero warnings, all five existing tests, production build and standalone HTML regeneration.

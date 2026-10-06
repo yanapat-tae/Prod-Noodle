@@ -17,6 +17,7 @@ export default defineConfig(
   },
   { files: ['src/**', 'preview/**'], languageOptions: { globals: globals.browser } },
   { files: ['server/**', 'scripts/**', 'tests/**', '*.config.{ts,mjs}'], languageOptions: { globals: globals.node } },
+  { files: ['tests/browser/**'], languageOptions: { globals: globals.browser } },
   { files: ['supabase/functions/**'], languageOptions: { globals: { ...globals.browser, Deno: 'readonly' } } },
   { files: ['public/sw.js'], languageOptions: { globals: globals.serviceworker } },
 );

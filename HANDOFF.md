@@ -1,10 +1,10 @@
 # Handoff: prod-noodle-pos
 
-Snapshot date: **6 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
+Snapshot date: **7 October 2026, UTC**. Read together with README.md and AGENTS.md. This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
 
 ## Current project status
 
-The completed milestone is a local QR ordering/POS MVP plus a single-file HTML design preview for **โปรด ก๋วยเตี๋ยวหมูโบราณ**, eight tables and takeaway. Linux Cloud baseline validation and dashboard reporting fixes are now complete. The online Supabase path is implemented but not deployed or connected to external accounts. The user has a Supabase account; the trial project URL and whether its database is empty are still needed. No App Store application is being built.
+The completed milestone is a local QR ordering/POS MVP plus a single-file HTML design preview for **โปรด ก๋วยเตี๋ยวหมูโบราณ**, eight tables and takeaway. Linux Cloud baseline validation and dashboard reporting fixes are now complete. The online Supabase path is implemented. The user reports that both migrations and both seeds were applied to trial project `emjktqzcvgjwtsgysljy`; Auth setup, Edge Functions, frontend deployment and hosted integration validation remain pending. No App Store application is being built.
 
 This folder originally had no `.git`, remote or commit author. The project is now committed and published to [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`, with the user-provided author email. The remote was initially empty; no history was rewritten or force-pushed. Application and handoff work are separated into logical commits. Remote revision was verified and the GitHub repository was cloned successfully for independent checks. Use `git status --short --branch`, `git log -1 --oneline`, and `git ls-remote origin refs/heads/main` to verify the latest revision. The repository is ready for Cloud continuation; creating/publishing a Cloud environment and deploying the restaurant remain separate tasks.
 
@@ -42,6 +42,19 @@ This folder originally had no `.git`, remote or commit author. The project is no
 - `pnpm preview` is a static build preview, not a complete demo backend. Use `pnpm dev` for demo interaction; online builds require correctly configured Supabase services.
 - SQL Editor installation does not record CLI migration history. Reconcile history before adopting `supabase db push`; do not rerun migrations against an existing schema blindly.
 
+## Supabase setup report · 7 October 2026
+
+The user supplied results from a separate Supabase-enabled chat for `https://emjktqzcvgjwtsgysljy.supabase.co`:
+
+- Both repository migrations applied; migration history contains only `initial_schema` and `application_api`.
+- 22 public tables with RLS, three views and 15 functions reported after migrations.
+- `seed.sql` then `menu-seed.sql` applied: eight tables, seven categories, 14 dishes and 24 variants. No data cleared or extra migrations created.
+- Advisor reports mention `public.is_staff()` SECURITY DEFINER execution and unindexed foreign keys; these have not been independently investigated on the hosted database. Do not alter deployed schema merely to silence warnings.
+
+These are user-reported hosted results, not queries executed from this development session. The Supabase connector's SQL/deployment tools are unavailable here. Local PGlite verification separately confirmed seed counts, duplicate-free reruns and preservation of edited prices. Seeds create no Auth accounts or QR credentials. Review [starter menu prices](docs/menu-review.md) before shop use; this does not block isolated technical testing.
+
+Next: disable public signup, create the owner's Auth user, bind its UUID to slot 1 with role `owner`, then configure the public frontend key, Cloudflare Pages origin and all three Edge Functions. Start with the owner for integration testing and add actual staff profiles in slots 2–4 before staff testing. Never request passwords or privileged keys in chat. Hosting account/origin and owner Auth UUID are not yet supplied. Do not treat database setup alone as a completed online pilot.
+
 ## Linux continuation · 6 October 2026
 
 The repository was inspected before code changes, including all three remote commits and the only remote branch, `main` at `2c03809`. A fresh Git clone had a clean working tree. Node 24.19.0 and pinned pnpm 11.25.0 installed from the lockfile, and the complete existing `pnpm check` passed before development. Work continues on `fix/dashboard-report-period`; verify local/remote Git state rather than assuming that branch has been pushed.
@@ -60,11 +73,11 @@ The 77 project files total approximately 1.36 MB; the largest is the required st
 
 ## Next recommended task and milestone
 
-Linux baseline checks are now verified. Review the existing HTML interface and confirm menu/prices with the owner, then proceed toward an **isolated Supabase + Cloudflare online pilot**, validated on multiple real phones and kitchen/POS tabs, followed by an opt-in free-tier lunch-load measurement. First identify the trial Supabase project and inspect its existing schema/migration history; do not blindly apply the initial migrations to a populated database. Account ownership alone does not provide project access. Hosting configuration and four staff Auth/profile accounts remain needed. Keep voice, photos and delivery APIs deferred.
+Linux baseline checks are now verified. Review the existing HTML interface and confirm menu/prices with the owner, then proceed toward an **isolated Supabase + Cloudflare online pilot**, validated on multiple real phones and kitchen/POS tabs, followed by an opt-in free-tier lunch-load measurement. Continue with owner Auth/profile setup and hosting configuration on the identified trial project. Verify the reported database state when direct access becomes available; do not rerun the initial migrations. Account ownership alone does not provide project access. Hosting configuration and four staff Auth/profile accounts remain needed. Keep voice, photos and delivery APIs deferred.
 
 Suggested continuation prompt:
 
-> Read HANDOFF.md, README.md and AGENTS.md. Check branch/status and run pnpm check; run pnpm test:browser for dashboard UI work. Continue the isolated online pilot after the user identifies the trial Supabase project and its data state. Preserve the architecture, large Thai controls and emoji menus. Clearly distinguish demo/Chromium results from real Supabase/device validation.
+> Read HANDOFF.md, README.md and AGENTS.md. Check branch/status and run pnpm check; run pnpm test:browser for dashboard UI work. Continue the isolated online pilot on project emjktqzcvgjwtsgysljy; migrations and seeds are reported applied, so proceed with owner Auth/profile and deployment configuration. Preserve the architecture, large Thai controls and emoji menus. Clearly distinguish demo/Chromium results from real Supabase/device validation.
 
 ## Exact commands after cloning
 

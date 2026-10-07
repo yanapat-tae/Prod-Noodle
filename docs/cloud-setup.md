@@ -1,6 +1,6 @@
 # ต่อ Supabase Free และ Cloudflare Pages
 
-สถานะ 7 ต.ค. 2026: ผู้ใช้รายงานว่าลง migrations 2 ไฟล์และ seeds 2 ไฟล์ใน project `emjktqzcvgjwtsgysljy` แล้ว ได้ 8 โต๊ะ, 7 หมวด, 14 เมนู, 24 variants และ migration history เดิม 2 รายการ แชตพัฒนานี้ยังไม่ได้ query ยืนยันฐานข้อมูลจริง; Auth, Edge Functions และเว็บยังรอตั้งค่า/ทดสอบ ห้ามรัน initial migrations ซ้ำบน project นี้
+สถานะ 7 ต.ค. 2026: ตรวจฐานข้อมูลและ Owner โดยตรงแล้ว ลง Edge Functions 3 ตัวสถานะ ACTIVE และเว็บอยู่ที่ https://prod-noodle.pages.dev แต่ยังต้องแก้ค่า Production VITE_SUPABASE_URL เป็น `https://emjktqzcvgjwtsgysljy.supabase.co` แล้ว redeploy และตั้ง Edge secret `APP_ORIGIN=https://prod-noodle.pages.dev` ขณะตรวจ API ตอบ 503 เพราะขาด origin configuration ยังไม่ผ่านการทดสอบ login/สั่งอาหาร ห้ามรัน initial migrations ซ้ำ
 
 ## 1. สร้าง Supabase project ทดลองแยก
 

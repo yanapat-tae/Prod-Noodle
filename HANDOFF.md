@@ -4,7 +4,7 @@ Snapshot date: **7 October 2026, UTC**. Read together with README.md and AGENTS.
 
 ## Current project status
 
-The completed milestone is a local QR ordering/POS MVP plus a single-file HTML design preview for **โปรด ก๋วยเตี๋ยวหมูโบราณ**, eight tables and takeaway. Linux Cloud baseline validation and dashboard reporting fixes are now complete. The online Supabase path is implemented. The user reports that both migrations and both seeds were applied to trial project `emjktqzcvgjwtsgysljy`; Auth setup, Edge Functions, frontend deployment and hosted integration validation remain pending. No App Store application is being built.
+The completed milestone is a local QR ordering/POS MVP plus a single-file HTML design preview for **โปรด ก๋วยเตี๋ยวหมูโบราณ**, eight tables and takeaway. Linux Cloud baseline validation and dashboard reporting fixes are now complete. The online Supabase path is implemented. Trial project `emjktqzcvgjwtsgysljy` now has directly verified seed counts and an active Owner. All three Edge Functions are deployed. The frontend is at `https://prod-noodle.pages.dev`, but its Supabase URL build value is incorrect and Edge `APP_ORIGIN` is missing; hosted integration remains blocked on configuration. No App Store application is being built.
 
 This folder originally had no `.git`, remote or commit author. The project is now committed and published to [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`, with the user-provided author email. The remote was initially empty; no history was rewritten or force-pushed. Application and handoff work are separated into logical commits. Remote revision was verified and the GitHub repository was cloned successfully for independent checks. Use `git status --short --branch`, `git log -1 --oneline`, and `git ls-remote origin refs/heads/main` to verify the latest revision. The repository is ready for Cloud continuation; creating/publishing a Cloud environment and deploying the restaurant remain separate tasks.
 
@@ -25,7 +25,7 @@ This folder originally had no `.git`, remote or commit author. The project is no
 ## Partially completed / intentionally deferred
 
 - Supabase: schema/RPC/Edge adapters are ready for integration validation; actual Auth, PostgREST, Deno, WebSockets and deploy execution have not been tested.
-- Hosting: Cloudflare Pages configuration is present; no live website or public QR URL exists.
+- Hosting: `https://prod-noodle.pages.dev` serves the frontend, but the deployed Supabase URL build variable needs correction. No working customer QR has been verified.
 - PWA: build assets exist; real iOS/Android installation, offline/reconnect and 200% text zoom are unverified.
 - Menu: only fourteen starter entries; recipe/pricing confirmation and remaining menu transcription are needed.
 - Voice: Thai prompt/schema examples only, no endpoint or AI calls. Photos, direct delivery APIs, automatic payment verification, split payments, native XLSX and new-menu/account-management/password-reset UI remain deferred.
@@ -41,6 +41,18 @@ This folder originally had no `.git`, remote or commit author. The project is no
 - Source typechecking uses a Deno shim; PGlite emulates Supabase Auth/roles. These checks are not a hosted integration test.
 - `pnpm preview` is a static build preview, not a complete demo backend. Use `pnpm dev` for demo interaction; online builds require correctly configured Supabase services.
 - SQL Editor installation does not record CLI migration history. Reconcile history before adopting `supabase db push`; do not rerun migrations against an existing schema blindly.
+
+## Direct hosted verification and deployment · 7 October 2026
+
+Supabase tools became available in this session. Direct queries verified eight tables, 14 dishes, 24 variants and exactly one active Owner profile for the user-supplied UID in slot 1. The migration history uses hosted versions `20261007000812` (`initial_schema`) and `20261007000819` (`application_api`), different from local filenames; reconcile version mapping before any CLI db push. Do not reapply the initial schema.
+
+Deployed unchanged repository source for `public-api`, `customer-api` and `staff-api`, each version 1 / ACTIVE, with per-function deno.json and shared http.ts. Preserved `verify_jwt=false` after checking the existing customer token/staff Auth guards. Edge source typecheck passed before deployment.
+
+Cloudflare serves `https://prod-noodle.pages.dev`. Inspection of deployed asset `index-jERAXyND.js` found the literal `VITE_SUPABASE_URL` as the URL value, rather than the actual project URL; the publishable-key-shaped value was not printed. Set the Production build variable to `https://emjktqzcvgjwtsgysljy.supabase.co` and redeploy. No application-code change is needed for this configuration error.
+
+Read-only endpoint probes, including OPTIONS, return 503 with the application's missing-service-configuration message and no CORS header. This occurs before handler execution and identifies missing `APP_ORIGIN`; the user has been asked to set it to `https://prod-noodle.pages.dev` under Edge Function secrets. This connector cannot set secrets or Auth site/redirect settings. No test orders or QR rotations were performed. Login, menu HTTP results, rejection guards, CORS, Realtime and real-device flows must be retested after these two configuration fixes. Cloudflare main still lacks the local dashboard fix commits.
+
+The historical report below describes what was known before direct tool access; its access/configuration blockers are superseded by this section.
 
 ## Supabase setup report · 7 October 2026
 

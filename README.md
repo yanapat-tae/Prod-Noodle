@@ -2,7 +2,7 @@
 
 Web app ภาษาไทยสำหรับร้าน 8 โต๊ะและสั่งกลับบ้าน ใช้ 🍜 แทนรูปอาหาร ไม่มีค่า Voice/AI ในรุ่นนี้
 
-**Current milestone:** local MVP + standalone HTML preview, validated in Linux Cloud with dashboard period/export regression coverage. Supabase migrations and seeds are reported applied to the trial project; Auth, Edge Functions and frontend deployment remain pending. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md) when continuing from another machine or Codex Cloud. This is a web/PWA project, not an App Store app.
+**Current milestone:** local MVP + standalone HTML preview, validated in Linux Cloud with dashboard period/export regression coverage. Trial database counts and Owner are verified; Edge Functions and the Cloudflare frontend are deployed, with Supabase URL / APP_ORIGIN configuration fixes still required before integration testing. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md) when continuing from another machine or Codex Cloud. This is a web/PWA project, not an App Store app.
 
 GitHub repository: [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`.
 
@@ -46,7 +46,7 @@ pnpm dev
 
 เขียนตัวเชื่อม Supabase พร้อม migrations, transactional RPC, RLS และ Edge Functions แล้ว ใช้ Cloudflare Pages เสิร์ฟ frontend และ Supabase Free เก็บข้อมูล/Auth/Realtime ตาม [แผนทดลองฟรี](docs/free-tier-pilot.md)
 
-ผู้ใช้รายงานว่าลง migrations และ seeds ใน Supabase project ทดลองแล้ว (7 ต.ค. 2026); **ยังไม่ได้ยืนยันการตั้ง Auth, deploy Edge Functions หรือเว็บ** ดู [ขั้นตอนติดตั้งคลาวด์](docs/cloud-setup.md) ก่อนเปิดให้โทรศัพท์หลายเครื่องสแกน QR ห้ามนำ PIN ทดลองไปใช้บนอินเทอร์เน็ต
+ลงฐานข้อมูลและ Owner แล้ว พร้อม deploy Edge Functions 3 ตัวและเว็บ https://prod-noodle.pages.dev (7 ต.ค. 2026); **ยังต้องแก้ VITE_SUPABASE_URL บน Cloudflare และตั้ง APP_ORIGIN ใน Supabase ก่อนทดสอบการเชื่อมต่อ** ดู [ขั้นตอนติดตั้งคลาวด์](docs/cloud-setup.md) ก่อนเปิดให้โทรศัพท์หลายเครื่องสแกน QR ห้ามนำ PIN ทดลองไปใช้บนอินเทอร์เน็ต
 
 Voice, รูปอาหาร, Delivery partner API, ตรวจเงินโอนอัตโนมัติ, แบ่งจ่าย และ XLSX โดยตรงยังไม่เปิดในรุ่นนี้ CSV มี BOM ภาษาไทยและเปิดใน Excel ได้
 
@@ -96,7 +96,7 @@ docs/                ออกแบบ/ติดตั้ง/ผลตรวจ
 | --- | --- | --- | --- |
 | HTML | Shared React UI bundled into `preview.html` | `preview/api.ts`, localStorage, mock staff/sample sales | Working design preview |
 | Demo (default) | React + TypeScript + Vite | Node HTTP API, JSON file, four mock staff accounts | Working localhost MVP |
-| Online pilot | Vite static build on Cloudflare Pages | Supabase PostgreSQL/Auth/Realtime, three Edge Functions | Database setup reported complete; Auth/Edge/frontend pending |
+| Online pilot | Vite static build on Cloudflare Pages | Supabase PostgreSQL/Auth/Realtime, three Edge Functions | Deployed; frontend URL and Edge origin configuration fixes pending |
 
 `src/api.ts` selects the demo or Supabase adapter. Online customer sessions are opaque hashed tokens bound to a table visit or takeaway entry; staff use Auth JWTs and active `admins` profiles. Edge handlers check authorization and call transactional SQL RPCs. RLS protects staff reads and prevents direct customer writes. Staff get order/visit updates through Realtime online and polling locally; visible customer pages poll their own orders every 30 seconds.
 

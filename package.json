@@ -8,7 +8,7 @@
     "demo:server": "node server/demo.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node --test tests/domain.test.ts tests/demo-api.test.mjs tests/database.test.mjs",
+    "test": "node --test tests/*.test.ts tests/*.test.mjs",
     "test:db": "node --test tests/database.test.mjs",
     "test:browser": "playwright test",
     "check:edge": "tsc -p tsconfig.edge.json",

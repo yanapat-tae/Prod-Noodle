@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import type { CartInput, CustomerSession, DeliverySummary, MenuItem, Order, Staff, Status } from './domain.ts';
+import type { CartInput, CustomerSession, DeliverySummary, MenuItem, Order, Staff, Status, TakeawayDetails } from './domain.ts';
+import type { NewMenuInput } from './menu-management.ts';
 import { businessDate, salesReport } from './domain.ts';
 export const mode = import.meta.env.VITE_APP_MODE === 'supabase' ? 'supabase' : 'demo';
 const url = import.meta.env.VITE_SUPABASE_URL ?? '';
@@ -25,11 +26,11 @@ async function staffToken(identity: Staff) {
 }
 function mapOrder(o: any): Order {
   const refunds = (o.payment_transactions ?? []).filter((p: any) => p.kind === 'refund' && p.status === 'succeeded');
-  return { id: o.id, channel: o.channel, tableNumber: o.restaurant_tables?.table_number ?? null, queueNumber: o.queue_number, visitId: o.table_session_id, status: o.fulfillment_status,
+  return { id: o.id, channel: o.channel, tableNumber: o.restaurant_tables?.table_number ?? null, queueNumber: o.queue_number, visitId: o.table_session_id, status: o.fulfillment_status, takeaway: o.takeaway_details ?? null,
     totalSatang: Number(o.total_satang), createdAt: o.created_at, paidAt: o.paid_at, paymentMethod: (o.payment_transactions ?? []).find((p: any) => p.kind === 'capture' && p.status === 'succeeded')?.method ?? null,
     refundedAt: refunds[refunds.length - 1]?.posted_at ?? null, refundedSatang: refunds.reduce((s: number, p: any) => s + Number(p.amount_satang), 0),
     lines: (o.order_items ?? []).map((l: any) => ({ id: l.id, itemCode: l.menu_items?.code ?? '', variantCode: l.menu_variants?.code ?? '', name: l.menu_name_snapshot, variantName: l.variant_name_snapshot, unit: l.unit_snapshot ?? l.menu_items?.unit ?? 'ชาม', quantity: l.quantity,
-      unitSatang: Number(l.base_unit_satang) + Number(l.options_unit_satang), totalSatang: Number(l.line_net_satang), optionNames: (l.order_item_options ?? []).map((v: any) => v.option_name_snapshot), options: [], notes: l.notes ? l.notes.split(' · ') : [] })) };
+      unitSatang: Number(l.base_unit_satang) + Number(l.options_unit_satang), totalSatang: Number(l.line_net_satang), optionNames: (l.order_item_options ?? []).map((v: any) => v.option_name_snapshot), options: [], notes: l.notes ? l.notes.split(' · ') : [], freeNote: l.free_note ?? '' })) };
 }
 const orderSelect = '*,restaurant_tables(table_number),payment_transactions(*),order_items(*,menu_items(code,unit),menu_variants(code),order_item_options(*))';
 async function profile(token: string, userId: string): Promise<Staff> {
@@ -41,7 +42,7 @@ export const api = {
   menu: () => call<MenuItem[]>('/menu'),
   bootstrap: (entry: string, oldToken?: string) => call<CustomerSession>('/customer/session', { entry }, oldToken),
   customerOrders: (session: CustomerSession) => call<Order[]>('/orders', undefined, session.token),
-  createOrder: (session: CustomerSession, lines: CartInput[], total: number, requestKey: string) => call<Order>('/orders', { lines, expectedTotalSatang: total }, session.token, requestKey),
+  createOrder: (session: CustomerSession, lines: CartInput[], total: number, requestKey: string, takeaway?: TakeawayDetails) => call<Order>('/orders', { lines, expectedTotalSatang: total, takeaway }, session.token, requestKey),
   async login(account: string, password: string) {
     if (!supabase) { if (mode === 'supabase') throw new Error('ยังไม่ได้ตั้งค่า Supabase'); const staff = await call<Staff>('/staff/login', { account, pin: password }); localStorage.setItem(staffStorage, JSON.stringify(staff)); return staff; }
     const { data, error } = await supabase.auth.signInWithPassword({ email: account, password }); if (error) throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง'); return profile(data.session!.access_token, data.user!.id);
@@ -73,12 +74,13 @@ export const api = {
     const timer = setInterval(() => { if (!connected && !document.hidden) refresh(); }, 30000);
     return () => { clearInterval(timer); void supabase!.removeChannel(channel); };
   },
-  async posOrder(identity: Staff, lines: CartInput[], total: number, channel: string, tableNumber: number | null, requestKey: string) { return call<Order>('/staff/orders', { lines, expectedTotalSatang: total, channel, tableNumber }, await staffToken(identity), requestKey); },
+  async posOrder(identity: Staff, lines: CartInput[], total: number, channel: string, tableNumber: number | null, requestKey: string, takeaway?: TakeawayDetails) { return call<Order>('/staff/orders', { lines, expectedTotalSatang: total, channel, tableNumber, takeaway }, await staffToken(identity), requestKey); },
   async status(identity: Staff, id: string, status: Status) { return call<Order>(`/staff/orders/${id}/status`, { status }, await staffToken(identity)); },
   async pay(identity: Staff, id: string, method: string) { return call<Order>(`/staff/orders/${id}/pay`, { method }, await staffToken(identity)); },
   async refund(identity: Staff, id: string) { return call<Order>(`/staff/orders/${id}/refund`, {}, await staffToken(identity)); },
   async close(identity: Staff, table: number) { return call(`/staff/tables/${table}/close`, {}, await staffToken(identity)); },
   async delivery(identity: Staff, summaries: DeliverySummary[]) { return call('/staff/delivery', { summaries }, await staffToken(identity), crypto.randomUUID()); },
+  async createMenu(identity: Staff, input: NewMenuInput) { return call<MenuItem>('/staff/menu/create', input, await staffToken(identity)); },
   async editMenu(identity: Staff, code: string, prices: Record<string, number>, available: boolean) { return call('/staff/menu', { code, prices, available }, await staffToken(identity)); },
   async report(identity: Staff, period: string): Promise<ReturnType<typeof salesReport>> {
     if (!supabase) { const state = await this.state(identity); return salesReport(state.orders, state.summaries, period); }

@@ -18,7 +18,7 @@ test('PostgreSQL transactions, pricing, permissions, table lifecycle and reporti
   const query=async(sql,args=[])=> (await db.query(sql,args)).rows;
   const scalar=async(sql,args=[])=>Object.values((await query(sql,args))[0])[0];
   const rpc=async(name,args=[])=>scalar(`select public.${name}(${args.map((_,i)=>'$'+(i+1)).join(',')})`,args);
-  const catalog=await rpc('menu_catalog'); assert.equal(catalog.length,14); assert.equal(catalog.find(m=>m.code==='soft-pork-noodles').groups.length,3);
+  const catalog=await rpc('menu_catalog'); assert.equal(catalog.length,38); assert.equal(catalog.find(m=>m.code==='soft-pork-noodles').groups.length,4);
   const qr=Array.from({length:9},(_,i)=>({tableNumber:i<8?i+1:null,hash:sha('entry'+i)}));
   await rpc('rotate_qr',[owner,JSON.stringify(qr)]);
   const session=await rpc('customer_bootstrap',[qr[0].hash,sha('customer1'),null]); assert.equal(session.tableNumber,1);

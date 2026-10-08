@@ -7,6 +7,10 @@ serve('staff-api',async(req,path,body)=>{
   if (order) return rpc(db,'staff_order_action',{p_actor:actor,p_id:order[1],p_action:order[2],p_value:order[2]==='status'?body.status:order[2]==='pay'?body.method:null});
   const close=path.match(/^\/staff\/tables\/([1-8])\/close$/);
   if (close) return rpc(db,'close_table',{p_actor:actor,p_number:Number(close[1])});
+  if (path==='/staff/menu/create') {
+    await staff(db,req,true);
+    return rpc(db,'create_menu',{p_actor:actor,p_payload:body});
+  }
   if (path==='/staff/menu') return rpc(db,'edit_menu',{p_actor:actor,p_code:body.code,p_prices:body.prices,p_available:body.available});
   if (path==='/staff/delivery') return rpc(db,'import_delivery_summary',{p_actor:actor,p_rows:body.summaries,p_hash:await hash(JSON.stringify(body.summaries)),p_key:requestKey(req)});
   if (path==='/staff/qr') {

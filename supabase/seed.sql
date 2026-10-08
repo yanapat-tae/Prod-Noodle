@@ -1,4 +1,4 @@
--- Verified setup only. Full menu names, recipes, sizes, and prices are not seeded.
+-- Base setup. Full dishes and prices are in menu-seed.sql.
 -- No QR secrets or Auth accounts are created by this script.
 begin;
 
@@ -7,9 +7,9 @@ select n, 'โต๊ะ ' || n::text from generate_series(1, 8) n
 on conflict (table_number) do nothing;
 
 insert into public.menu_categories(code, name, sort_order) values
-  ('noodles', 'ก๋วยเตี๋ยว', 1), ('yentafo', 'เย็นตาโฟ', 2),
-  ('soup-only', 'เกาเหลา', 3), ('rice', 'ข้าว / บะหมี่หมูแดงหมูกรอบ', 4),
-  ('snacks', 'ของทานเล่น', 5), ('drinks', 'เครื่องดื่ม', 6), ('desserts', 'ของหวาน', 7)
+  ('noodles', 'ก๋วยเตี๋ยว', 1), ('soup-only', 'เกาเหลา', 2),
+  ('rice', 'ข้าวและบะหมี่', 3), ('snacks', 'ของทานเล่น / เพิ่มพิเศษ', 4),
+  ('drinks', 'เครื่องดื่ม', 5), ('desserts', 'ของหวาน', 6)
 on conflict (code) do nothing;
 
 insert into public.option_groups(code, name) values
@@ -30,6 +30,5 @@ from public.option_groups g cross join (values
 where g.code = 'noodle'
 on conflict (group_id, code) do nothing;
 
--- Attach allowed groups/options per dish after menu verification. The menu photo
--- contains dishes with restrictions; do not enable every option for every dish.
+-- menu-seed.sql attaches the allowed groups/options for each dish.
 commit;

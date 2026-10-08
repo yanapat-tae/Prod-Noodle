@@ -1,0 +1,9 @@
+.takeaway-form { margin: 24px 0; padding: 20px; border: 2px solid #dac8b6; border-radius: 16px; }
+.takeaway-form label, .free-note-field, .menu-search { display: grid; gap: 10px; margin: 16px 0; font-weight: 600; }
+.takeaway-form input:not([type=checkbox]), .takeaway-form textarea, .free-note-field textarea, .menu-search input { box-sizing: border-box; width: 100%; min-height: 56px; padding: 14px; border: 1px solid #a48d77; border-radius: 10px; color: #39271e; background: #fffdfa; font: inherit; }
+.takeaway-form .option-control { display: flex; }
+.free-note-field small { font-size: .8em; font-weight: 400; color: #66574c; }
+.kitchen-note { white-space: pre-wrap; overflow-wrap: anywhere; color: #752514; font-weight: 700; padding: 8px 12px; background: #fff0d8; border-radius: 8px; }
+.delivery-details { background: #edf5e8; border: 1px solid #bacdae; padding: 12px; border-radius: 10px; margin: 12px 0; overflow-wrap: anywhere; }
+.delivery-details p { margin: 6px 0; white-space: pre-wrap; }
+.ticket-top h2, .order-title h2 { overflow-wrap: anywhere; }

@@ -8,13 +8,16 @@ export interface MenuItem {
   unit: string; available: boolean; variants: Variant[]; groups: Group[]; prepNotes: string[];
 }
 export interface SelectedOption { groupCode: string; optionCode: string; quantity: number }
-export interface CartInput { itemCode: string; variantCode: string; quantity: number; options: SelectedOption[]; notes: string[] }
+export interface CartInput { itemCode: string; variantCode: string; quantity: number; options: SelectedOption[]; notes: string[]; freeNote?: string }
+export interface TakeawayDetails { customerName: string; villageDelivery: boolean; deliveryAddress: string; deliveryPhone: string }
+export const villageName = 'หมู่บ้านเศรษฐสิริ วงแหวน-สุขาภิบาล2';
 export interface Line extends CartInput { id: string; name: string; variantName: string; unit: string; optionNames: string[]; unitSatang: number; totalSatang: number }
 export interface Order {
   id: string; channel: Channel; tableNumber: number | null; queueNumber: number | null;
   visitId: string | null; status: Status; lines: Line[]; totalSatang: number;
   createdAt: string; paidAt: string | null; paymentMethod: string | null;
   refundedAt: string | null; refundedSatang: number;
+  takeaway?: TakeawayDetails | null;
 }
 export interface CustomerSession { token: string; tableNumber: number | null; channel: 'dine_in' | 'takeaway'; visitId: string | null }
 export interface Staff { token: string; id: string; name: string; role: 'owner' | 'admin' }
@@ -28,8 +31,29 @@ export function businessDate(value: string | Date = new Date()) {
   return `${get('year')}-${get('month')}-${get('day')}`;
 }
 export function thaiTime(value: string) { return new Date(value).toLocaleTimeString('th-TH', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit' }); }
-export function orderLabel(order: Order) { return order.channel === 'dine_in' ? `โต๊ะ ${order.tableNumber}` : order.channel === 'takeaway' ? `T-${String(order.queueNumber).padStart(2, '0')}` : channelNames[order.channel]; }
+export function orderLabel(order: Order) { return order.channel === 'dine_in' ? `โต๊ะ ${order.tableNumber}` : order.channel === 'takeaway' ? `กลับบ้าน${order.takeaway?.customerName ? '-' + order.takeaway.customerName : ''} · T-${String(order.queueNumber).padStart(2, '0')}` : channelNames[order.channel]; }
 export class DomainError extends Error { code: number; constructor(message: string, code = 400) { super(message); this.code = code; } }
+export function validateTakeaway(value: unknown): TakeawayDetails {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new DomainError('กรุณาใส่ชื่อผู้สั่งกลับบ้าน');
+  const data = value as Record<string, unknown>;
+  const text = (key: string, max: number, label: string) => {
+    if (typeof data[key] !== 'string') throw new DomainError(`กรุณาตรวจ${label}`);
+    const result = data[key].trim();
+    if (Array.from(result).length > max || result.includes('\u0000')) throw new DomainError(`${label}ยาวเกิน ${max} ตัวอักษร`);
+    return result;
+  };
+  const customerName = text('customerName', 80, 'ชื่อผู้สั่ง');
+  if (!customerName) throw new DomainError('กรุณาใส่ชื่อผู้สั่งกลับบ้าน');
+  if (typeof data.villageDelivery !== 'boolean') throw new DomainError('กรุณาเลือกวิธีรับอาหาร');
+  const deliveryAddress = text('deliveryAddress', 200, 'บ้านเลขที่/ซอย');
+  const deliveryPhone = text('deliveryPhone', 30, 'เบอร์ติดต่อ');
+  if (data.villageDelivery) {
+    if (!deliveryAddress) throw new DomainError('กรุณาใส่บ้านเลขที่/ซอยสำหรับจัดส่ง');
+    const digits = deliveryPhone.replace(/\D/g, '');
+    if (!/^[0-9+()\-\s]{8,30}$/.test(deliveryPhone) || digits.length < 9 || digits.length > 15) throw new DomainError('กรุณาใส่เบอร์ติดต่อให้ถูกต้อง');
+  }
+  return { customerName, villageDelivery: data.villageDelivery, deliveryAddress: data.villageDelivery ? deliveryAddress : '', deliveryPhone: data.villageDelivery ? deliveryPhone : '' };
+}
 export function priceLine(catalog: MenuItem[], input: CartInput): Line {
   if (!input || !Number.isInteger(input.quantity) || input.quantity < 1 || input.quantity > 20) throw new DomainError('กรุณาเลือกจำนวนระหว่าง 1–20');
   const item = catalog.find(m => m.code === input.itemCode);
@@ -52,8 +76,11 @@ export function priceLine(catalog: MenuItem[], input: CartInput): Line {
     if (count < group.min || count > group.max) throw new DomainError(`กรุณาเลือก${group.name}${group.max === 1 ? ' 1 อย่าง' : 'ตามจำนวนที่กำหนด'}`);
   }
   if (new Set(input.notes).size !== input.notes.length || input.notes.some(n => !item.prepNotes.includes(n))) throw new DomainError('หมายเหตุนี้ยังไม่รองรับ กรุณาแจ้งพนักงาน');
+  if (input.freeNote !== undefined && typeof input.freeNote !== 'string') throw new DomainError('หมายเหตุอาหารไม่ถูกต้อง');
+  const freeNote = (input.freeNote ?? '').trim();
+  if (Array.from(freeNote).length > 300 || freeNote.includes('\u0000')) throw new DomainError('หมายเหตุอาหารยาวได้ไม่เกิน 300 ตัวอักษร');
   const unitSatang = variant.priceSatang + extra;
-  return { ...input, id: crypto.randomUUID(), name: item.name, variantName: variant.name, unit: item.unit, optionNames: names, unitSatang, totalSatang: unitSatang * input.quantity };
+  return { ...input, freeNote, id: crypto.randomUUID(), name: item.name, variantName: variant.name, unit: item.unit, optionNames: names, unitSatang, totalSatang: unitSatang * input.quantity };
 }
 export function canTransition(from: Status, to: Status) {
   return ({ new: ['preparing', 'cancelled'], preparing: ['ready', 'cancelled'], ready: ['served', 'cancelled'], served: [], cancelled: [] } as Record<Status, string[]>)[from].includes(to);

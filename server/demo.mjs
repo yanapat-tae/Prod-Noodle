@@ -2,12 +2,14 @@ import { createServer } from 'node:http';
 import { readFileSync, existsSync, mkdirSync, writeFileSync, renameSync } from 'node:fs';
 import { randomUUID, randomBytes, createHash } from 'node:crypto';
 import { resolve, dirname } from 'node:path';
-import { starterCatalog } from '../src/catalog.ts';
-import { DomainError, priceLine, canTransition, businessDate, validateSummary } from '../src/domain.ts';
+import { starterCatalog, catalogVersion, upgradeSavedCatalog } from '../src/catalog.ts';
+import { DomainError, priceLine, canTransition, businessDate, validateSummary, validateTakeaway } from '../src/domain.ts';
+import { validateNewMenu, menuFromInput } from '../src/menu-management.ts';
 const sha = value => createHash('sha256').update(value).digest('hex');
 const staffProfiles = Array.from({ length: 4 }, (_, i) => ({ id: 'demo-' + (i + 1), name: i ? 'พนักงาน ' + i : 'เจ้าของร้าน', role: i ? 'admin' : 'owner' }));
 export function createDemoServer({ dataPath = resolve('.local-data/demo.json') } = {}) {
   let state = existsSync(dataPath) ? JSON.parse(readFileSync(dataPath, 'utf8')) : { catalog: structuredClone(starterCatalog), orders: [], visits: {}, customers: {}, counters: {}, summaries: [], requests: {}, events: [] };
+  if (state.catalogVersion !== catalogVersion) { state.catalog = upgradeSavedCatalog(state.catalog); state.catalogVersion = catalogVersion; }
   const staffTokens = new Map();
   const persist = () => { mkdirSync(dirname(dataPath), { recursive: true }); writeFileSync(dataPath + '.tmp', JSON.stringify(state)); renameSync(dataPath + '.tmp', dataPath); };
   const newToken = () => randomBytes(24).toString('hex');
@@ -24,12 +26,14 @@ export function createDemoServer({ dataPath = resolve('.local-data/demo.json') }
     if (total !== payload.expectedTotalSatang) throw new DomainError('ราคาเปลี่ยน กรุณาตรวจตะกร้าอีกครั้ง', 409);
     const channel = actor.role ? payload.channel : actor.channel;
     if (!['dine_in', 'takeaway'].includes(channel)) throw new DomainError('ช่องทางออเดอร์ไม่ถูกต้อง');
+    if (channel !== 'takeaway' && payload.takeaway != null) throw new DomainError('ข้อมูลกลับบ้านใช้เฉพาะออเดอร์กลับบ้าน');
+    const takeaway = payload.takeaway == null ? null : validateTakeaway(payload.takeaway);
     const tableNumber = channel === 'dine_in' ? (actor.role ? payload.tableNumber : actor.tableNumber) : null;
     if (channel === 'dine_in' && (!Number.isInteger(tableNumber) || tableNumber < 1 || tableNumber > 8)) throw new DomainError('เลขโต๊ะไม่ถูกต้อง');
     if (tableNumber && !state.visits[tableNumber]) state.visits[tableNumber] = { id: randomUUID(), openedAt: new Date().toISOString() };
     const date = businessDate();
     const queueNumber = channel === 'takeaway' ? (state.counters[date] ?? 0) + 1 : null;
-    const order = { id: randomUUID(), channel, tableNumber, queueNumber, visitId: tableNumber ? state.visits[tableNumber].id : null, customerSessionId: actor.sessionId ?? null, status: 'new', lines, totalSatang: total, createdAt: new Date().toISOString(), paidAt: null, paymentMethod: null, refundedAt: null, refundedSatang: 0 };
+    const order = { id: randomUUID(), channel, takeaway, tableNumber, queueNumber, visitId: tableNumber ? state.visits[tableNumber].id : null, customerSessionId: actor.sessionId ?? null, status: 'new', lines, totalSatang: total, createdAt: new Date().toISOString(), paidAt: null, paymentMethod: null, refundedAt: null, refundedSatang: 0 };
     if (queueNumber) state.counters[date] = queueNumber;
     state.orders.push(order); state.requests[key] = { hash, scope, orderId: order.id };
     state.events.push({ orderId: order.id, status: 'new', actor: actor.name ?? 'ลูกค้า', at: order.createdAt }); persist(); return order;
@@ -72,6 +76,12 @@ export function createDemoServer({ dataPath = resolve('.local-data/demo.json') }
       const close = path.match(/^\/api\/staff\/tables\/(\d+)\/close$/);
       if (req.method === 'POST' && close) { staff(token); const table = Number(close[1]); const visit = state.visits[table]; if (!visit) throw new DomainError('โต๊ะปิดแล้ว'); const orders = state.orders.filter(o => o.visitId === visit.id); if (orders.some(o => !['served', 'cancelled'].includes(o.status) || (o.status !== 'cancelled' && !o.paidAt))) throw new DomainError('กรุณาส่งมอบและเคลียร์การชำระเงินก่อนปิดโต๊ะ'); delete state.visits[table]; persist(); return json(200, { ok: true }); }
       if (req.method === 'POST' && path === '/api/staff/delivery') { staff(token, true); const summaries = body.summaries; if (!Array.isArray(summaries) || !summaries.length || summaries.length > 100) throw new DomainError('รายการนำเข้าไม่ถูกต้อง'); summaries.forEach(validateSummary); for (const s of summaries) { const index = state.summaries.findIndex(v => v.date === s.date && v.channel === s.channel); if (index >= 0) state.summaries[index] = s; else state.summaries.push(s); } persist(); return json(200, { ok: true, count: summaries.length }); }
+      if (req.method === 'POST' && path === '/api/staff/menu/create') {
+        staff(token, true); const input = validateNewMenu(body, state.catalog); const signature = JSON.stringify(input);
+        const existing = state.catalog.find(m => m.code === input.code);
+        if (existing) { if (state.menuRequests?.[input.code] !== signature) throw new DomainError('รหัสเมนูนี้ถูกใช้แล้ว', 409); return json(201, existing); }
+        const item = menuFromInput(input, state.catalog); state.catalog.push(item); state.menuRequests ??= {}; state.menuRequests[input.code] = signature; persist(); return json(201, item);
+      }
       if (req.method === 'POST' && path === '/api/staff/menu') { staff(token, true); const item = state.catalog.find(m => m.code === body.code); if (!item) throw new DomainError('ไม่พบเมนู'); if (body.prices) { for (const v of item.variants) { const price = body.prices[v.code]; if (!Number.isSafeInteger(price) || price < 1 || price > 100_000) throw new DomainError('ราคาไม่ถูกต้อง'); } for (const v of item.variants) v.priceSatang = body.prices[v.code]; } if (typeof body.available === 'boolean') item.available = body.available; persist(); return json(200, item); }
       json(404, { error: 'ไม่พบหน้าที่ต้องการ' });
     } catch (error) { json(error instanceof DomainError ? error.code : 500, { error: error instanceof DomainError ? error.message : 'ระบบขัดข้อง กรุณาลองใหม่' }); }

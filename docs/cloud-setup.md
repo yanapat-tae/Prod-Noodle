@@ -1,21 +1,16 @@
 # ต่อ Supabase Free และ Cloudflare Pages
 
-สถานะ 7 ต.ค. 2026: ตรวจฐานข้อมูลและ Owner โดยตรงแล้ว ลง Edge Functions 3 ตัวสถานะ ACTIVE และเว็บอยู่ที่ https://prod-noodle.pages.dev แต่ยังต้องแก้ค่า Production VITE_SUPABASE_URL เป็น `https://emjktqzcvgjwtsgysljy.supabase.co` แล้ว redeploy และตั้ง Edge secret `APP_ORIGIN=https://prod-noodle.pages.dev` ขณะตรวจ API ตอบ 503 เพราะขาด origin configuration ยังไม่ผ่านการทดสอบ login/สั่งอาหาร ห้ามรัน initial migrations ซ้ำ
+สถานะ 8 ต.ค. 2026: ฐานข้อมูล project `emjktqzcvgjwtsgysljy` มี Owner, โต๊ะ 8, เมนู 38, ขนาด 58 และหมวด 6 แล้ว ทั้ง 4 migrations ลงครบ, staff-api รุ่น 3 ACTIVE และ public menu API ตอบ 200 พร้อม CORS ของ https://prod-noodle.pages.dev ค่า URL/APP_ORIGIN ที่เคยผิดแก้แล้ว ดูสถานะ frontend release ล่าสุดใน HANDOFF.md ห้ามรัน initial migrations ซ้ำ
 
 ## 1. สร้าง Supabase project ทดลองแยก
 
 เลือก Free และ region ใกล้ร้าน ใช้ project ทดลองแยกจากข้อมูลขายจริง ไม่เปิด paid plan เพื่อทำขั้นตอนนี้
 
-รัน SQL ด้วย SQL Editor ตามลำดับ:
+สำหรับ project ใหม่เท่านั้น: รันทุกไฟล์ใน `supabase/migrations/` ตามชื่อไฟล์ แล้วตามด้วย `supabase/seed.sql` และ `supabase/menu-seed.sql` สำหรับ project ที่ใช้อยู่ให้ apply เฉพาะ migrations ใหม่ที่ยังไม่ลง
 
-1. `supabase/migrations/202610050001_initial_schema.sql`
-2. `supabase/migrations/202610050002_application_api.sql`
-3. `supabase/seed.sql`
-4. `supabase/menu-seed.sql`
+สอง migration แรกของ project ปัจจุบันมี version `20261007000812` และ `20261007000819` บน Supabase ซึ่งต่างจากชื่อไฟล์ใน repo ต้องเทียบ migration history ก่อนใช้ CLI `db push` อย่า apply schema เดิมซ้ำ สอง migration ใหม่ใช้ version ตรงกันทั้ง repo/remote: `20261008041620_order_details_and_menu_creation` และ `20261008041631_owner_menu_catalog`
 
-Seed ไม่สร้าง QR secrets หรือรหัสผ่าน เมนูเริ่มต้น 14 รายการต้องให้ร้านตรวจราคา/สูตรก่อนลงขายจริง เมนูอื่นสามารถเพิ่มผ่านตารางและกลุ่มตัวเลือกได้ โดยหน้าจออ่านจากฐานข้อมูล
-
-ดู [รายการเมนูและราคาเริ่มต้น](menu-review.md) เพื่อให้เจ้าของตรวจ ระหว่างนี้ทดสอบระบบแยกได้โดยยังไม่เปิดขายจริง
+Seed ไม่สร้าง QR secrets หรือรหัสผ่าน และไม่ทับราคาที่ Owner แก้ เมนูครบ 38 รายการจากภาพร้าน; ดู [รายการและราคา](menu-review.md) Owner เพิ่มเมนูใหม่ ขนาด ราคา และเลือกกลุ่มตัวเลือกผ่าน UI ได้แล้ว ไม่ต้องแก้ SQL เพื่อเพิ่มอาหาร
 
 เริ่มทดสอบด้วยบัญชี Owner และ profile slot 1 ก่อน แล้วเพิ่มพนักงานใน slot 2–4 เมื่อพร้อม ไม่จำเป็นต้องสร้างบัญชีพนักงานสมมติเพื่อเริ่มทดสอบ
 
@@ -65,7 +60,7 @@ VITE_ENABLE_VOICE=false
 VITE_ENABLE_MENU_PHOTOS=false
 ```
 
-Frontend มีเฉพาะ publishable key ที่เปิดเผยได้ RLS ไม่ให้ anon อ่าน/เขียน orders โดยตรง Staff อ่านผ่าน JWT/RLS การเขียนทั้งหมดผ่าน guard และ RPC มี _headers สำหรับ CSP และ _redirects สำหรับ SPA แล้ว
+Frontend มีเฉพาะ publishable key ที่เปิดเผยได้ RLS ไม่ให้ anon อ่าน/เขียน orders โดยตรง Staff อ่านผ่าน JWT/RLS การเขียนทั้งหมดผ่าน guard และ RPC มี _headers สำหรับ CSP ส่วน Pages ใช้ SPA fallback ได้; wildcard เดิมใน _redirects มี warning วนซ้ำและถูก Pages ข้าม
 
 เพิ่ม site URL/redirect URL ของเว็บใน Supabase Auth ตามโดเมนจริง รุ่นนี้เข้าสู่ระบบด้วยอีเมล/รหัสผ่าน ไม่ได้ทำ OAuth หรือ reset-password UI
 
@@ -75,8 +70,9 @@ Frontend มีเฉพาะ publishable key ที่เปิดเผยไ
 2. บน cloud QR มี token สุ่ม; เก็บเฉพาะ SHA-256 ใน DB สแกนแล้วสร้าง customer session 4 ชั่วโมง ผูกกับรอบโต๊ะ และนำ query QR ออกจาก address bar
 3. เปิดครัว/POS 2–4 แท็บ เปิดเสียงด้วยปุ่มครั้งแรก (browser ต้องการการแตะก่อนเล่นเสียง)
 4. สแกนโต๊ะ 1 จากโทรศัพท์ 2 เครื่อง สั่งเพิ่มให้อยู่รอบเดียวกัน ตรวจราคาที่ครัว รับชำระ และปิดโต๊ะ ลิงก์ session เก่าต้องสั่งต่อไม่ได้
-5. ทดสอบ Takeaway 2 เครื่อง คิวไม่ซ้ำ ตรวจคืนเงินและรายงาน รวม Delivery รายวัน แล้วนำเข้าไฟล์เดิมซ้ำ ยอดต้องไม่เพิ่ม
-6. ทดสอบ PWA บน HTTPS และการหลุดเน็ต ยืนยันว่าตะกร้ายังอยู่ และ UI ไม่บอกว่าส่งสำเร็จหาก server ยังไม่ตอบ
+5. ทดสอบ Takeaway 2 เครื่อง: ต้องใส่ชื่อ เห็น “กลับบ้าน-ชื่อ” และคิวไม่ซ้ำ ติ๊กส่งหมู่บ้านต้องกรอกบ้านเลขที่/ซอยกับเบอร์โทร เขียนโน้ตต่อจานแล้วตรวจที่ครัว ดู [ขั้นตอนตรวจรับ](acceptance-tests.md) เพิ่มเติม
+6. ตรวจคืนเงินและรายงาน รวม Delivery รายวัน แล้วนำเข้าไฟล์เดิมซ้ำ ยอดต้องไม่เพิ่ม
+7. ทดสอบ PWA บน HTTPS และการหลุดเน็ต ยืนยันว่าตะกร้ายังอยู่ และ UI ไม่บอกว่าส่งสำเร็จหาก server ยังไม่ตอบ
 
 Owner สร้าง QR ใหม่จะเปลี่ยนทั้ง 9 ใบ ต้องพิมพ์ชุดใหม่ Printed QR เป็นทางเข้า ไม่ใช่การยืนยันว่าคนอยู่หน้าร้าน จึงควรหมุน QR หากมีการเผยแพร่ต่อ และใช้ staff ตรวจรายการผิดปกติ
 

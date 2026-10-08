@@ -1,5 +1,16 @@
 # ผลตรวจรุ่นทดลอง
 
+## Owner menu / takeaway release · 8 October 2026
+
+- `pnpm check`: strict frontend/Edge typecheck, zero-warning lint, 28 Node/PGlite tests, production build and regenerated HTML pass. The new migrations are read from the repository, with no draft-file dependency.
+- `pnpm test:browser --workers=2`: 12 Chromium tests pass, covering existing dashboard regressions, required name/address/phone, saved drafts, kitchen note receipts, owner create/retry/validation and existing price editing.
+- PGlite checks preserve old bill names/prices while replacing the trial menu, validate service-only RPC grants and reject invalid order/menu input atomically. New migrations retain both original schema files unchanged.
+- Hosted Supabase has four applied migrations, 38 active menu items / 58 variants / six categories / eight tables. Before/after update: the same ten orders, 77,500 satang total and identical historical item checksum. No live test order was created.
+- Hosted public menu returns 200 with 38 items and Pages CORS; updated staff-api v3 rejects unauthenticated create-menu calls with 401. Frontend code commit `57e04fe` is live: `/` and `/admin` return 200, and published assets include the new forms/menu creation.
+- Full authenticated flow, real-phone Realtime/PWA, staff accounts and lunch-load measurements remain acceptance work. See [test steps](acceptance-tests.md).
+
+The dated sections below retain earlier validation history and limitations; they do not override the current release results.
+
 ## Linux Cloud continuation · 6 October 2026
 
 - Clean GitHub clone of `main` at `2c03809`; no newer remote branch. Node 24.19.0, pnpm 11.25.0, frozen-lockfile install and the full existing `pnpm check` passed before code changes.
@@ -34,11 +45,11 @@
 
 ## ยังไม่ได้ยืนยัน
 
-- ยังไม่มีบัญชี Supabase/Cloudflare ผูกกับโปรเจกต์ ไม่มี cloud deployment หรือผล lunch traffic ของ Free
+- มี Supabase/Cloudflare deployment แล้ว; ยังไม่มีผล lunch traffic ของ Free
 - PGlite จำลอง auth schema/roles ได้ แต่ไม่แทน Supabase Auth, PostgREST, WebSocket, Deno runtime, cold start หรือ shared CPU จึงยังต้อง integration test บน project จริง
 - Production build มี PWA manifest/icons/service worker แต่ยังไม่ได้ตรวจ install/offline บนอุปกรณ์ iOS/Android จริง
 - ใช้ rem และไม่ปิด pinch zoom แต่ยังไม่ได้ทดสอบ browser text zoom 200% บนอุปกรณ์จริง
-- ใช้เมนูเริ่มต้น 14 รายการ ต้องให้ร้านยืนยันสูตร/ตัวเลือก/ราคา และเพิ่มรายการที่เหลือก่อนใช้จริง
+- เพิ่มเมนูครบจากภาพร้านแล้ว; ยังต้องทดสอบการใช้งานจริงและตรวจสูตร/ตัวเลือกกับครัว
 
 ผลยิง 40 requests นี้วัดความถูกต้องของ demo API บนเครื่อง ไม่ใช้ประมาณขีดจำกัด Supabase หรือรับประกันยอดขายร้าน
 

@@ -1,34 +1,36 @@
 # Handoff: prod-noodle-pos
 
-Snapshot date: **7 October 2026, UTC**. Read together with README.md and AGENTS.md. This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
+Snapshot date: **8 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
 
 ## Current project status
 
-The completed milestone is a local QR ordering/POS MVP plus a single-file HTML design preview for **โปรด ก๋วยเตี๋ยวหมูโบราณ**, eight tables and takeaway. Linux Cloud baseline validation and dashboard reporting fixes are now complete. The online Supabase path is implemented. Trial project `emjktqzcvgjwtsgysljy` now has directly verified seed counts and an active Owner. All three Edge Functions are deployed. The frontend is at `https://prod-noodle.pages.dev`, but its Supabase URL build value is incorrect and Edge `APP_ORIGIN` is missing; hosted integration remains blocked on configuration. No App Store application is being built.
+The implemented milestone is the online restaurant pilot with the owner menu, named takeaway and village delivery, per-dish free notes, and owner menu creation. React/Vite, Node demo, HTML preview and Supabase architecture are preserved. The database and staff API changes are deployed on project `emjktqzcvgjwtsgysljy`; the frontend release is verified on Cloudflare Pages. Live URL: `https://prod-noodle.pages.dev`. Previous URL/APP_ORIGIN configuration blockers are resolved. Real-device kitchen/POS acceptance is still required; no App Store app is being built.
 
-This folder originally had no `.git`, remote or commit author. The project is now committed and published to [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`, with the user-provided author email. The remote was initially empty; no history was rewritten or force-pushed. Application and handoff work are separated into logical commits. Remote revision was verified and the GitHub repository was cloned successfully for independent checks. Use `git status --short --branch`, `git log -1 --oneline`, and `git ls-remote origin refs/heads/main` to verify the latest revision. The repository is ready for Cloud continuation; creating/publishing a Cloud environment and deploying the restaurant remain separate tasks.
+This folder originally had no `.git`, remote or commit author. The project is now committed and published to [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`, with the user-provided author email. The remote was initially empty; no history was rewritten or force-pushed. Application and handoff work are separated into logical commits. Remote revision was verified and the GitHub repository was cloned successfully for independent checks. Use `git status --short --branch`, `git log -1 --oneline`, and `git ls-remote origin refs/heads/main` to verify the latest revision. The repository is ready for Cloud continuation; the hosted pilot now awaits restaurant acceptance.
 
 ## What is completed
 
 - Shared React/TypeScript screens, Node demo API and browser-local HTML adapter.
-- Fourteen starter dishes; emoji placeholders; large Thai customer controls; cart/options/pricing/notes and customer receipts/status.
+- 38 owner-menu dishes, 58 variants and six searchable categories; emoji placeholders, large Thai controls, cart/options/pricing, free notes and receipts/status.
+- Required takeaway name; optional village delivery with required address/soi and phone, shared with POS/kitchen. Legacy orders without these details remain readable.
+- Owner creates menus with one to eight sizes, prices and existing option groups; stable draft codes make retries safe even after later price edits.
 - Eight-table sessions, daily takeaway queues, retry protection and historical price snapshots.
 - Four mock staff accounts, POS entry, kitchen status/sound, full cash or confirmed-PromptPay recording, owner refunds and close/reopen table visits.
 - Daily/monthly dashboard, hourly/channel/top-menu charts, CSV export, owner price/availability edits and nine QR entries.
 - GrabFood/LINE MAN daily summary/CSV replacement import, avoiding duplicate totals.
 - PWA shell, manifest/icons, hosting routing/headers and guarded online API source.
-- Two SQL migrations, two seed files, RLS/grants, transaction RPCs, ledger/reporting, opaque customer tokens and staff Auth guards.
-- Existing five test groups covering domain calculations, HTTP/session authorization/retries, 40 concurrent local requests, and PostgreSQL/RLS/transaction/reporting behavior.
-- Seven Chromium browser regressions for dashboard date/month changes, CSV content, errors/retry, empty dates, returning to a previous date and stale refresh responses.
+- Four SQL migrations, two seed files, RLS/grants, transaction RPCs, ledger/reporting, opaque customer tokens and staff Auth guards.
+- 28 Node/PGlite tests covering domain/HTTP/database behavior, order details, owner menu validation/retries/authorization, real catalog upgrades and historical bills, including the existing 40-request local burst.
+- 12 Chromium regressions: seven dashboard/CSV cases, two takeaway/village flows and three owner menu creation/edit/retry flows.
 - Handoff tooling: pinned Node/pnpm, full typecheck/lint/check scripts, ESLint configuration, portable dependency installer and secret-safe example environment.
 
 ## Partially completed / intentionally deferred
 
-- Supabase: schema/RPC/Edge adapters are ready for integration validation; actual Auth, PostgREST, Deno, WebSockets and deploy execution have not been tested.
-- Hosting: `https://prod-noodle.pages.dev` serves the frontend, but the deployed Supabase URL build variable needs correction. No working customer QR has been verified.
+- Supabase: migrations, hosted menu reads, CORS and unauthenticated staff rejection are verified. Full authenticated customer/staff flow and Realtime acceptance on real phones remain.
+- Hosting: configuration now works. Verify the published frontend revision and use the owner’s existing QR entries for acceptance; do not rotate QR as part of a code deployment.
 - PWA: build assets exist; real iOS/Android installation, offline/reconnect and 200% text zoom are unverified.
-- Menu: only fourteen starter entries; recipe/pricing confirmation and remaining menu transcription are needed.
-- Voice: Thai prompt/schema examples only, no endpoint or AI calls. Photos, direct delivery APIs, automatic payment verification, split payments, native XLSX and new-menu/account-management/password-reset UI remain deferred.
+- Menu: transcribed all 38 entries from the supplied photo and owner corrections. Owner can adjust operational availability/prices in the UI; no photos or recipe/inventory system was added.
+- Voice: Thai prompt/schema examples only, no endpoint or AI calls. Photos, direct delivery APIs, automatic payment verification, split payments, native XLSX and account-management/password-reset UI remain deferred.
 
 ## Known limitations
 
@@ -41,6 +43,20 @@ This folder originally had no `.git`, remote or commit author. The project is no
 - Source typechecking uses a Deno shim; PGlite emulates Supabase Auth/roles. These checks are not a hosted integration test.
 - `pnpm preview` is a static build preview, not a complete demo backend. Use `pnpm dev` for demo interaction; online builds require correctly configured Supabase services.
 - SQL Editor installation does not record CLI migration history. Reconcile history before adopting `supabase db push`; do not rerun migrations against an existing schema blindly.
+
+## Owner menu and ordering release · 8 October 2026
+
+User approved six categories, required takeaway names, village address/phone, free dish notes and owner-created menus. The photo correction is “ชามโปรดหมูแผ่น”; ice cream 30/40 refers to small/large sizes. No new environment variables or dependencies are required.
+
+Applied migrations through the connected Supabase tool after PGlite validation. The CLI download was unavailable, so the tool-generated versions were recorded verbatim in local filenames: `20261008041620_order_details_and_menu_creation` and `20261008041631_owner_menu_catalog`. Original deployed migration files were not edited. Historical bills are retained: before/after counts 10 orders, total 77,500 satang and identical item-snapshot checksum. Live counts: eight tables, 38 active dishes, 58 active variants, six active categories. Trial-only braised pork is inactive, not deleted.
+
+`staff-api` version 3 is ACTIVE with explicit staff/owner guards and unchanged verify_jwt=false. Deployment required an explicit relative `staff-api/deno.json` import-map path; the first attempt inherited an invalid old temporary path. Public menu HTTP returns 200/38 items; unauthenticated menu-create returns 401; both return the correct Pages CORS origin. No live test orders, new accounts or QR rotations were created during this release.
+
+`pnpm check` passes all 28 Node/PGlite tests, frontend/Edge typecheck, lint, production build and HTML regeneration. All 12 Chromium tests pass. Review caught and fixed inconsistent option-template selection and stale saved demo catalogs: templates use stable code order in UI/demo/SQL; local version upgrades preserve custom dishes and edited prices. Browser tests use controlled API responses, not owner credentials. Run [acceptance steps](docs/acceptance-tests.md) on the published app.
+
+Code commit `57e04fe` was pushed as a normal fast-forward to remote `main`, preserving earlier dashboard/handoff commits. Live `/` and `/admin` return 200. Cloudflare serves customer asset `index-Df0B-B0U.js` and staff asset `Staff-dFKMAZ-I.js`; inspection confirms named takeaway, village form, free notes and the menu-create endpoint/button in the published build. No extra user configuration was required. The final documentation commit follows this code release.
+
+The dated entries below are historical; their old configuration/menu blockers are superseded by this release.
 
 ## Direct hosted verification and deployment · 7 October 2026
 
@@ -85,11 +101,11 @@ The 77 project files total approximately 1.36 MB; the largest is the required st
 
 ## Next recommended task and milestone
 
-Linux baseline checks are now verified. Review the existing HTML interface and confirm menu/prices with the owner, then proceed toward an **isolated Supabase + Cloudflare online pilot**, validated on multiple real phones and kitchen/POS tabs, followed by an opt-in free-tier lunch-load measurement. Continue with owner Auth/profile setup and hosting configuration on the identified trial project. Verify the reported database state when direct access becomes available; do not rerun the initial migrations. Account ownership alone does not provide project access. Hosting configuration and four staff Auth/profile accounts remain needed. Keep voice, photos and delivery APIs deferred.
+Complete online acceptance using [the test steps](docs/acceptance-tests.md): actual owner login, existing customer QR, named takeaway/village delivery, kitchen visibility, owner menu creation and payments/reporting on multiple devices. Add real staff accounts when the owner is ready. Check iOS/Android PWA install/offline behavior, then measure lunch load only on an isolated test project. Keep voice, photos and delivery partner APIs deferred.
 
-Suggested continuation prompt:
+Continuation prompt:
 
-> Read HANDOFF.md, README.md and AGENTS.md. Check branch/status and run pnpm check; run pnpm test:browser for dashboard UI work. Continue the isolated online pilot on project emjktqzcvgjwtsgysljy; migrations and seeds are reported applied, so proceed with owner Auth/profile and deployment configuration. Preserve the architecture, large Thai controls and emoji menus. Clearly distinguish demo/Chromium results from real Supabase/device validation.
+> Read HANDOFF.md, README.md and AGENTS.md. Check local/remote Git state and run pnpm check plus pnpm test:browser. Continue acceptance on emjktqzcvgjwtsgysljy and prod-noodle.pages.dev. Do not rerun the applied migrations/seeds or rotate QR unnecessarily. Preserve historical bills and distinguish automated/mock tests from live acceptance.
 
 ## Exact commands after cloning
 
@@ -118,7 +134,7 @@ Customer: `http://127.0.0.1:5173/?table=1`; takeaway: `?table=takeaway`; staff: 
 | Local/HTML review and existing checks | None; package registry needed for fresh dependency install |
 | Git handoff | User's GitHub repository and write authentication |
 | Codex Cloud continuation | GitHub repository access and a prepared Cloud environment with Node 24 |
-| Online restaurant trial (future) | Supabase trial project + Cloudflare Pages, four staff Auth accounts |
+| Online restaurant trial | Supabase project + Cloudflare Pages, owner account and actual staff accounts when ready |
 | Voice | None in current scope; Gemini is deferred |
 
 An iPhone workflow should use the pushed repository/branch and the prepared environment, not local Mac file paths. Environment setup/publish and GitHub access still need to be confirmed; this handoff cannot prove an account's Cloud access. See [official Cloud environments guide](https://learn.chatgpt.com/docs/environments/cloud-environments).
@@ -132,12 +148,7 @@ An iPhone workflow should use the pushed repository/branch and the prepared envi
 - Load script only: `PILOT_ALLOW_WRITE=TEST_DATA_ONLY`, `PILOT_MODE`, `PILOT_BASE_URL`, `PILOT_QR_TOKEN`, `PILOT_PUBLISHABLE_KEY`, `PILOT_WORKERS`, `PILOT_ORDERS_PER_WORKER`; use an isolated trial DB. `.env.example` and docs/cloud-setup.md contain safe examples/defaults.
 - `GEMINI_API_KEY`/`GEMINI_MODEL` are unused future placeholders. Deployment CLI authentication is tool configuration, not application frontend configuration.
 
-Apply SQL in this exact order on a new Supabase project:
-
-1. `supabase/migrations/202610050001_initial_schema.sql`
-2. `supabase/migrations/202610050002_application_api.sql`
-3. `supabase/seed.sql`
-4. `supabase/menu-seed.sql`
+On a new Supabase project, apply all four `supabase/migrations/*.sql` files in filename order, then `supabase/seed.sql` and `supabase/menu-seed.sql`. Existing projects receive only unapplied migrations. The deployed pilot already has all four; reconcile the first two hosted version numbers before using CLI db push.
 
 Seeds do not create passwords, accounts or QR tokens. Follow docs/cloud-setup.md to disable signup, create four Auth users/profiles, deploy all three guarded functions and set `APP_ORIGIN`. All migrations/seeds must be tracked by Git. Future deployed changes require a new migration.
 

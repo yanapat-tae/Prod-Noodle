@@ -2,7 +2,7 @@
 
 Web app ภาษาไทยสำหรับร้าน 8 โต๊ะและสั่งกลับบ้าน ใช้ 🍜 แทนรูปอาหาร ไม่มีค่า Voice/AI ในรุ่นนี้
 
-**Current milestone:** local MVP + standalone HTML preview, validated in Linux Cloud with dashboard period/export regression coverage. Trial database counts and Owner are verified; Edge Functions and the Cloudflare frontend are deployed, with Supabase URL / APP_ORIGIN configuration fixes still required before integration testing. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md) when continuing from another machine or Codex Cloud. This is a web/PWA project, not an App Store app.
+**Current milestone:** online pilot with the owner’s full menu, named takeaway/village delivery, free kitchen notes and owner menu creation. Supabase migrations and the updated staff API are deployed; the frontend release is verified on Cloudflare Pages (details in HANDOFF.md). Local checks and 12 Chromium regressions pass; multi-device restaurant acceptance remains the next milestone. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md) when continuing from another machine or Codex Cloud. This is a web/PWA project, not an App Store app.
 
 GitHub repository: [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`.
 
@@ -32,21 +32,22 @@ pnpm dev
 
 ## สิ่งที่ใช้งานได้
 
-- เมนูเริ่มต้น 14 รายการ: ขนาด เส้น น้ำซุป ท็อปปิ้ง และหมายเหตุที่ร้านกำหนด เมนูนี้เป็นชุดเริ่มทดลอง ต้องตรวจสูตรและราคากับร้านก่อนใช้จริง ยังถอดเมนูจากภาพไม่ครบทั้งหมด
-- ลูกค้าสั่งอาหาร ตรวจตะกร้า และดูสถานะ เลขคิว Takeaway แยกตามวัน
+- เมนูจากภาพร้าน 38 รายการ 58 ขนาด จัด 6 หมวด พร้อมค้นหา ขนาด เส้น น้ำซุป ท็อปปิ้ง และโน้ตอิสระรายจาน ดู [ราคาและรายการครบ](docs/menu-review.md)
+- ลูกค้าสั่งอาหาร ตรวจตะกร้า และดูสถานะ กลับบ้านต้องใส่ชื่อ แสดง “กลับบ้าน-ชื่อ” พร้อมเลขคิวแยกตามวัน
+- ติ๊กส่งหมู่บ้านเศรษฐสิริ วงแหวน-สุขาภิบาล2 แล้วต้องกรอกบ้านเลขที่/ซอยและเบอร์โทร ข้อมูลส่งต่อถึง POS/ครัว เป็นบริการส่งของร้าน ไม่มีการเชื่อมแพลตฟอร์ม Delivery
 - ปุ่มและแถวตัวเลือกสูงอย่างน้อย 56px ตัวอักษรลูกค้าหลัก 20px เว้นช่องกด 12px ใช้ฟอนต์เครื่อง ไม่โหลดรูปหรือฟอนต์ภายนอก
 - POS เปิดออเดอร์โต๊ะ/กลับบ้าน ห้องครัวเปลี่ยนสถานะ เปิดเสียงเตือน และปิดรอบโต๊ะ
 - แคชเชียร์บันทึกรับเงินเต็มจำนวนด้วยเงินสด หรือยืนยันว่าตรวจรายการ PromptPay แล้ว Owner คืนเงินเต็มจำนวนได้
 - ยอดขายรายวัน/เดือน กราฟรายชั่วโมง สัดส่วนช่องทาง 10 เมนูขายดี และ CSV ที่เปิดใน Excel ได้
 - Delivery กรอกยอดรายวันหรือนำเข้า CSV; ยอดเดิมของวัน/ช่องทางถูกแทนที่เพื่อไม่บวกซ้ำ ยอดที่ไม่มีจำนวนออเดอร์แสดงว่าข้อมูลไม่ครบ
-- Owner เปลี่ยนราคา/สถานะหมด และสร้าง QR โต๊ะ 8 ใบ + Takeaway; รุ่นนี้แก้เมนูที่มีอยู่ ยังไม่มีหน้าสร้างเมนูใหม่
+- Owner เพิ่มเมนูใหม่พร้อมขนาด/ราคา เลือกหมวดและกลุ่มตัวเลือกที่มีอยู่ เปลี่ยนราคา/สถานะหมด และสร้าง QR โต๊ะ 8 ใบ + Takeaway
 - PWA manifest/icons และ service worker สำหรับ app shell ใน production build; เมื่อเน็ตหลุดจะไม่แสดงว่าส่งออเดอร์สำเร็จโดยไม่ได้รับคำตอบจากเซิร์ฟเวอร์
 
 ## เตรียมใช้บริการฟรี
 
 เขียนตัวเชื่อม Supabase พร้อม migrations, transactional RPC, RLS และ Edge Functions แล้ว ใช้ Cloudflare Pages เสิร์ฟ frontend และ Supabase Free เก็บข้อมูล/Auth/Realtime ตาม [แผนทดลองฟรี](docs/free-tier-pilot.md)
 
-ลงฐานข้อมูลและ Owner แล้ว พร้อม deploy Edge Functions 3 ตัวและเว็บ https://prod-noodle.pages.dev (7 ต.ค. 2026); **ยังต้องแก้ VITE_SUPABASE_URL บน Cloudflare และตั้ง APP_ORIGIN ใน Supabase ก่อนทดสอบการเชื่อมต่อ** ดู [ขั้นตอนติดตั้งคลาวด์](docs/cloud-setup.md) ก่อนเปิดให้โทรศัพท์หลายเครื่องสแกน QR ห้ามนำ PIN ทดลองไปใช้บนอินเทอร์เน็ต
+ลงฐานข้อมูลและ Owner แล้ว พร้อม deploy Edge Functions 3 ตัวและเว็บ https://prod-noodle.pages.dev; ตรวจ public menu API และ CORS ผ่านแล้ว (8 ต.ค. 2026) ไม่มี environment variable ใหม่สำหรับฟีเจอร์รอบนี้ ดู [ขั้นตอนติดตั้งคลาวด์](docs/cloud-setup.md) ก่อนเปิดให้โทรศัพท์หลายเครื่องสแกน QR ห้ามนำ PIN ทดลองไปใช้บนอินเทอร์เน็ต
 
 Voice, รูปอาหาร, Delivery partner API, ตรวจเงินโอนอัตโนมัติ, แบ่งจ่าย และ XLSX โดยตรงยังไม่เปิดในรุ่นนี้ CSV มี BOM ภาษาไทยและเปิดใน Excel ได้
 
@@ -62,14 +63,14 @@ pnpm preview:html
 
 ชุดทดสอบครอบคลุมราคา/ตัวเลือก, retry ซ้ำ, ข้าม session, สิทธิ์ Owner/Admin, เปลี่ยนราคาโดยรักษาบิลเดิม, รับเงิน/คืนเงิน/ปิดโต๊ะ, ยอด Delivery และ reporting grain ทดสอบ SQL ด้วย PostgreSQL ผ่าน PGlite ที่จำลองส่วน Auth/Roles ของ Supabase
 
-ทดสอบ dashboard ใน Chromium เพิ่มเติม (ติดตั้ง browser ครั้งแรก):
+ทดสอบ dashboard, กลับบ้าน/ส่งหมู่บ้าน และหน้าเพิ่มเมนูใน Chromium เพิ่มเติม (ติดตั้ง browser ครั้งแรก):
 
 ```sh
 pnpm exec playwright install chromium --only-shell
 pnpm test:browser
 ```
 
-ชุด browser tests เปิด Vite ที่ `127.0.0.1:5175` และใช้ข้อมูล API จำลอง ไม่ต้องใช้บัญชีหรือฐานข้อมูลจริง ตรวจวัน/เดือนใน CSV, โหลดล้มเหลว/ลองใหม่, วันที่ว่าง และผลตอบกลับที่มาผิดลำดับ รายงานและปุ่มส่งออกจะรอข้อมูลของช่วงที่เลือก แทนการใช้ยอดจากช่วงก่อนหน้า ชุดนี้แยกจาก `pnpm check` เพราะต้องติดตั้ง browser ก่อน; ใช้ทั้งสองคำสั่งเมื่อตรวจการแก้ dashboard
+ชุด browser tests เปิด Vite ที่ `127.0.0.1:5175` และใช้ข้อมูล API จำลอง ไม่ต้องใช้บัญชีหรือฐานข้อมูลจริง ตรวจวัน/เดือนใน CSV, โหลดล้มเหลว/ลองใหม่, วันที่ว่าง, ผลตอบกลับที่มาผิดลำดับ, ชื่อ/ที่อยู่/เบอร์ที่ต้องกรอก, โน้ต และเพิ่มเมนูซ้ำอย่างปลอดภัย รายงานและปุ่มส่งออกจะรอข้อมูลของช่วงที่เลือก แทนการใช้ยอดจากช่วงก่อนหน้า ชุดนี้แยกจาก `pnpm check` เพราะต้องติดตั้ง browser ก่อน; ใช้ทั้งสองคำสั่งเมื่อตรวจการแก้ dashboard
 
 ทดสอบ burst 40 คำขอพร้อมกันผ่าน HTTP **บนเครื่อง** ตรวจออเดอร์/คิวไม่ซ้ำ ไม่ใช่หลักฐานว่า Supabase Free รองรับช่วงเที่ยงแล้ว ดู [ผลและข้อจำกัด](docs/validation.md) และใช้ `scripts/load-pilot.mjs` บน project ทดลองแยกเพื่อเก็บ p50/p95/error หลัง deploy
 
@@ -81,7 +82,7 @@ server/demo.mjs       API ในเครื่อง + ไฟล์ข้อม
 supabase/migrations/  Database schema, RLS, transactional RPC และรายงาน
 supabase/functions/   public-api, customer-api, staff-api พร้อม auth guards
 supabase/seed.sql      โต๊ะ/หมวด/เส้น
-supabase/menu-seed.sql เมนูเริ่มทดลอง 14 รายการ
+supabase/menu-seed.sql เมนูร้าน 38 รายการ (seed ไม่ทับราคาเดิม)
 public/               PWA, icons, Cloudflare headers, CSV ตัวอย่าง
 scripts/              เปิด dev server, สร้าง seed/icons, load test
 tests/               unit, HTTP integration, PostgreSQL integration
@@ -96,7 +97,7 @@ docs/                ออกแบบ/ติดตั้ง/ผลตรวจ
 | --- | --- | --- | --- |
 | HTML | Shared React UI bundled into `preview.html` | `preview/api.ts`, localStorage, mock staff/sample sales | Working design preview |
 | Demo (default) | React + TypeScript + Vite | Node HTTP API, JSON file, four mock staff accounts | Working localhost MVP |
-| Online pilot | Vite static build on Cloudflare Pages | Supabase PostgreSQL/Auth/Realtime, three Edge Functions | Deployed; frontend URL and Edge origin configuration fixes pending |
+| Online pilot | Vite static build on Cloudflare Pages | Supabase PostgreSQL/Auth/Realtime, three Edge Functions | Deployed; configuration probes pass, real-device acceptance pending |
 
 `src/api.ts` selects the demo or Supabase adapter. Online customer sessions are opaque hashed tokens bound to a table visit or takeaway entry; staff use Auth JWTs and active `admins` profiles. Edge handlers check authorization and call transactional SQL RPCs. RLS protects staff reads and prevents direct customer writes. Staff get order/visit updates through Realtime online and polling locally; visible customer pages poll their own orders every 30 seconds.
 
@@ -120,14 +121,15 @@ Node does not load `.env.local`: export optional demo variables into the shell. 
 
 ## Database setup and migration history
 
-Demo needs no database service; SQL tests use in-memory PGlite. On a new isolated Supabase trial project, run these files through SQL Editor in order:
+Demo needs no database service; SQL tests use in-memory PGlite. On a new isolated Supabase trial project, apply all files in `supabase/migrations/` in filename order, then `supabase/seed.sql` and `supabase/menu-seed.sql`:
 
-1. `supabase/migrations/202610050001_initial_schema.sql` — schema, RLS/grants, constraints, views and Realtime publication.
-2. `supabase/migrations/202610050002_application_api.sql` — transactional application RPCs, snapshots, retries, import/reporting.
-3. `supabase/seed.sql` — eight tables, categories and noodle options.
-4. `supabase/menu-seed.sql` — fourteen starter dishes and allowed options.
+- `202610050001_initial_schema.sql` — schema, RLS, constraints, views and Realtime.
+- `202610050002_application_api.sql` — transactional RPCs, snapshots, retries and reporting.
+- `20261008041620_order_details_and_menu_creation.sql` — optional legacy-compatible takeaway snapshots, free kitchen notes and owner-only menu creation.
+- `20261008041631_owner_menu_catalog.sql` — owner menu/prices and six categories, preserving historic order snapshots and retired rows.
 
-All four files belong in Git. Apply migrations once; add a new migration for future deployed changes instead of editing applied files. Seeds avoid overwriting owner menu prices and create no accounts, passwords or QR secrets. Disable public signup, create four Auth users and corresponding `admins` profiles, and generate QR entries through the owner UI. [Cloud setup](docs/cloud-setup.md) has the profile SQL and deployment steps. SQL Editor application does not populate CLI migration history automatically; reconcile it before using `supabase db push` later. Local JSON sales are not automatically migrated online.
+For the existing online pilot, all four migrations are already applied; do not rerun seeds or initial migrations. The first two hosted migration versions differ from the repository filenames; see HANDOFF.md before using CLI `db push`.
+All migrations and seeds belong in Git. Apply migrations once; add a new migration for future deployed changes instead of editing applied files. Seeds avoid overwriting owner menu prices and create no accounts, passwords or QR secrets. Disable public signup, create four Auth users and corresponding `admins` profiles, and generate QR entries through the owner UI. [Cloud setup](docs/cloud-setup.md) has the profile SQL and deployment steps. SQL Editor application does not populate CLI migration history automatically; reconcile it before using `supabase db push` later. Local JSON sales are not automatically migrated online.
 
 ## Development commands and toolchain
 
@@ -138,9 +140,9 @@ All four files belong in Git. Apply migrations once; add a new migration for fut
 | `pnpm typecheck` | Strict frontend/HTML source + Edge source checks |
 | `pnpm check:edge` | Edge source check only; not a Deno runtime test |
 | `pnpm lint` | ESLint JS/TS/TSX with zero warnings |
-| `pnpm test` | Five existing domain, HTTP and PostgreSQL test groups |
+| `pnpm test` | 28 domain, HTTP, catalog and PostgreSQL tests |
 | `pnpm test:db` | PGlite migration/RPC tests only |
-| `pnpm test:browser` | Seven Chromium dashboard/CSV regressions using controlled API responses |
+| `pnpm test:browser` | 12 Chromium dashboard, takeaway and menu-editor regressions using controlled API responses |
 | `pnpm build` | Frontend typecheck and build `dist/` |
 | `pnpm preview` | Static build preview; use `pnpm dev` for complete demo interaction |
 | `pnpm preview:html` | Rebuild the committed standalone HTML artifact |
@@ -150,11 +152,11 @@ All four files belong in Git. Apply migrations once; add a new migration for fut
 
 Use Node 24 and pnpm 11.25.0. The lockfile pins dependencies. TypeScript 7 remains the compiler; the `typescript` alias provides the TypeScript 6 API needed by ESLint. [Microsoft compatibility guidance](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6-0) explains the aliases. Lint is syntactic/static validation; it does not replace runtime tests.
 
-Keep both dev ports free. Restart `pnpm dev` after changing server code; the Node API does not auto-reload. A fresh clone starts with no server orders. The HTML instead contains labeled synthetic samples and separate browser storage. Existing `.local-data/` stays on this Mac and is excluded from Git. Icons are committed; optional icon regeneration uses Python + Pillow, which is not needed for build/tests.
+Keep both dev ports free. Restart `pnpm dev` after changing server code; the Node API does not auto-reload. A fresh clone starts with no server orders. The HTML instead contains labeled synthetic samples and separate browser storage. Existing `.local-data/` stays on the local machine and is excluded from Git. Catalog version upgrades retain custom dishes and edited prices; order snapshots remain unchanged. Icons are committed; optional icon regeneration uses Python + Pillow, which is not needed for build/tests.
 
 ## Deployment and continuation from another machine
 
-The planned hosting remains Cloudflare Pages static frontend + Supabase. Do not publish the demo API or HTML mock as a live POS. Use Node 24, build `pnpm build`, output `dist`, and the Supabase-mode public Vite variables. `public/_redirects` handles SPA routes and `_headers` contains CSP/cache headers. Deploy `public-api`, `customer-api`, `staff-api`, set `APP_ORIGIN`, and configure Auth site/redirect URLs. `verify_jwt=false` relies on explicit handler guards; preserve them.
+Hosting uses Cloudflare Pages static frontend + Supabase. Do not publish the demo API or HTML mock as a live POS. Use Node 24, build `pnpm build`, output `dist`, and the Supabase-mode public Vite variables. Cloudflare Pages supplies SPA fallback; the legacy wildcard in `public/_redirects` currently produces an ignored-loop warning. `_headers` contains CSP/cache headers. Deploy `public-api`, `customer-api`, `staff-api`, set `APP_ORIGIN`, and configure Auth site/redirect URLs. `verify_jwt=false` relies on explicit handler guards; preserve them.
 
 Before shop use, validate actual QR/session isolation, Auth/RLS, order retries, Realtime, payments/refunds, table lifecycle, import/reporting and real-device PWA behavior. PGlite and source checks do not verify Deno/Auth/PostgREST/WebSockets or shared CPU performance. The single-restaurant mutation lock must be measured before optimization. Staff active-order reads reject a 1,000-row result rather than silently truncating. Use only isolated trial data for load tests. The quota/pricing note is dated; recheck it when deploying.
 

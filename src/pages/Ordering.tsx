@@ -1,27 +1,31 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CartInput, Line, MenuItem, Order, SelectedOption, TakeawayDetails } from '../domain.ts';
 import TakeawayForm from './TakeawayForm.tsx';
-import { money, priceLine, validateTakeaway } from '../domain.ts';
+import { RequestFailure } from '../http.ts';
+import { DomainError, money, priceLine, validateTakeaway } from '../domain.ts';
 interface Props { catalog: MenuItem[]; context: string; storageKey: string; onSubmit: (lines: CartInput[], total: number, key: string, takeaway?: TakeawayDetails) => Promise<Order>; onSubmitted: (order: Order) => void; onRefresh: () => Promise<MenuItem[]>; onExit?: () => void; isTakeaway?: boolean }
 export function StickyAction({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLElement>(null);
   useEffect(() => { const node = ref.current!; const update = () => document.documentElement.style.setProperty('--bottom-bar-height', node.getBoundingClientRect().height + 'px'); const observer = new ResizeObserver(update); observer.observe(node); update(); return () => observer.disconnect(); }, []);
   return <footer ref={ref} className="sticky-cart">{children}</footer>;
 }
+interface SavedRequest { payload: string; key: string; pending?: boolean }
+function savedRequest(key: string): SavedRequest | null { try { return JSON.parse(sessionStorage.getItem(key) ?? '{}').request ?? null; } catch { return null; } }
 function initialCart(key: string): Line[] { try { return JSON.parse(sessionStorage.getItem(key) ?? '{}').cart ?? []; } catch { return []; } }
 export default function Ordering({ catalog, context, storageKey, onSubmit, onSubmitted, onRefresh, onExit, isTakeaway = false }: Props) {
+  const request = useRef<SavedRequest | null>(savedRequest(storageKey));
+  const sending = useRef(false);
+  const [locked, setLocked] = useState(!!request.current?.pending);
   const [cart, setCart] = useState<Line[]>(() => initialCart(storageKey));
   const [takeaway, setTakeaway] = useState<TakeawayDetails>(() => { try { return JSON.parse(sessionStorage.getItem(storageKey) ?? '{}').takeaway ?? { customerName: '', villageDelivery: false, deliveryAddress: '', deliveryPhone: '' }; } catch { return { customerName: '', villageDelivery: false, deliveryAddress: '', deliveryPhone: '' }; } });
   const [freeNote, setFreeNote] = useState('');
   const [search, setSearch] = useState('');
-  const [view, setView] = useState<'menu' | 'cart'>('menu'); const [category, setCategory] = useState('all');
+  const [view, setView] = useState<'menu' | 'cart'>(request.current?.pending ? 'cart' : 'menu'); const [category, setCategory] = useState('all');
   const [selected, setSelected] = useState<MenuItem | null>(null); const [variant, setVariant] = useState('normal');
   const [options, setOptions] = useState<SelectedOption[]>([]); const [notes, setNotes] = useState<string[]>([]); const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const categoryPicker = useRef<HTMLDetailsElement>(null);
-  const request = useRef<{ payload: string; key: string } | null>(null);
-  useEffect(() => { try { request.current = JSON.parse(sessionStorage.getItem(storageKey) ?? '{}').request ?? null; } catch { /* Empty draft. */ } }, [storageKey]);
   useEffect(() => { sessionStorage.setItem(storageKey, JSON.stringify({ cart, takeaway, request: request.current })); }, [cart, takeaway, storageKey]);
   useEffect(() => { window.scrollTo(0, 0); heading.current?.focus(); }, [selected, view]);
   const total = cart.reduce((s, l) => s + l.totalSatang, 0); const count = cart.reduce((s, l) => s + l.quantity, 0);
@@ -34,16 +38,27 @@ export default function Ordering({ catalog, context, storageKey, onSubmit, onSub
   }
   function changeQuantity(id: string, delta: number) { setCart(previous => previous.map(line => line.id === id ? { ...line, quantity: Math.min(20, Math.max(1, line.quantity + delta)), totalSatang: line.unitSatang * Math.min(20, Math.max(1, line.quantity + delta)) } : line)); setError(''); }
   async function submit() {
-    if (busy || !cart.length) return;
+    if (sending.current || !cart.length) return;
     let details: TakeawayDetails | undefined;
     try { if (isTakeaway) details = validateTakeaway(takeaway); } catch (e) { setError((e as Error).message); return; }
-    setBusy(true); setError('');
     const inputs = cart.map(({ itemCode, variantCode, quantity, options, notes, freeNote }) => ({ itemCode, variantCode, quantity, options, notes, freeNote }));
-    const payload = JSON.stringify({ inputs, total, takeaway: details }); if (request.current?.payload !== payload) request.current = { payload, key: crypto.randomUUID() };
+    const payload = JSON.stringify({ inputs, total, takeaway: details });
+    if (request.current?.pending && request.current.payload !== payload) {
+      setError('รายการนี้ยังรอยืนยันจากร้าน กรุณาลองส่งรายการเดิมอีกครั้งก่อนแก้ตะกร้า'); return;
+    }
+    if (request.current?.payload !== payload) request.current = { payload, key: crypto.randomUUID() };
+    request.current!.pending = true;
+    sending.current = true; setBusy(true); setLocked(true); setError('');
     sessionStorage.setItem(storageKey, JSON.stringify({ cart, takeaway, request: request.current }));
-    try { const order = await onSubmit(inputs, total, request.current.key, details); setCart([]); request.current = null; sessionStorage.removeItem(storageKey); onSubmitted(order); }
-    catch (e) { setError((e as Error).message); await onRefresh().catch(() => {}); }
-    finally { setBusy(false); }
+    try {
+      const order = await onSubmit(inputs, total, request.current!.key, details);
+      setCart([]); request.current = null; setLocked(false); sessionStorage.removeItem(storageKey); onSubmitted(order);
+    } catch (e) {
+      const rejected = e instanceof DomainError || (e instanceof RequestFailure && !e.uncertain);
+      if (rejected) { request.current!.pending = false; setLocked(false); }
+      sessionStorage.setItem(storageKey, JSON.stringify({ cart, takeaway, request: request.current }));
+      setError((e as Error).message); await onRefresh().catch(() => {});
+    } finally { sending.current = false; setBusy(false); }
   }
   async function recalculate() { try { const fresh = await onRefresh(); const repriced = cart.map(line => ({ ...priceLine(fresh, line), id: line.id })); setCart(repriced); setError(''); setNotice('ตรวจราคาแล้ว กรุณาตรวจยอดก่อนส่งอีกครั้ง'); } catch (e) { setError((e as Error).message); } }
   if (selected) {
@@ -54,7 +69,7 @@ export default function Ordering({ catalog, context, storageKey, onSubmit, onSub
       <div className="context-label">{context}</div><span className="detail-emoji" aria-hidden="true">🍜</span>
       <h1 ref={heading} tabIndex={-1}>{selected.name}</h1><p className="supporting-text">เลือกแบบที่ชอบ ก่อนเพิ่มลงตะกร้า</p>
       <fieldset><legend>ขนาดอาหาร <span>เลือก 1 อย่าง</span></legend><div className="option-list">{selected.variants.map(v => <label className="option-control" data-selected={variant === v.code} key={v.code}><input type="radio" name="variant" checked={variant === v.code} onChange={() => setVariant(v.code)} /><span className="choice-copy"><strong>{v.name}</strong><span>{money(v.priceSatang)} {variant === v.code && <em>✓ เลือกแล้ว</em>}</span></span></label>)}</div></fieldset>
-      {selected.groups.map(group => <fieldset key={group.code}><legend id={'group-' + group.code} tabIndex={-1}>{group.name}<span>{group.min ? 'เลือก 1 อย่าง' : 'เลือกเพิ่มได้ · ไม่บังคับ'}</span></legend><div className="option-list">{group.options.map(option => { const checked = options.some(o => o.groupCode === group.code && o.optionCode === option.code); return <label key={option.code} className="option-control" data-selected={checked}><input type={group.max === 1 ? 'radio' : 'checkbox'} name={group.code} checked={checked} onChange={() => toggle(group.code, option.code, group.max === 1)} /><span className="choice-copy"><strong>{option.name}</strong><span>{option.priceSatang ? '+' + money(option.priceSatang) : 'ไม่เพิ่มราคา'} {checked && <em>✓ เลือกแล้ว</em>}</span></span></label>; })}</div></fieldset>)}
+      {selected.groups.map(group => <fieldset key={group.code}><legend id={'group-' + group.code} tabIndex={-1}>{group.name}<span>{group.min ? 'เลือก 1 อย่าง' : 'เลือกเพิ่มได้ · ไม่บังคับ'}</span></legend><div className="option-list">{group.options.map(option => { const checked = options.some(o => o.groupCode === group.code && o.optionCode === option.code); return <label key={option.code} className="option-control" data-selected={checked}><input type={group.max === 1 ? 'radio' : 'checkbox'} name={group.code} checked={checked} onChange={() => toggle(group.code, option.code, group.max === 1)} /><span className="choice-copy"><strong>{option.name}</strong><span>{'+' + money(option.priceSatang)} {checked && <em>✓ เลือกแล้ว</em>}</span></span></label>; })}</div></fieldset>)}
       {selected.prepNotes.length > 0 && <fieldset><legend>ปรับตามที่ชอบ <span>ไม่บังคับ</span></legend><div className="option-list">{selected.prepNotes.map(note => <label className="option-control" data-selected={notes.includes(note)} key={note}><input type="checkbox" checked={notes.includes(note)} onChange={() => setNotes(previous => previous.includes(note) ? previous.filter(n => n !== note) : [...previous, note])} /><span>{note}{notes.includes(note) && <em> ✓ เลือกแล้ว</em>}</span></label>)}</div></fieldset>}
       <label className="free-note-field">หมายเหตุถึงครัว<textarea value={freeNote} onChange={e => setFreeNote(e.target.value)} rows={3} placeholder="เช่น ไม่เอาหมึกกรอบ แยกน้ำซุป" aria-describedby="note-hint" /><small id="note-hint">ไม่บังคับ · ไม่เกิน 300 ตัวอักษร · ถ้าต้องการเพิ่มอาหารให้เลือกตัวเลือกเพิ่ม</small></label>
       <div className="quantity-block"><h2>จำนวน {quantity} {selected.unit}</h2><div className="quantity-controls"><button aria-label="ลดจำนวน" disabled={quantity === 1} onClick={() => setQuantity(q => q - 1)}>−</button><output>{quantity}</output><button aria-label="เพิ่มจำนวน" disabled={quantity === 20} onClick={() => setQuantity(q => q + 1)}>+</button></div></div>
@@ -63,13 +78,14 @@ export default function Ordering({ catalog, context, storageKey, onSubmit, onSub
     </main>;
   }
   if (view === 'cart') return <main className="customer-app customer-container bottom-space">
-    <button className="text-back" onClick={() => { setView('menu'); setError(''); }}>← เลือกอาหารเพิ่ม</button><div className="context-label">{context}</div><h1 ref={heading} tabIndex={-1}>ตรวจรายการอาหาร</h1><p className="supporting-text">เช็กเส้น ขนาด และจำนวน ก่อนส่งให้ร้าน</p>
+    <button className="text-back" disabled={busy || locked} onClick={() => { setView('menu'); setError(''); }}>← เลือกอาหารเพิ่ม</button><div className="context-label">{context}</div><h1 ref={heading} tabIndex={-1}>ตรวจรายการอาหาร</h1><p className="supporting-text">เช็กเส้น ขนาด และจำนวน ก่อนส่งให้ร้าน</p>
     {!cart.length && <div className="empty-state"><span aria-hidden="true">🍜</span><h2>ตะกร้ายังว่างอยู่</h2><button className="primary-action" onClick={() => setView('menu')}>กลับไปเลือกเมนู</button></div>}
-    {cart.map(line => <article className="cart-line" key={line.id}><div className="cart-title"><h2>{line.name}</h2><strong>{money(line.totalSatang)}</strong></div><p>{[line.variantName, ...line.optionNames, ...line.notes].join(' · ')}</p>{line.freeNote && <p className="kitchen-note">{line.freeNote}</p>}<div className="cart-line-actions"><div className="quantity-controls"><button aria-label={'ลดจำนวน ' + line.name} disabled={line.quantity === 1} onClick={() => changeQuantity(line.id, -1)}>−</button><output>{line.quantity} {line.unit}</output><button aria-label={'เพิ่มจำนวน ' + line.name} disabled={line.quantity === 20} onClick={() => changeQuantity(line.id, 1)}>+</button></div><button className="remove-action" onClick={() => setCart(previous => previous.filter(l => l.id !== line.id))}>นำออก</button></div></article>)}
-    {isTakeaway && cart.length > 0 && <TakeawayForm value={takeaway} onChange={setTakeaway} disabled={busy} />}
+    {cart.map(line => <article className="cart-line" key={line.id}><div className="cart-title"><h2>{line.name}</h2><strong>{money(line.totalSatang)}</strong></div><p>{[line.variantName, ...line.optionNames, ...line.notes].join(' · ')}</p>{line.freeNote && <p className="kitchen-note">{line.freeNote}</p>}<div className="cart-line-actions"><div className="quantity-controls"><button aria-label={'ลดจำนวน ' + line.name} disabled={busy || locked || line.quantity === 1} onClick={() => changeQuantity(line.id, -1)}>−</button><output>{line.quantity} {line.unit}</output><button aria-label={'เพิ่มจำนวน ' + line.name} disabled={busy || locked || line.quantity === 20} onClick={() => changeQuantity(line.id, 1)}>+</button></div><button className="remove-action" disabled={busy || locked} onClick={() => setCart(previous => previous.filter(l => l.id !== line.id))}>นำออก</button></div></article>)}
+    {isTakeaway && cart.length > 0 && <TakeawayForm value={takeaway} onChange={setTakeaway} disabled={busy || locked} />}
+    {locked && !busy && <p className="info-message" role="status">รายการเดิมยังรอยืนยันจากร้าน กดลองส่งรายการเดิมอีกครั้งเพื่อยืนยันโดยไม่สร้างบิลซ้ำ</p>}
     {cart.length > 0 && <div className="bill-total"><span>ยอดรวม {count} รายการ</span><strong>{money(total)}</strong></div>}
-    {error && <div className="error-message" role="alert"><p>{error}</p>{error.includes('ราคา') && <button onClick={() => void recalculate()}>ตรวจราคาใหม่</button>}</div>}
-    {cart.length > 0 && <StickyAction><button className="primary-action" disabled={busy} onClick={() => void submit()}>{busy ? 'กำลังส่งออเดอร์…' : 'ยืนยันส่งออเดอร์ · ' + money(total)}</button></StickyAction>}
+    {error && <div className="error-message" role="alert"><p>{error}</p>{!locked && error.includes('ราคา') && <button onClick={() => void recalculate()}>ตรวจราคาใหม่</button>}</div>}
+    {cart.length > 0 && <StickyAction><button className="primary-action" disabled={busy} onClick={() => void submit()}>{busy ? 'กำลังส่งออเดอร์…' : locked ? 'ลองส่งรายการเดิมอีกครั้ง · ' + money(total) : 'ยืนยันส่งออเดอร์ · ' + money(total)}</button></StickyAction>}
   </main>;
   return <main className={'customer-app customer-container' + (cart.length ? ' bottom-space' : '')}>
     {onExit && <button className="text-back" onClick={onExit}>← กลับไป POS</button>}

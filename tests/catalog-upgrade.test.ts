@@ -15,3 +15,18 @@ test('saved demo catalog gains real menus while preserving owner prices and cust
   assert.ok(!upgraded.some(m=>m.code==='braised-pork-noodles'));
   assert.equal(edited.name,'ชื่อทดลองเดิม');
 });
+
+test('menu corrections preserve owner names and prices while restricting crispy-pork rice toppings', () => {
+  const saved = structuredClone(catalog.starterCatalog);
+  saved.find(item => item.code === 'water')!.name = 'น้ำดื่มของร้าน';
+  saved.find(item => item.code === 'water')!.variants[0].priceSatang = 1200;
+  saved.find(item => item.code === 'yentafo-hotpot')!.description = 'รอประมาณ 2–3 นาที';
+  saved.find(item => item.code === 'mahachai-ice-cream')!.name = 'ไอศกรีมมหาชัยพร้อมเครื่อง';
+  const corrected = catalog.upgradeSavedCatalog(saved, 2);
+  assert.equal(corrected.find(item => item.code === 'water')!.name, 'น้ำดื่มของร้าน');
+  assert.equal(corrected.find(item => item.code === 'water')!.variants[0].priceSatang, 1200);
+  assert.equal(corrected.find(item => item.code === 'yentafo-hotpot')!.description, 'สำหรับ 2–3 ท่าน');
+  assert.equal(corrected.find(item => item.code === 'mahachai-ice-cream')!.name, 'ไอศกรีมมหาชัย');
+  assert.deepEqual(corrected.find(item => item.code === 'crispy-pork-rice')!.groups[0].options.map(o => o.code), ['crispy-pork', 'soft-boiled-egg']);
+  assert.equal(saved.find(item => item.code === 'mahachai-ice-cream')!.name, 'ไอศกรีมมหาชัยพร้อมเครื่อง');
+});

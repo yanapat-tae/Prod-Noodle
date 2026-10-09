@@ -17,7 +17,7 @@ async function openMenu(page) {
     if (path === '/api/staff/menu') {
       const input = route.request().postDataJSON();
       edits.push(input);
-      catalog = catalog.map(item => item.code === input.code ? { ...item, available: input.available,
+      catalog = catalog.map(item => item.code === input.code ? { ...item, name: input.name ?? item.name, available: input.available,
         variants: item.variants.map(variant => ({ ...variant, priceSatang: input.prices[variant.code] })) } : item);
       await route.fulfill({ json: {} });
       return;
@@ -106,15 +106,30 @@ test('owner creation rejects non-decimal baht without sending a request or disca
   await expect(page.getByRole('button', { name: 'บันทึกเมนูใหม่', exact: true })).toBeEnabled();
 });
 
-test('existing menu price and availability editing still saves and refreshes the inventory', async ({ page }) => {
+test('existing menu name, price and availability editing saves and refreshes the inventory', async ({ page }) => {
   const { edits } = await openMenu(page);
   const row = page.locator('.inventory-row').filter({ has: page.getByRole('heading', { name: 'ชามโปรดหมูแผ่น', exact: true }) });
   await row.getByRole('button', { name: 'แก้ไข', exact: true }).click();
+  await expect(page.getByLabel('ชื่อเมนู', { exact: true })).toHaveValue('ชามโปรดหมูแผ่น');
+  await page.getByLabel('ชื่อเมนู', { exact: true }).fill('  ชามโปรดสูตรพิเศษ  ');
   await page.getByLabel('ราคาธรรมดา (บาท)', { exact: true }).fill('52.50');
   await page.getByLabel('เปิดขายเมนูนี้', { exact: true }).uncheck();
   await page.getByRole('button', { name: 'บันทึกเมนู', exact: true }).click();
-  await expect(page.getByRole('status')).toHaveText('บันทึกเมนูแล้ว ออเดอร์เก่าใช้ราคาเดิม');
-  expect(edits).toEqual([{ code: 'soft-pork-noodles', prices: { normal: 5250, special: 6000 }, available: false }]);
-  await expect(row).toContainText('52.5 บาท');
-  await expect(row).toContainText('ปิดขายชั่วคราว');
+  await expect(page.getByRole('status')).toHaveText('บันทึกเมนูแล้ว ออเดอร์เก่าใช้ชื่อและราคาเดิม');
+  expect(edits).toEqual([{ code: 'soft-pork-noodles', name: 'ชามโปรดสูตรพิเศษ', prices: { normal: 5250, special: 6000 }, available: false }]);
+  const renamed = page.locator('.inventory-row').filter({ has: page.getByRole('heading', { name: 'ชามโปรดสูตรพิเศษ', exact: true }) });
+  await expect(renamed).toContainText('52.5 บาท');
+  await expect(renamed).toContainText('ปิดขายชั่วคราว');
+});
+
+test('invalid existing names stay editable and never reach the API', async ({ page }) => {
+  const { edits } = await openMenu(page);
+  await page.locator('.inventory-row').first().getByRole('button', { name: 'แก้ไข', exact: true }).click();
+  for (const name of ['   ', '🍜'.repeat(121)]) {
+    await page.getByLabel('ชื่อเมนู', { exact: true }).fill(name);
+    await page.getByRole('button', { name: 'บันทึกเมนู', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText('ชื่อเมนู');
+    expect(edits).toHaveLength(0);
+    await expect(page.getByLabel('ชื่อเมนู', { exact: true })).toHaveValue(name);
+  }
 });

@@ -169,3 +169,70 @@ test('owner cannot create a menu with an empty option template', async () => {
   await assert.rejects(() => rpc('create_menu', [owner, JSON.stringify(newMenu({code:'empty-options-menu',optionGroupCodes:['empty-template']}))]), /ตัวเลือก/);
   assert.equal(await scalar("select count(*)::int from public.menu_items where code='empty-options-menu'"),0);
 });
+
+test('owner menu rename preserves snapshots, trims Unicode and retains legacy price edits', async () => {
+  const oldOrder = await place(payload());
+  await rpc('edit_menu', [owner, 'water', JSON.stringify({ normal: 1500 }), false, ' \tน้ำดื่มเย็น 🍜\n ']);
+  const menu = await query("select name,is_sold_out from public.menu_items where code='water'");
+  assert.deepEqual(menu, [{ name: 'น้ำดื่มเย็น 🍜', is_sold_out: true }]);
+  assert.deepEqual((await rpc('order_json', [oldOrder.id])).lines, oldOrder.lines);
+  await rpc('edit_menu', [owner, 'water', JSON.stringify({ normal: 1000 }), true]);
+  assert.equal(await scalar("select name from public.menu_items where code='water'"), 'น้ำดื่มเย็น 🍜');
+  await rpc('edit_menu', [owner, 'water', JSON.stringify({ normal: 1000 }), true, '🍜'.repeat(120)]);
+  assert.equal(await scalar("select name from public.menu_items where code='water'"), '🍜'.repeat(120));
+});
+
+test('invalid renames and non-owner edits roll back menu, availability and prices', async () => {
+  const snapshot = () => query("select m.name,m.is_sold_out,v.price_satang from public.menu_items m join public.menu_variants v on v.menu_item_id=m.id where m.code='water'");
+  const before = await snapshot();
+  for (const name of ['', ' \t\n ', '🍜'.repeat(121), null]) {
+    await assert.rejects(() => rpc('edit_menu', [owner, 'water', JSON.stringify({ normal: 9000 }), false, name]), error => error.code === 'PT400');
+    assert.deepEqual(await snapshot(), before);
+  }
+  await assert.rejects(() => rpc('edit_menu', [owner, 'water', JSON.stringify({ normal: 0 }), false, 'ห้ามบันทึก']), error => error.code === 'PT400');
+  for (const actor of [admin, randomUUID(), null]) {
+    await assert.rejects(() => rpc('edit_menu', [actor, 'water', JSON.stringify({ normal: 9000 }), false, 'ห้ามบันทึก']), error => error.code === 'PT403');
+  }
+  assert.deepEqual(await snapshot(), before);
+});
+
+test('both menu edit signatures are service-only security invoker functions', async () => {
+  for (const role of ['anon', 'authenticated']) {
+    await db.exec('set role ' + role);
+    try {
+      await assert.rejects(() => rpc('edit_menu', [owner, 'water', JSON.stringify({ normal: 1000 }), true, 'ชื่อใหม่']), /permission denied/);
+      await assert.rejects(() => rpc('edit_menu', [owner, 'water', JSON.stringify({ normal: 1000 }), true]), /permission denied/);
+    } finally { await db.exec('reset role'); }
+  }
+  await db.exec('set role service_role');
+  try { await rpc('edit_menu', [owner, 'water', JSON.stringify({ normal: 1000 }), true, 'น้ำดื่ม']); }
+  finally { await db.exec('reset role'); }
+  const functions = await query("select p.prosecdef from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname='edit_menu'");
+  assert.equal(functions.length, 2);
+  assert(functions.every(fn => !fn.prosecdef));
+});
+
+test('staff rename checks owner and rejects non-string JSON names before the RPC', async () => {
+  const source = readFileSync(new URL('../supabase/functions/staff-api/index.ts', import.meta.url), 'utf8').replace(/^import[^\n]+\n/, '');
+  let handler, ownerAllowed = true;
+  const calls = [];
+  runInNewContext(source, {
+    serve: (_name, callback) => { handler = callback; }, service: () => ({}),
+    staff: async (_db, _req, ownerOnly) => { if (ownerOnly && !ownerAllowed) throw new Error('owner required'); return owner; },
+    rpc: async (_db, name, args) => { calls.push({ name, args }); return { ok: true }; },
+    HttpError: class extends Error { constructor(message, code) { super(message); this.code = code; } },
+  });
+  const input = { code: 'water', prices: { normal: 1000 }, available: true, name: 'น้ำดื่มเย็น' };
+  await handler({ method: 'POST' }, '/staff/menu', input);
+  assert.equal(calls[0].args.p_name, input.name);
+  for (const name of [12, null, {}, [], false]) {
+    await assert.rejects(() => handler({ method: 'POST' }, '/staff/menu', { ...input, name }), error => error.code === 400);
+  }
+  assert.equal(calls.length, 1);
+  const legacy = { ...input }; delete legacy.name;
+  await handler({ method: 'POST' }, '/staff/menu', legacy);
+  assert.equal(Object.hasOwn(calls[1].args, 'p_name'), false);
+  ownerAllowed = false;
+  await assert.rejects(() => handler({ method: 'POST' }, '/staff/menu', input), /owner required/);
+  assert.equal(calls.length, 2);
+});

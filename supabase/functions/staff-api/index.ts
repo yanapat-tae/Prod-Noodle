@@ -11,7 +11,11 @@ serve('staff-api',async(req,path,body)=>{
     await staff(db,req,true);
     return rpc(db,'create_menu',{p_actor:actor,p_payload:body});
   }
-  if (path==='/staff/menu') return rpc(db,'edit_menu',{p_actor:actor,p_code:body.code,p_prices:body.prices,p_available:body.available});
+  if (path==='/staff/menu') {
+    await staff(db,req,true);
+    if (Object.hasOwn(body,'name') && typeof body.name !== 'string') throw new HttpError('ชื่อเมนูไม่ถูกต้อง',400);
+    return rpc(db,'edit_menu',{p_actor:actor,p_code:body.code,p_prices:body.prices,p_available:body.available,...(Object.hasOwn(body,'name') ? {p_name:body.name} : {})});
+  }
   if (path==='/staff/delivery') return rpc(db,'import_delivery_summary',{p_actor:actor,p_rows:body.summaries,p_hash:await hash(JSON.stringify(body.summaries)),p_key:requestKey(req)});
   if (path==='/staff/qr') {
     await staff(db,req,true);

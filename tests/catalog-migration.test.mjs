@@ -26,6 +26,8 @@ test('Real menu migration replaces the trial catalog while preserving retired di
     const path = file ? new URL('migrations/' + file, root) : process.env.DRAFT_MENU_PATH;
     assert.ok(path, 'The real-menu migration must exist');
     await db.exec(readFileSync(path, 'utf8'));
+    for (const later of readdirSync(new URL('migrations/', root)).filter(name => file && name > file && name.endsWith('.sql')).sort()) await db.exec(readFileSync(new URL('migrations/' + later, root), 'utf8'));
+    if (process.env.DRAFT_CORRECTIONS_PATH) await db.exec(readFileSync(process.env.DRAFT_CORRECTIONS_PATH, 'utf8'));
     const snapshot = (await db.query('select public.order_json($1) as value', [order.id])).rows[0].value;
     assert.equal(snapshot.totalSatang, 11500);
     assert.deepEqual(snapshot.lines.map(line=>line.name).sort(), ['หมูตุ๋นทดลอง','หมูนุ่มทดลอง'].sort());

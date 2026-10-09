@@ -41,3 +41,40 @@ test('HTTP orders retain takeaway contact and kitchen notes; owner menu creation
     assert.equal((await call('/staff/menu/create', menu, owner.token)).data.variants[0].priceSatang, 4000);
   } finally { await new Promise(resolve => server.close(resolve)); await rm(dir, { recursive: true, force: true }); }
 });
+
+test('HTTP owner renames atomically while old order snapshots and legacy edits remain intact', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'prod-rename-'));
+  const server = createDemoServer({ dataPath: join(dir, 'state.json') });
+  try {
+    server.listen(0, '127.0.0.1'); await once(server, 'listening');
+    const base = 'http://127.0.0.1:' + server.address().port;
+    const call = async (path, body, token, key) => {
+      const response = await fetch(base + '/api' + path, { method: body === undefined ? 'GET' : 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}), ...(key ? { 'Idempotency-Key': key } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
+      return { status: response.status, data: await response.json() };
+    };
+    const owner = (await call('/staff/login', { account: 'demo-1', pin: '1234' })).data;
+    const admin = (await call('/staff/login', { account: 'demo-2', pin: '1234' })).data;
+    const customer = (await call('/customer/session', { entry: '1' })).data;
+    const oldOrder = await call('/orders', { lines: [{ itemCode: 'water', variantCode: 'normal', quantity: 1, options: [], notes: [] }], expectedTotalSatang: 1000 }, customer.token, randomUUID());
+    assert.equal(oldOrder.status, 201);
+    const input = { code: 'water', prices: { normal: 1500 }, available: false, name: ' \tน้ำดื่มเย็น 🍜\n ' };
+    assert.equal((await call('/staff/menu', input)).status, 401);
+    assert.equal((await call('/staff/menu', input, admin.token)).status, 403);
+    const renamed = await call('/staff/menu', input, owner.token);
+    assert.equal(renamed.status, 200);
+    assert.equal(renamed.data.name, 'น้ำดื่มเย็น 🍜');
+    const saved = (await call('/menu')).data.find(item => item.code === 'water');
+    assert.equal(saved.name, 'น้ำดื่มเย็น 🍜');
+    assert.equal(saved.variants[0].priceSatang, 1500);
+    assert.equal(saved.available, false);
+    for (const name of ['', ' \n ', '🍜'.repeat(121), null, 12, {}, 'ชื่อ\0เมนู']) {
+      assert.equal((await call('/staff/menu', { ...input, name, available: true, prices: { normal: 2000 } }, owner.token)).status, 400);
+      assert.deepEqual((await call('/menu')).data.find(item => item.code === 'water'), saved);
+    }
+    assert.equal((await call('/staff/menu', { ...input, name: 'ห้ามบันทึก', prices: { normal: 0 } }, owner.token)).status, 400);
+    assert.deepEqual((await call('/menu')).data.find(item => item.code === 'water'), saved);
+    const state = (await call('/staff/state', undefined, owner.token)).data;
+    assert.deepEqual(state.orders.find(order => order.id === oldOrder.data.id).lines, oldOrder.data.lines);
+    assert.equal((await call('/staff/menu', { code: 'water', prices: { normal: 1000 }, available: true }, owner.token)).data.name, saved.name);
+  } finally { await new Promise(resolve => server.close(resolve)); await rm(dir, { recursive: true, force: true }); }
+});

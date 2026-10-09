@@ -122,3 +122,13 @@ test('new menu option templates follow stable code order instead of catalog disp
   const result = menuManagement.menuFromInput(draft(), [first,last]);
   assert.equal(result.groups[0].options[0].priceSatang, first.groups[0].options[0].priceSatang);
 });
+
+test('menu rename validates Unicode names and rejects blank, oversized, non-text and NUL values', () => {
+  const validateName = menuManagement.validateMenuName;
+  assert.equal(typeof validateName, 'function');
+  assert.equal(validateName(' \tชื่อใหม่ 🍜\n '), 'ชื่อใหม่ 🍜');
+  assert.equal(validateName('🍜'.repeat(120)), '🍜'.repeat(120));
+  for (const value of ['', ' \n ', '🍜'.repeat(121), 12, null, undefined, {}, 'ชื่อ\0เมนู']) {
+    assert.throws(() => validateName(value));
+  }
+});

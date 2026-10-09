@@ -28,6 +28,12 @@ function text(input: unknown, label: string, maximum: number, minimum = 1): stri
   return value;
 }
 
+export function validateMenuName(input: unknown): string {
+  const name = text(input, 'ชื่อเมนู', 120);
+  if (name.includes('\0')) throw new DomainError('ชื่อเมนูไม่ถูกต้อง');
+  return name;
+}
+
 function code(input: unknown, label: string): string {
   if (typeof input !== 'string' || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(input)) throw new DomainError(`${label}ไม่ถูกต้อง`);
   return input;

@@ -4,12 +4,12 @@ import { randomUUID, randomBytes, createHash } from 'node:crypto';
 import { resolve, dirname } from 'node:path';
 import { starterCatalog, catalogVersion, upgradeSavedCatalog } from '../src/catalog.ts';
 import { DomainError, priceLine, canTransition, businessDate, validateSummary, validateTakeaway } from '../src/domain.ts';
-import { validateNewMenu, menuFromInput } from '../src/menu-management.ts';
+import { validateNewMenu, menuFromInput, validateMenuName } from '../src/menu-management.ts';
 const sha = value => createHash('sha256').update(value).digest('hex');
 const staffProfiles = Array.from({ length: 4 }, (_, i) => ({ id: 'demo-' + (i + 1), name: i ? 'พนักงาน ' + i : 'เจ้าของร้าน', role: i ? 'admin' : 'owner' }));
 export function createDemoServer({ dataPath = resolve('.local-data/demo.json') } = {}) {
   let state = existsSync(dataPath) ? JSON.parse(readFileSync(dataPath, 'utf8')) : { catalog: structuredClone(starterCatalog), orders: [], visits: {}, customers: {}, counters: {}, summaries: [], requests: {}, events: [] };
-  if (state.catalogVersion !== catalogVersion) { state.catalog = upgradeSavedCatalog(state.catalog); state.catalogVersion = catalogVersion; }
+  if (state.catalogVersion !== catalogVersion) { state.catalog = upgradeSavedCatalog(state.catalog, state.catalogVersion); state.catalogVersion = catalogVersion; }
   const staffTokens = new Map();
   const persist = () => { mkdirSync(dirname(dataPath), { recursive: true }); writeFileSync(dataPath + '.tmp', JSON.stringify(state)); renameSync(dataPath + '.tmp', dataPath); };
   const newToken = () => randomBytes(24).toString('hex');
@@ -82,7 +82,7 @@ export function createDemoServer({ dataPath = resolve('.local-data/demo.json') }
         if (existing) { if (state.menuRequests?.[input.code] !== signature) throw new DomainError('รหัสเมนูนี้ถูกใช้แล้ว', 409); return json(201, existing); }
         const item = menuFromInput(input, state.catalog); state.catalog.push(item); state.menuRequests ??= {}; state.menuRequests[input.code] = signature; persist(); return json(201, item);
       }
-      if (req.method === 'POST' && path === '/api/staff/menu') { staff(token, true); const item = state.catalog.find(m => m.code === body.code); if (!item) throw new DomainError('ไม่พบเมนู'); if (body.prices) { for (const v of item.variants) { const price = body.prices[v.code]; if (!Number.isSafeInteger(price) || price < 1 || price > 100_000) throw new DomainError('ราคาไม่ถูกต้อง'); } for (const v of item.variants) v.priceSatang = body.prices[v.code]; } if (typeof body.available === 'boolean') item.available = body.available; persist(); return json(200, item); }
+      if (req.method === 'POST' && path === '/api/staff/menu') { staff(token, true); const item = state.catalog.find(m => m.code === body.code); if (!item) throw new DomainError('ไม่พบเมนู'); const newName = Object.hasOwn(body, 'name') ? validateMenuName(body.name) : item.name; if (body.prices) { for (const v of item.variants) { const price = body.prices[v.code]; if (!Number.isSafeInteger(price) || price < 1 || price > 100_000) throw new DomainError('ราคาไม่ถูกต้อง'); } for (const v of item.variants) v.priceSatang = body.prices[v.code]; } item.name = newName; if (typeof body.available === 'boolean') item.available = body.available; persist(); return json(200, item); }
       json(404, { error: 'ไม่พบหน้าที่ต้องการ' });
     } catch (error) { json(error instanceof DomainError ? error.code : 500, { error: error instanceof DomainError ? error.message : 'ระบบขัดข้อง กรุณาลองใหม่' }); }
   });

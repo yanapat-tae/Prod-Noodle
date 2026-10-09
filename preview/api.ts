@@ -2,7 +2,7 @@
 import { starterCatalog, catalogVersion, upgradeSavedCatalog } from '../src/catalog.ts';
 import { businessDate, canTransition, DomainError, priceLine, salesReport, validateSummary, validateTakeaway } from '../src/domain.ts';
 import type { CartInput, CustomerSession, DeliverySummary, MenuItem, Order, Staff, Status, TakeawayDetails } from '../src/domain.ts';
-import { validateNewMenu, menuFromInput } from '../src/menu-management.ts';
+import { validateNewMenu, menuFromInput, validateMenuName } from '../src/menu-management.ts';
 import type { NewMenuInput } from '../src/menu-management.ts';
 export const mode = 'demo';
 export const supabase = null;
@@ -52,7 +52,7 @@ function sampleState(): State {
     { date: today, channel: 'lineman', grossSatang: 120000, discountSatang: 5000, refundSatang: 0, orderCount: 8 },
   ] };
 }
-function restore(): State { try { const raw = local.getItem(STORAGE); if (raw) { const saved: State = JSON.parse(raw); if (saved.catalogVersion !== catalogVersion) { saved.catalog = upgradeSavedCatalog(saved.catalog); saved.catalogVersion = catalogVersion; } return saved; } } catch { /* Start with clearly marked sample data. */ } return sampleState(); }
+function restore(): State { try { const raw = local.getItem(STORAGE); if (raw) { const saved: State = JSON.parse(raw); if (saved.catalogVersion !== catalogVersion) { saved.catalog = upgradeSavedCatalog(saved.catalog, saved.catalogVersion); saved.catalogVersion = catalogVersion; } return saved; } } catch { /* Start with clearly marked sample data. */ } return sampleState(); }
 let data = restore();
 function save() { try { local.setItem(STORAGE, JSON.stringify(data)); } catch { persistent = false; } window.dispatchEvent(new Event('prod-html-data')); }
 const copy = <T,>(value: T): T => structuredClone(value);
@@ -109,7 +109,7 @@ export const api = {
     if (existing) { if (data.menuRequests?.[input.code] !== signature) throw new DomainError('รหัสเมนูนี้ถูกใช้แล้ว', 409); return copy(existing); }
     const item = menuFromInput(input, data.catalog); data.catalog.push(item); data.menuRequests ??= {}; data.menuRequests[input.code] = signature; save(); return copy(item);
   },
-  async editMenu(identity: Staff, code: string, prices: Record<string, number>, available: boolean) { checkStaff(identity, true); const item = data.catalog.find(m => m.code === code); if (!item) throw new DomainError('ไม่พบเมนู'); if (item.variants.some(v => !Number.isSafeInteger(prices[v.code]) || prices[v.code] < 1 || prices[v.code] > 100000)) throw new DomainError('ราคาไม่ถูกต้อง'); item.available = available; for (const variant of item.variants) variant.priceSatang = prices[variant.code]; save(); return copy(item); },
+  async editMenu(identity: Staff, code: string, prices: Record<string, number>, available: boolean, name?: string) { checkStaff(identity, true); const item = data.catalog.find(m => m.code === code); if (!item) throw new DomainError('ไม่พบเมนู'); if (item.variants.some(v => !Number.isSafeInteger(prices[v.code]) || prices[v.code] < 1 || prices[v.code] > 100000)) throw new DomainError('ราคาไม่ถูกต้อง'); const newName = name === undefined ? item.name : validateMenuName(name); item.name = newName; item.available = available; for (const variant of item.variants) variant.priceSatang = prices[variant.code]; save(); return copy(item); },
   async report(identity: Staff, period: string) { checkStaff(identity); return salesReport(data.orders, data.summaries, period); },
   async qr(identity: Staff) { checkStaff(identity, true); return [...Array.from({ length: 8 }, (_, i) => ({ label: 'โต๊ะ ' + (i + 1), url: location.href.split(/[?#]/)[0] + '?table=' + (i + 1) })), { label: 'กลับบ้าน', url: location.href.split(/[?#]/)[0] + '?table=takeaway' }]; },
   async accounts(identity: Staff) { checkStaff(identity, true); return profiles.map((p, i) => ({ ...p, active: true, slot: i + 1 })); },

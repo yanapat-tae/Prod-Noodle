@@ -45,11 +45,11 @@ export const starterCatalog: MenuItem[] = [
   dish('yentafo', 'ก๋วยเตี๋ยวเย็นตาโฟ', 'noodles', 60, 70, [noodle, serving, topping]),
   dish('yentafo-extra-pork', 'ก๋วยเตี๋ยวเย็นตาโฟเพิ่มหมูแผ่น', 'noodles', 70, 80, [noodle, serving, topping]),
   dish('yentafo-tomyum', 'ก๋วยเตี๋ยวเย็นตาโฟต้มยำ', 'noodles', 70, 80, [noodle, serving, topping]),
-  dish('yentafo-hotpot', 'เย็นตาโฟหม้อไฟ', 'noodles', 179, null, [topping], 'หม้อ', 'รอประมาณ 2–3 นาที'),
+  dish('yentafo-hotpot', 'เย็นตาโฟหม้อไฟ', 'noodles', 179, null, [topping], 'หม้อ', 'สำหรับ 2–3 ท่าน'),
   dish('pork-soup', 'เกาเหลาหมู', 'soup-only', 60, 70, [broth, topping]),
   dish('yentafo-soup', 'เกาเหลาเย็นตาโฟ', 'soup-only', 70, 80, [topping]),
   dish('red-pork-rice', 'ข้าวหมูแดง', 'rice', 50, 60, [topping], 'จาน'),
-  dish('crispy-pork-rice', 'ข้าวหมูกรอบ', 'rice', 60, 70, [topping], 'จาน'),
+  dish('crispy-pork-rice', 'ข้าวหมูกรอบ', 'rice', 60, 70, [{ ...topping, max: 2, options: topping.options.filter(option => !['pork-slices', 'minced-pork'].includes(option.code)) }], 'จาน'),
   dish('mixed-pork-rice', 'ข้าวหมูแดงหมูกรอบ', 'rice', 60, 70, [topping], 'จาน'),
   dish('red-pork-bamee', 'บะหมี่หมูแดง', 'rice', 50, 60, [serving, topping]),
   dish('crispy-pork-bamee', 'บะหมี่หมูกรอบ', 'rice', 60, 70, [serving, topping]),
@@ -71,12 +71,20 @@ export const starterCatalog: MenuItem[] = [
   dish('water', 'น้ำเปล่า', 'drinks', 10, null, [], 'ขวด'),
   dish('ice', 'น้ำแข็งเปล่า', 'drinks', 2, null, [], 'แก้ว'),
   dish('grass-jelly', 'เฉาก๊วยโบราณ', 'desserts', 25, null, [], 'ถ้วย'),
-  { ...dish('mahachai-ice-cream', 'ไอศกรีมมหาชัยพร้อมเครื่อง', 'desserts', 30, 40, [], 'ถ้วย'), variants: [{code:'normal',name:'เล็ก',priceSatang:3000},{code:'special',name:'ใหญ่',priceSatang:4000}] },
+  { ...dish('mahachai-ice-cream', 'ไอศกรีมมหาชัย', 'desserts', 30, 40, [], 'ถ้วย'), variants: [{code:'normal',name:'เล็ก',priceSatang:3000},{code:'special',name:'ใหญ่',priceSatang:4000}] },
 ];
 
 // Upgrade local demos once without dropping orders, custom menus or owner price edits.
-export const catalogVersion = 2;
-export function upgradeSavedCatalog(previous: MenuItem[]): MenuItem[] {
+export const catalogVersion = 3;
+export function upgradeSavedCatalog(previous: MenuItem[], previousVersion = 0): MenuItem[] {
+  if (previousVersion >= 2) return previous.map(value => {
+    const item = structuredClone(value);
+    if (item.code === 'yentafo-hotpot' && item.description === 'รอประมาณ 2–3 นาที') item.description = 'สำหรับ 2–3 ท่าน';
+    if (item.code === 'mahachai-ice-cream' && item.name === 'ไอศกรีมมหาชัยพร้อมเครื่อง') item.name = 'ไอศกรีมมหาชัย';
+    if (item.code === 'crispy-pork-rice') item.groups = item.groups.map(group => group.code === 'topping'
+      ? { ...group, max: Math.min(group.max, 2), options: group.options.filter(option => !['pork-slices', 'minced-pork'].includes(option.code)) } : group);
+    return item;
+  });
   const currentCodes = new Set(starterCatalog.map(item => item.code));
   const current = starterCatalog.map(source => {
     const item = structuredClone(source);

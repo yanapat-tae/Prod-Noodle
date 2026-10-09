@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { CartInput, CustomerSession, DeliverySummary, MenuItem, Order, Staff, Status, TakeawayDetails } from './domain.ts';
 import type { NewMenuInput } from './menu-management.ts';
 import { businessDate, salesReport } from './domain.ts';
+import { requestJson } from './http.ts';
 export const mode = import.meta.env.VITE_APP_MODE === 'supabase' ? 'supabase' : 'demo';
 const url = import.meta.env.VITE_SUPABASE_URL ?? '';
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
@@ -16,9 +17,7 @@ async function call<T>(path: string, body?: unknown, token?: string, idempotency
   if (mode === 'supabase') headers.apikey = key;
   if (token) headers.Authorization = 'Bearer ' + token;
   if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
-  const response = await fetch(target, { method: body === undefined ? 'GET' : 'POST', headers, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(20000) });
-  const data = await response.json(); if (!response.ok) throw new Error(data.error ?? 'ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่');
-  return data;
+  return requestJson<T>(target, { method: body === undefined ? 'GET' : 'POST', headers, body: body === undefined ? undefined : JSON.stringify(body) }, idempotencyKey);
 }
 async function staffToken(identity: Staff) {
   if (!supabase) return identity.token;
@@ -81,7 +80,7 @@ export const api = {
   async close(identity: Staff, table: number) { return call(`/staff/tables/${table}/close`, {}, await staffToken(identity)); },
   async delivery(identity: Staff, summaries: DeliverySummary[]) { return call('/staff/delivery', { summaries }, await staffToken(identity), crypto.randomUUID()); },
   async createMenu(identity: Staff, input: NewMenuInput) { return call<MenuItem>('/staff/menu/create', input, await staffToken(identity)); },
-  async editMenu(identity: Staff, code: string, prices: Record<string, number>, available: boolean) { return call('/staff/menu', { code, prices, available }, await staffToken(identity)); },
+  async editMenu(identity: Staff, code: string, prices: Record<string, number>, available: boolean, name?: string) { return call('/staff/menu', { code, prices, available, ...(name === undefined ? {} : { name }) }, await staffToken(identity)); },
   async report(identity: Staff, period: string): Promise<ReturnType<typeof salesReport>> {
     if (!supabase) { const state = await this.state(identity); return salesReport(state.orders, state.summaries, period); }
     const from = period.length === 7 ? period + '-01' : period;

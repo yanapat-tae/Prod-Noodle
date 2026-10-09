@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { api } from '../api.ts';
 import type { MenuItem, Staff as Identity } from '../domain.ts';
 import { money, parseBaht } from '../domain.ts';
-import { validateNewMenu, menuGroupTemplates } from '../menu-management.ts';
+import { validateNewMenu, menuGroupTemplates, validateMenuName } from '../menu-management.ts';
 import '../styles/menu-editor.css';
 
 interface DraftVariant { code: string; name: string; price: string }
@@ -18,6 +18,7 @@ function newDraft(catalog: MenuItem[]): MenuDraft {
 
 export default function MenuEditor({ catalog, identity, refresh }: { catalog: MenuItem[]; identity: Identity; refresh: () => Promise<MenuItem[]> }) {
   const [selected, setSelected] = useState<MenuItem | null>(null);
+  const [name, setName] = useState('');
   const [prices, setPrices] = useState<Record<string, string>>({});
   const [available, setAvailable] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -53,8 +54,8 @@ export default function MenuEditor({ catalog, identity, refresh }: { catalog: Me
     submitting.current = true; setBusy(true); setError(''); setNotice('');
     try {
       const values = Object.fromEntries(Object.entries(prices).map(([code, value]) => [code, parseBaht(value)]));
-      await api.editMenu(identity, selected.code, values, available);
-      await refresh(); setSelected(null); setNotice('บันทึกเมนูแล้ว ออเดอร์เก่าใช้ราคาเดิม');
+      await api.editMenu(identity, selected.code, values, available, validateMenuName(name));
+      await refresh(); setSelected(null); setNotice('บันทึกเมนูแล้ว ออเดอร์เก่าใช้ชื่อและราคาเดิม');
     } catch (error) { setError((error as Error).message); }
     finally { submitting.current = false; setBusy(false); }
   }
@@ -107,6 +108,7 @@ export default function MenuEditor({ catalog, identity, refresh }: { catalog: Me
     </form> : selected ? <form className="panel" aria-busy={busy} onSubmit={event => { event.preventDefault(); void saveChanges(); }}>
       <h2>{selected.name}</h2>
       <fieldset className="menu-editor-fields" disabled={busy}>
+        <label>ชื่อเมนู<input value={name} onChange={event => setName(event.target.value)} required /></label>
         {selected.variants.map(variant => <label key={variant.code}>ราคา{variant.name} (บาท)<input inputMode="decimal" value={prices[variant.code]} onChange={event => setPrices(previous => ({ ...previous, [variant.code]: event.target.value }))} required /></label>)}
         <label className="inline-check menu-availability-check"><input type="checkbox" checked={available} onChange={event => setAvailable(event.target.checked)} />เปิดขายเมนูนี้</label>
         <div className="form-actions"><button type="submit" className="primary-action">{busy ? 'กำลังบันทึก…' : 'บันทึกเมนู'}</button><button type="button" onClick={back}>กลับ</button></div>
@@ -116,7 +118,7 @@ export default function MenuEditor({ catalog, identity, refresh }: { catalog: Me
       <div className="inventory-list">{catalog.map(item => <article className="panel inventory-row" key={item.code}>
         <span aria-hidden="true">🍜</span>
         <div><h2>{item.name}</h2><p>{item.variants.map(variant => variant.name + ' ' + money(variant.priceSatang)).join(' / ')}</p><span className={item.available ? 'available' : 'danger-text'}>{item.available ? 'พร้อมขาย' : 'ปิดขายชั่วคราว'}</span></div>
-        <button onClick={() => { setSelected(item); setAvailable(item.available); setPrices(Object.fromEntries(item.variants.map(variant => [variant.code, String(variant.priceSatang / 100)]))); setError(''); setNotice(''); }}>แก้ไข</button>
+        <button onClick={() => { setSelected(item); setName(item.name); setAvailable(item.available); setPrices(Object.fromEntries(item.variants.map(variant => [variant.code, String(variant.priceSatang / 100)]))); setError(''); setNotice(''); }}>แก้ไข</button>
       </article>)}</div>
     </>}
   </section>;

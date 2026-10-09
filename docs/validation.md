@@ -1,5 +1,14 @@
 # ผลตรวจรุ่นทดลอง
 
+## Menu corrections and eight-table live test · 9 October 2026
+
+- Deployed frontend code `41bef37`, staff-api v4 and both new migrations; six migrations total. Live menu corrections are confirmed and two Owner-created dishes remain intact.
+- Strict frontend/Edge TypeScript, zero-warning lint, all 36 Node/PGlite tests, production build and HTML regeneration pass. Database tests use the final checked-in SQL files.
+- 16 Chromium scenarios verified across the full run and targeted reruns: nine unchanged dashboard/takeaway cases passed, followed by all seven menu/submit cases after fixing HTTP application-error preservation. API responses are controlled, not live staff credentials.
+- Actual hosted customer API: eight simultaneous table orders, five dishes each, 8/8 HTTP 200, 665–1,829 ms, batch complete in 1,832 ms. Eight same-key retries returned the same bills; SQL independently confirmed eight orders/40 lines and no payment entries. No timeout or duplicate in this sample.
+- Test orders remain tagged `ทดสอบระบบ ไม่ต้องทำอาหาร`, new and unpaid for owner inspection. No real payment was recorded; no old bill snapshot or Owner custom dish was removed.
+- See the [full report, per-table measurements and reusable script](reports/2026-10-09-eight-table-test.md). Session preparation used SQL; actual QR scanning, authenticated kitchen Realtime rendering, iPhone/PWA behavior and sustained load remain unverified. Safe retries mitigate unknown outcomes; they do not prove all external causes of “Load failed” are eliminated.
+
 ## Owner menu / takeaway release · 8 October 2026
 
 - `pnpm check`: strict frontend/Edge typecheck, zero-warning lint, 28 Node/PGlite tests, production build and regenerated HTML pass. The new migrations are read from the repository, with no draft-file dependency.

@@ -1,10 +1,10 @@
 # Handoff: prod-noodle-pos
 
-Snapshot date: **8 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
+Snapshot date: **9 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
 
 ## Current project status
 
-The implemented milestone is the online restaurant pilot with the owner menu, named takeaway and village delivery, per-dish free notes, and owner menu creation. React/Vite, Node demo, HTML preview and Supabase architecture are preserved. The database and staff API changes are deployed on project `emjktqzcvgjwtsgysljy`; the frontend release is verified on Cloudflare Pages. Live URL: `https://prod-noodle.pages.dev`. Previous URL/APP_ORIGIN configuration blockers are resolved. Real-device kitchen/POS acceptance is still required; no App Store app is being built.
+The implemented milestone is the online restaurant pilot with the owner menu, named takeaway and village delivery, per-dish free notes, owner menu creation/renaming, corrected menu details and safe recovery from uncertain order submissions. React/Vite, Node demo, HTML preview and Supabase architecture are preserved. The database and staff API changes are deployed on project `emjktqzcvgjwtsgysljy`; the frontend release is verified on Cloudflare Pages. Live URL: `https://prod-noodle.pages.dev`. Previous URL/APP_ORIGIN configuration blockers are resolved. Real-device kitchen/POS acceptance is still required; no App Store app is being built.
 
 This folder originally had no `.git`, remote or commit author. The project is now committed and published to [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`, with the user-provided author email. The remote was initially empty; no history was rewritten or force-pushed. Application and handoff work are separated into logical commits. Remote revision was verified and the GitHub repository was cloned successfully for independent checks. Use `git status --short --branch`, `git log -1 --oneline`, and `git ls-remote origin refs/heads/main` to verify the latest revision. The repository is ready for Cloud continuation; the hosted pilot now awaits restaurant acceptance.
 
@@ -13,20 +13,20 @@ This folder originally had no `.git`, remote or commit author. The project is no
 - Shared React/TypeScript screens, Node demo API and browser-local HTML adapter.
 - 38 owner-menu dishes, 58 variants and six searchable categories; emoji placeholders, large Thai controls, cart/options/pricing, free notes and receipts/status.
 - Required takeaway name; optional village delivery with required address/soi and phone, shared with POS/kitchen. Legacy orders without these details remain readable.
-- Owner creates menus with one to eight sizes, prices and existing option groups; stable draft codes make retries safe even after later price edits.
+- Owner creates menus with one to eight sizes, prices and existing option groups, and renames existing dishes while preserving historical bills; stable draft codes make retries safe even after later price edits.
 - Eight-table sessions, daily takeaway queues, retry protection and historical price snapshots.
 - Four mock staff accounts, POS entry, kitchen status/sound, full cash or confirmed-PromptPay recording, owner refunds and close/reopen table visits.
 - Daily/monthly dashboard, hourly/channel/top-menu charts, CSV export, owner price/availability edits and nine QR entries.
 - GrabFood/LINE MAN daily summary/CSV replacement import, avoiding duplicate totals.
 - PWA shell, manifest/icons, hosting routing/headers and guarded online API source.
-- Four SQL migrations, two seed files, RLS/grants, transaction RPCs, ledger/reporting, opaque customer tokens and staff Auth guards.
-- 28 Node/PGlite tests covering domain/HTTP/database behavior, order details, owner menu validation/retries/authorization, real catalog upgrades and historical bills, including the existing 40-request local burst.
-- 12 Chromium regressions: seven dashboard/CSV cases, two takeaway/village flows and three owner menu creation/edit/retry flows.
+- Six SQL migrations, two seed files, RLS/grants, transaction RPCs, ledger/reporting, opaque customer tokens and staff Auth guards.
+- 36 Node/PGlite tests covering domain/HTTP/database behavior, order details, owner menu validation/retries/authorization, real catalog upgrades and historical bills, including the existing 40-request local burst.
+- 16 Chromium scenarios: seven dashboard/CSV cases, two takeaway/village flows, four owner menu creation/edit/retry flows and three uncertain-submit/reload cases. The nine unchanged scenarios passed in the full run; all seven affected menu/submit cases passed after the final HTTP-error fix.
 - Handoff tooling: pinned Node/pnpm, full typecheck/lint/check scripts, ESLint configuration, portable dependency installer and secret-safe example environment.
 
 ## Partially completed / intentionally deferred
 
-- Supabase: migrations, hosted menu reads, CORS and unauthenticated staff rejection are verified. Full authenticated customer/staff flow and Realtime acceptance on real phones remain.
+- Supabase: migrations, menu reads, CORS, customer order submission/readback and same-key retries are verified live, including eight concurrent table orders. Actual QR scanning, authenticated staff UI and Realtime acceptance on real phones remain.
 - Hosting: configuration now works. Verify the published frontend revision and use the owner’s existing QR entries for acceptance; do not rotate QR as part of a code deployment.
 - PWA: build assets exist; real iOS/Android installation, offline/reconnect and 200% text zoom are unverified.
 - Menu: transcribed all 38 entries from the supplied photo and owner corrections. Owner can adjust operational availability/prices in the UI; no photos or recipe/inventory system was added.
@@ -38,11 +38,25 @@ This folder originally had no `.git`, remote or commit author. The project is no
 - Demo API binds localhost only. PIN `1234` is public demo data, not a production credential. Persistent `.local-data/demo.json` stays on the original machine; it contains previous fake test sales and must not be published or treated as actual shop revenue. Fresh clones start empty.
 - API does not auto-reload; restart `pnpm dev` after server edits. Node does not read Vite's `.env.local`.
 - Dashboard updates when opened or manually refreshed. Figures/export are unavailable while loading or after failure; late responses cannot overwrite another period. Delivery summaries cannot supply hourly/item-level breakdowns; missing order count is reported as incomplete.
-- A single short SQL advisory lock serializes mutations for one restaurant. No real shared-CPU or lunch-load measurement exists; do not infer free-tier capacity from localhost tests.
+- A single short SQL advisory lock serializes mutations for one restaurant. One authorized live burst of eight table orders passed; it does not establish sustained lunch-load capacity or device rendering latency.
 - Staff active-order reads fail at 1,000 rows to avoid silent truncation. Long-running operation may need pagination/archive work later.
 - Source typechecking uses a Deno shim; PGlite emulates Supabase Auth/roles. These checks are not a hosted integration test.
 - `pnpm preview` is a static build preview, not a complete demo backend. Use `pnpm dev` for demo interaction; online builds require correctly configured Supabase services.
 - SQL Editor installation does not record CLI migration history. Reconcile history before adopting `supabase db push`; do not rerun migrations against an existing schema blindly.
+
+## Menu corrections, submission recovery and live load test · 9 October 2026
+
+Code commit `41bef37` is pushed to `main` and verified live on Pages: customer asset `index-DUO-GUVk.js`, staff asset `Staff-B8Tw50PE.js`. `staff-api` version 4 is ACTIVE. Applied and recorded new migrations `20261009112857_owner_menu_rename.sql` and `20261009113319_owner_menu_corrections.sql`; all six migrations are present remotely. Original migration files, existing QR entries and previous bill snapshots are preserved. The live menu has 40 active dishes: 38 source dishes plus two Owner-created dishes.
+
+Corrected hotpot description to serving 2–3 people, renamed ice cream, removed only the two unwanted crispy-pork-rice toppings, and standardized zero-cost options to `+0 บาท`. Owner can rename a menu through the existing editor; the new optional-name RPC overload preserves legacy callers and historical item names/prices. No new runtime environment variables or dependencies are required.
+
+Expert code review identified raw fetch-error leakage and the risk of editing/re-keying an order after a lost response. The shared HTTP wrapper retries only reads or writes with an idempotency key, once, with the same body/key. Each attempt has a 20-second timeout. Uncertain order outcomes keep a persisted, locked draft; reloading and manual retry use the same request. Definitive application rejection permits editing. This addresses recovery/duplicate risk; it does not identify every possible mobile-network cause of “Load failed”.
+
+Strict frontend/Edge typecheck, lint, build/HTML generation and all 36 Node/PGlite tests pass. Chromium coverage totals 16 scenarios as described above. Final SQL files also passed 12 database tests without draft-file overrides. Early localhost permission failures were execution-environment restrictions; they were resolved for checks.
+
+At 18:37 Thailand time, the authorized [eight-table live test](docs/reports/2026-10-09-eight-table-test.md) sent five dishes per table through the actual customer API: 8/8 HTTP 200, 40 line items, 665–1,829 ms response time, all first submissions complete in 1,832 ms. Eight exact retries returned the original order IDs; independent SQL confirmed no duplicates, correct table/line counts and zero payment entries. CORS and customer readback passed. Test sessions were prepared with the existing SQL bootstrap RPC; QR scanning and kitchen screen rendering were not measured.
+
+The eight clearly tagged test orders remain `new`/`unpaid` for the owner to inspect; do not silently delete, charge or cancel them. The private sessions and bootstrap file remain ignored in `.local-data/table-tests/`; only the reusable script and sanitized report are committed. Do not create a second run merely to reproduce this completed test. Wider/sustained tests should use an isolated test project. Real-device kitchen/POS/Realtime, intermittent mobile failures and PWA acceptance remain the next milestone.
 
 ## Owner menu and ordering release · 8 October 2026
 

@@ -1,6 +1,6 @@
 # ต่อ Supabase Free และ Cloudflare Pages
 
-สถานะ 8 ต.ค. 2026: ฐานข้อมูล project `emjktqzcvgjwtsgysljy` มี Owner, โต๊ะ 8, เมนู 38, ขนาด 58 และหมวด 6 แล้ว ทั้ง 4 migrations ลงครบ, staff-api รุ่น 3 ACTIVE และ public menu API ตอบ 200 พร้อม CORS ของ https://prod-noodle.pages.dev ค่า URL/APP_ORIGIN ที่เคยผิดแก้แล้ว ดูสถานะ frontend release ล่าสุดใน HANDOFF.md ห้ามรัน initial migrations ซ้ำ
+สถานะ 9 ต.ค. 2026: project `emjktqzcvgjwtsgysljy` มี Owner, โต๊ะ 8, เมนูออนไลน์ 40 (38 จากภาพร้าน + Owner เพิ่มเอง 2) และหมวด 6 ทั้ง 6 migrations ลงครบ, staff-api รุ่น 4 ACTIVE และ frontend ล่าสุดขึ้น https://prod-noodle.pages.dev แล้ว ทดสอบส่งพร้อมกัน 8 โต๊ะ/40 จานและ retry ผ่าน ดู [รายงาน](reports/2026-10-09-eight-table-test.md) และ HANDOFF.md ห้ามรัน initial migrations ซ้ำ
 
 ## 1. สร้าง Supabase project ทดลองแยก
 
@@ -8,7 +8,7 @@
 
 สำหรับ project ใหม่เท่านั้น: รันทุกไฟล์ใน `supabase/migrations/` ตามชื่อไฟล์ แล้วตามด้วย `supabase/seed.sql` และ `supabase/menu-seed.sql` สำหรับ project ที่ใช้อยู่ให้ apply เฉพาะ migrations ใหม่ที่ยังไม่ลง
 
-สอง migration แรกของ project ปัจจุบันมี version `20261007000812` และ `20261007000819` บน Supabase ซึ่งต่างจากชื่อไฟล์ใน repo ต้องเทียบ migration history ก่อนใช้ CLI `db push` อย่า apply schema เดิมซ้ำ สอง migration ใหม่ใช้ version ตรงกันทั้ง repo/remote: `20261008041620_order_details_and_menu_creation` และ `20261008041631_owner_menu_catalog`
+สอง migration แรกของ project ปัจจุบันมี version `20261007000812` และ `20261007000819` บน Supabase ซึ่งต่างจากชื่อไฟล์ใน repo ต้องเทียบ migration history ก่อนใช้ CLI `db push` อย่า apply schema เดิมซ้ำ สี่ migration ที่เพิ่มภายหลังใช้ version ตรงกันทั้ง repo/remote: `20261008041620_order_details_and_menu_creation`, `20261008041631_owner_menu_catalog`, `20261009112857_owner_menu_rename` และ `20261009113319_owner_menu_corrections`
 
 Seed ไม่สร้าง QR secrets หรือรหัสผ่าน และไม่ทับราคาที่ Owner แก้ เมนูครบ 38 รายการจากภาพร้าน; ดู [รายการและราคา](menu-review.md) Owner เพิ่มเมนูใหม่ ขนาด ราคา และเลือกกลุ่มตัวเลือกผ่าน UI ได้แล้ว ไม่ต้องแก้ SQL เพื่อเพิ่มอาหาร
 

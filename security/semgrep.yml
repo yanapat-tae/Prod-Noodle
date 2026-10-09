@@ -1,0 +1,48 @@
+rules:
+  - id: no-dynamic-code
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Avoid eval or Function constructors; keep executable code static.
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: new Function(...)
+  - id: no-raw-html
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Use React text rendering instead of raw HTML sinks; review sanitization explicitly.
+    pattern-either:
+      - pattern: $EL.innerHTML = $VALUE
+      - pattern: $EL.outerHTML = $VALUE
+      - pattern: $EL.insertAdjacentHTML(...)
+      - pattern: <$TAG ... dangerouslySetInnerHTML={...} ... />
+  - id: no-shell-string
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Use spawn/execFile with shell disabled and separate validated arguments.
+    pattern-either:
+      - pattern: exec(...)
+      - pattern: execSync(...)
+      - pattern: 'spawn(..., { ..., shell: true, ... })'
+  - id: no-interpolated-sql
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Use parameterized queries rather than interpolated SQL.
+    pattern-either:
+      - pattern: $DB.query(`...${...}...`, ...)
+      - pattern: $DB.exec(`...${...}...`, ...)
+  - id: no-private-client-env
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Private credentials must not be read from VITE browser environment variables.
+    patterns:
+      - pattern: import.meta.env.$KEY
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: '^VITE_.*(SERVICE_ROLE|SECRET|PASSWORD|PRIVATE|ACCESS_TOKEN|API_TOKEN|API_KEY).*$'
+  - id: no-disabled-tls
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Do not disable TLS certificate verification.
+    pattern-either:
+      - pattern: process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+      - pattern: '{ ..., rejectUnauthorized: false, ... }'

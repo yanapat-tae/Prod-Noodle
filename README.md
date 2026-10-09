@@ -173,3 +173,7 @@ Install Node 24/pnpm 11.25.0, run `pnpm install --frozen-lockfile`, copy `.env.e
 For an iPhone-managed Cloud workflow, select the GitHub repository and branch, request Node 24, and use `bash scripts/cloud-setup.sh` as the install command. Validate with `pnpm check`, save/publish the prepared environment and continue from it. Demo needs no application secrets. See [official Cloud environments documentation](https://learn.chatgpt.com/docs/environments/cloud-environments). This handoff does not create a Cloud environment or deploy the restaurant website.
 
 The next recommended work is owner review of the existing HTML interface/menu, then an isolated online pilot and real-device/load validation. Voice/photos/partner APIs remain deferred. The original architecture proposal contains future ideas; this README and HANDOFF describe current implemented behavior.
+
+## Security checks
+
+See [security workflow](docs/security.md) and [initial review evidence](docs/security-review-2026-10-09.md). The security workflow checks secrets, selected code patterns, dependencies and regression tests on PRs/main. Require its three statuses through branch protection before release; CI files alone do not enforce merging. Hosted security testing uses an isolated staging backend, never the restaurant's live data.

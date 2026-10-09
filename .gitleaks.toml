@@ -1,0 +1,10 @@
+# Preserve the built-in detectors. Exclude only reproducible dependency caches.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Installed dependency/cache trees are not application source"
+paths = [
+  '''(^|/)node_modules/''',
+  '''(^|/)\.pnpm-(store|cache|state)/''',
+]

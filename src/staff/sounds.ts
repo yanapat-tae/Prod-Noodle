@@ -57,7 +57,8 @@ export class StaffSoundPlayer {
 
   // Called directly from a tap, including before the asynchronous payment request.
   async enable(): Promise<boolean> {
-    const generation = this.generation;
+    // Each tap supersedes previous resume requests as well as muted sessions.
+    const generation = ++this.generation;
     try {
       this.context ??= new AudioContext();
       const context = this.context;

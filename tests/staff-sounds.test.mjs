@@ -124,3 +124,27 @@ test('Disabling sound while enable is pending prevents a late resume from enabli
     audio.restore();
   }
 });
+
+test('A failed older enable cannot silence a newer successful enable', async () => {
+  const audio = audioHarness();
+  const player = new StaffSoundPlayer();
+  try {
+    await player.enable();
+    player.disable();
+    let rejectOlder, resolveLatest;
+    audio.contexts[0].resumeWait = new Promise((_, reject) => { rejectOlder = reject; });
+    const older = player.enable();
+    audio.contexts[0].resumeWait = new Promise(resolve => { resolveLatest = resolve; });
+    const latest = player.enable();
+    resolveLatest();
+    assert.equal(await latest, true);
+    rejectOlder(new Error('older enable failed'));
+    assert.equal(await older, false);
+    audio.contexts[0].resumeWait = null;
+    await player.play('payment');
+    assert.equal(audio.starts.filter(note => note.type === 'triangle').length, 4);
+  } finally {
+    player.dispose();
+    audio.restore();
+  }
+});

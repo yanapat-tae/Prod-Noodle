@@ -14,11 +14,11 @@ The owner reported clearing 26 old test bills and closing eight visits on 10 Oct
 
 ## Code review and file organization · 10 October 2026
 
-The follow-up review starts from `25e1708`, after deployed PR #3. Regression fixes prevent a delayed full refresh from restoring an older ticket, isolate refreshes by login, reject out-of-order Realtime reads, coalesce a burst of order bells, and ignore audio callbacks from a muted or logged-out session. Successful mutations update the screen immediately from the server response. The review changes no SQL or Edge Functions.
+The follow-up review starts from `25e1708`, after deployed PR #3. Regression fixes prevent a delayed full refresh from restoring an older ticket, isolate refreshes by login, reject out-of-order Realtime reads, coalesce a burst of order bells, and ignore audio callbacks from a muted or logged-out session and superseded enable taps. Successful mutations update the screen immediately from the server response. The review changes no SQL or Edge Functions.
 
 Staff components, sound playback, QR helpers and state synchronization are grouped in `src/staff/`; `src/pages/Staff.tsx` composes the screens. Dated handoffs are archived without deleting their evidence. Fresh-install instructions now match the seeded database test order. See [review evidence](docs/reports/2026-10-10-code-review.md) and [file map](docs/project-structure.md).
 
-Final validation passed: `pnpm check` (48 Node/PGlite tests, both typechecks, lint, build and regenerated HTML) and all 31 Chromium scenarios. Publication of this review release is pending; the current production reference remains PR #3 (`c7ba323`) plus documentation `25e1708` until deployment is verified.
+Final validation passed: `pnpm check` (49 Node/PGlite tests, both typechecks, lint, build and regenerated HTML) and all 31 Chromium scenarios. Publication of this review release is pending; the current production reference remains PR #3 (`c7ba323`) plus documentation `25e1708` until deployment is verified.
 
 ## What is completed
 
@@ -32,7 +32,7 @@ Final validation passed: `pnpm check` (48 Node/PGlite tests, both typechecks, li
 - GrabFood/LINE MAN daily summary/CSV replacement import, avoiding duplicate totals.
 - PWA shell, manifest/icons, hosting routing/headers and guarded online API source.
 - Nine SQL migrations, two seed files, RLS/grants, transaction RPCs, ledger/reporting, opaque customer tokens and staff Auth guards.
-- 48 Node/PGlite tests covering domain/HTTP/database behavior, order details, owner menu validation/retries/authorization, real catalog upgrades and historical bills, including the existing 40-request local burst.
+- 49 Node/PGlite tests covering domain/HTTP/database behavior, order details, owner menu validation/retries/authorization, real catalog upgrades and historical bills, including the existing 40-request local burst.
 - 31 Chromium scenarios cover dashboard/CSV, takeaway/village, menu creation/edit/retry, uncertain submission, one-step kitchen/POS, sounds, persistent QR and staff-session races. All passed after the file moves.
 - Handoff tooling: pinned Node/pnpm, full typecheck/lint/check scripts, ESLint configuration, portable dependency installer and secret-safe example environment.
 

@@ -30,3 +30,15 @@ test('menu corrections preserve owner names and prices while restricting crispy-
   assert.deepEqual(corrected.find(item => item.code === 'crispy-pork-rice')!.groups[0].options.map(o => o.code), ['crispy-pork', 'soft-boiled-egg']);
   assert.equal(saved.find(item => item.code === 'mahachai-ice-cream')!.name, 'ไอศกรีมมหาชัยพร้อมเครื่อง');
 });
+
+test('Coke rename preserves saved prices, availability, custom names and historical lines', () => {
+  const drink = structuredClone(catalog.starterCatalog.find(item => item.code === 'soft-drink')!);
+  drink.name = 'น้ำอัดลม'; drink.variants[0].priceSatang = 2500; drink.available = false;
+  const upgraded = catalog.upgradeSavedCatalog([drink], 3)[0];
+  assert.equal(upgraded.name, 'น้ำอัดลม - โค้ก');
+  assert.deepEqual({ ...upgraded, name: drink.name }, drink);
+  assert.equal(drink.name, 'น้ำอัดลม');
+  assert.equal(catalog.starterCatalog.find(item => item.code === 'soft-drink')!.name, 'น้ำอัดลม - โค้ก');
+  drink.name = 'ชื่อร้านตั้งเอง';
+  assert.equal(catalog.upgradeSavedCatalog([drink], 3)[0].name, 'ชื่อร้านตั้งเอง');
+});

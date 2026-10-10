@@ -67,7 +67,7 @@ export const starterCatalog: MenuItem[] = [
   dish('longan-juice', 'น้ำลำไย', 'drinks', 25, null, [], 'แก้ว'),
   dish('chrysanthemum-tea', 'น้ำเก๊กฮวย', 'drinks', 25, null, [], 'แก้ว'),
   dish('butterfly-pea-lime', 'น้ำอัญชันมะนาว', 'drinks', 25, null, [], 'แก้ว'),
-  dish('soft-drink', 'น้ำอัดลม', 'drinks', 20, null, [], 'ขวด'),
+  dish('soft-drink', 'น้ำอัดลม - โค้ก', 'drinks', 20, null, [], 'ขวด'),
   dish('water', 'น้ำเปล่า', 'drinks', 10, null, [], 'ขวด'),
   dish('ice', 'น้ำแข็งเปล่า', 'drinks', 2, null, [], 'แก้ว'),
   dish('grass-jelly', 'เฉาก๊วยโบราณ', 'desserts', 25, null, [], 'ถ้วย'),
@@ -75,10 +75,11 @@ export const starterCatalog: MenuItem[] = [
 ];
 
 // Upgrade local demos once without dropping orders, custom menus or owner price edits.
-export const catalogVersion = 3;
+export const catalogVersion = 4;
 export function upgradeSavedCatalog(previous: MenuItem[], previousVersion = 0): MenuItem[] {
   if (previousVersion >= 2) return previous.map(value => {
     const item = structuredClone(value);
+    if (item.code === 'soft-drink' && item.name === 'น้ำอัดลม') item.name = 'น้ำอัดลม - โค้ก';
     if (item.code === 'yentafo-hotpot' && item.description === 'รอประมาณ 2–3 นาที') item.description = 'สำหรับ 2–3 ท่าน';
     if (item.code === 'mahachai-ice-cream' && item.name === 'ไอศกรีมมหาชัยพร้อมเครื่อง') item.name = 'ไอศกรีมมหาชัย';
     if (item.code === 'crispy-pork-rice') item.groups = item.groups.map(group => group.code === 'topping'

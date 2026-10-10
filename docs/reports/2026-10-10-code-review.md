@@ -25,7 +25,8 @@ Older dated handoffs are retained in [the history archive](../history/2026-10-ha
 - After correction, before file moves: `pnpm check` passed all 48 Node/PGlite tests, typechecks, lint, build and HTML generation. Focused sound/state browser checks passed, including the additional late-enable/login test.
 - After file moves and the final overlapping-enable fix: `pnpm check` passed 49/49 Node/PGlite tests with zero failures/skips, frontend/Edge typechecks, zero-warning lint, production build and regenerated HTML. Full Chromium suite passed 31/31 with two workers and system Chromium. The 390px staff screenshot was inspected; no horizontal overflow was reported by the sound/QR scenarios.
 - `git diff --check` and local documentation-link targets pass. No real environment files, local data, dependency/build directories or browser reports are tracked. No migration, Edge, package declaration or lockfile changed.
-- Publication: pending.
+- [PR #4](https://github.com/yanapat-tae/Prod-Noodle/pull/4) merged into `main` as `90907dfb38e7f7a6bafd410a6f15b65f7f59ac9a` at 14:22:08 UTC (21:22:08 Bangkok). Cloudflare Pages reported success for that commit. Live root/admin pages serve `index-B0EMpNbE.js` and `Staff-CCT1MioV.js`; bundle inspection confirms the new snapshot merge, bounded bells, latest audio generation, payment preview and persistent-QR screen. Staff asset SHA-256: `1ab3227549eb864442c69b7420b7dc79083621733849ca97d02b49392e365b8f`.
+- Read-only public menu check: 40 active dishes, “น้ำอัดลม - โค้ก” at 2,000 satang. No authenticated staff action or live database write was used for deployment verification.
 
 ## Scope and remaining acceptance
 

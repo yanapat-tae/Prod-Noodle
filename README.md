@@ -2,7 +2,7 @@
 
 Web app ภาษาไทยสำหรับร้าน 8 โต๊ะและสั่งกลับบ้าน ใช้ 🍜 แทนรูปอาหาร ไม่มีค่า Voice/AI ในรุ่นนี้
 
-**Current milestone:** the online pilot includes one-step kitchen completion, “น้ำอัดลม - โค้ก”, distinct order/payment alert tones, ten persistent QR links and safe same-request order retries. The follow-up code review hardens staff refresh/audio races and groups staff code into focused files; see [HANDOFF.md](HANDOFF.md) for validation and deployment status and [the review report](docs/reports/2026-10-10-code-review.md) for findings. The owner reported clearing 26 old test bills on 10 October; new orders have since been observed. **Do not repeat cleanup.** Start with HANDOFF.md and [AGENTS.md](AGENTS.md). This is a web/PWA project, not an App Store app.
+**Current milestone:** the online pilot includes one-step kitchen completion, “น้ำอัดลม - โค้ก”, distinct order/payment alert tones, ten persistent QR links and safe same-request order retries. The follow-up code review is deployed on 10 October: it hardens staff refresh/audio races and groups staff code into focused files; see [HANDOFF.md](HANDOFF.md) for validation and deployment status and [the review report](docs/reports/2026-10-10-code-review.md) for findings. The owner reported clearing 26 old test bills on 10 October; new orders have since been observed. **Do not repeat cleanup.** Start with HANDOFF.md and [AGENTS.md](AGENTS.md). This is a web/PWA project, not an App Store app.
 
 GitHub repository: [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`.
 

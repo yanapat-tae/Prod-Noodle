@@ -18,7 +18,7 @@ The follow-up review starts from `25e1708`, after deployed PR #3. Regression fix
 
 Staff components, sound playback, QR helpers and state synchronization are grouped in `src/staff/`; `src/pages/Staff.tsx` composes the screens. Dated handoffs are archived without deleting their evidence. Fresh-install instructions now match the seeded database test order. See [review evidence](docs/reports/2026-10-10-code-review.md) and [file map](docs/project-structure.md).
 
-Final validation passed: `pnpm check` (49 Node/PGlite tests, both typechecks, lint, build and regenerated HTML) and all 31 Chromium scenarios. Publication of this review release is pending; the current production reference remains PR #3 (`c7ba323`) plus documentation `25e1708` until deployment is verified.
+Final validation passed: `pnpm check` (49 Node/PGlite tests, both typechecks, lint, build and regenerated HTML) and all 31 Chromium scenarios. [PR #4](https://github.com/yanapat-tae/Prod-Noodle/pull/4) merged as `90907dfb38e7f7a6bafd410a6f15b65f7f59ac9a` on 10 October at 21:22:08 Bangkok. Cloudflare Pages completed successfully. Live `/` and `/admin` serve `index-B0EMpNbE.js` and `Staff-CCT1MioV.js`; the staff bundle includes the snapshot/audio fixes and persistent-QR screen. The public menu still returns 40 active dishes and Coke at 20 baht. Verification was read-only; no live order, payment, session or QR was changed.
 
 ## What is completed
 

@@ -4,7 +4,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  { ignores: ['node_modules/**', 'dist/**', '.html-preview-build/**', '.local-data/**', '.pnpm-*/**'] },
+  { ignores: ['node_modules/**', 'test-results/**', 'playwright-report/**', 'dist/**', '.html-preview-build/**', '.local-data/**', '.pnpm-*/**'] },
   { files: ['**/*.{js,mjs,ts,tsx}'], extends: [js.configs.recommended] },
   {
     files: ['**/*.{ts,tsx}'],

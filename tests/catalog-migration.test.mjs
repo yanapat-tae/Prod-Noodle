@@ -48,5 +48,24 @@ test('Real menu migration replaces the trial catalog while preserving retired di
         for (const option of group.options) assert.equal(found.options.find(value=>value.code===option.code).priceSatang,option.priceSatang);
       }
     }
+    const rename = readdirSync(new URL('migrations/', root)).find(name => name.endsWith('_coke_menu_name.sql'));
+    assert.ok(rename, 'The targeted Coke rename migration must exist');
+    await db.exec("update public.menu_items set name='น้ำอัดลม' where code='soft-drink'");
+    const drinkPayload = { channel: 'takeaway', lines: [{ itemCode: 'soft-drink', variantCode: 'normal', quantity: 1, options: [], notes: [] }], expectedTotalSatang: 2000 };
+    const drinkOrder = (await db.query('select public.place_order($1,$2,$3,null,$4) as value', [JSON.stringify(drinkPayload), randomUUID(), createHash('sha256').update('drink-test').digest('hex'), owner])).rows[0].value;
+    await db.exec("update public.menu_items set is_active=false where code='soft-drink'; update public.menu_variants set price_satang=2500 where menu_item_id=(select id from public.menu_items where code='soft-drink')");
+    const beforeItem = (await db.query("select * from public.menu_items where code='soft-drink'")).rows[0];
+    const beforeVariants = (await db.query('select * from public.menu_variants order by id')).rows;
+    const sql = readFileSync(new URL('migrations/' + rename, root), 'utf8');
+    await db.exec(sql);
+    const afterItem = (await db.query("select * from public.menu_items where code='soft-drink'")).rows[0];
+    assert.equal(afterItem.name, 'น้ำอัดลม - โค้ก');
+    assert.deepEqual({ ...afterItem, name: beforeItem.name }, beforeItem);
+    assert.deepEqual((await db.query('select * from public.menu_variants order by id')).rows, beforeVariants);
+    assert.deepEqual((await db.query('select public.order_json($1) as value', [drinkOrder.id])).rows[0].value, drinkOrder);
+    await db.exec(sql);
+    await db.exec("update public.menu_items set name='ชื่อเจ้าของเปลี่ยน' where code='soft-drink'");
+    await db.exec(sql);
+    assert.equal((await db.query("select name from public.menu_items where code='soft-drink'")).rows[0].name, 'ชื่อเจ้าของเปลี่ยน');
   } finally { await db.close(); }
 });

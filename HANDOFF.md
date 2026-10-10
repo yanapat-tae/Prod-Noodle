@@ -1,8 +1,10 @@
 # Handoff: prod-noodle-pos
 
-Snapshot date: **9 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
+Snapshot date: **10 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. The latest section below supersedes older release and test-data status. This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
 
 ## Current project status
+
+The one-step kitchen migration is deployed; production frontend publication is pending. Bank-confirmed payment speech is blocked on an actual bank payment-notification integration; the owner uses K PLUS on iPhone. No manual-confirmation payment speech was added. Details and deployment prerequisites are in the 10 October section below.
 
 The implemented milestone is the online restaurant pilot with the owner menu, named takeaway and village delivery, per-dish free notes, owner menu creation/renaming, corrected menu details and safe recovery from uncertain order submissions. React/Vite, Node demo, HTML preview and Supabase architecture are preserved. The database and staff API changes are deployed on project `emjktqzcvgjwtsgysljy`; the frontend release is verified on Cloudflare Pages. Live URL: `https://prod-noodle.pages.dev`. Previous URL/APP_ORIGIN configuration blockers are resolved. Real-device kitchen/POS acceptance is still required; no App Store app is being built.
 
@@ -43,6 +45,28 @@ This folder originally had no `.git`, remote or commit author. The project is no
 - Source typechecking uses a Deno shim; PGlite emulates Supabase Auth/roles. These checks are not a hosted integration test.
 - `pnpm preview` is a static build preview, not a complete demo backend. Use `pnpm dev` for demo interaction; online builds require correctly configured Supabase services.
 - SQL Editor installation does not record CLI migration history. Reconcile history before adopting `supabase db push`; do not rerun migrations against an existing schema blindly.
+
+## One-step kitchen completion and latest owner handoff · 10 October 2026
+
+Before edits, the clean cloud checkout was on branch `work` at `492ef40`, matching remote `main`; the newest README/HANDOFF commit was also `492ef40`. Baseline `pnpm check` passed all 36 Node/PGlite tests, and all 16 Chromium scenarios passed. Read-only live probes found the existing `index-DUO-GUVk.js` frontend asset and 40 menu items, consistent with the 9 October deployment. These probes do not verify database migration history or current order counts; management credentials were unavailable.
+
+Additional GitHub branch/PR inspection found outstanding work outside `main`: [PR #1](https://github.com/yanapat-tae/Prod-Noodle/pull/1), `security/review-and-ci-20261009` at `d6326cd`, adds security CI, Edge request hardening and security tests. Its commit is dated 9 October 11:34:51 UTC, and its Security review workflow passed. It is unmerged, not a newer `main` deployment, and was not incorporated into this kitchen release. Coordinate README/HANDOFF edits and rerun the combined tests when merging it; do not treat its tests/hardening as present in this branch. The kitchen implementation is on `feat/one-step-kitchen-completion` with commits `389be58` (status rules/tests) and `aa97636` (UI/browser tests/release notes), published as [draft PR #2](https://github.com/yanapat-tae/Prod-Noodle/pull/2).
+
+The owner reports that on 10 October all 26 old test bills and related payment records were cleared, and visits for all eight tables were closed. Menus, accounts and QR entries were retained. This newer report supersedes the older statement that live test orders remain new/unpaid. It was not independently queried in this session. **Never repeat the cleanup:** orders may have arrived afterward. No live order/payment/visit mutation, cleanup, seed, QR rotation or account change was performed during this work.
+
+The shared ticket now has a single “เสร็จ/เสิร์ฟแล้ว” button. Domain rules (used by the demo server and HTML mock) allow active `new`, `preparing` and `ready` orders directly to `served`. The new migration `20261010034022_one_step_kitchen_completion.sql` applies the same rule to `staff_order_action` while retaining intermediate transitions for older clients. Repeating completion returns the existing order without a duplicate status event. Terminal orders cannot reopen. Completion preserves item/price snapshots and leaves payment state unchanged; unpaid served bills remain in POS and still block table closing. Existing cancellation, full-payment, owner-only refund, authenticated staff and service-only RPC restrictions are preserved.
+
+Regression tests were observed failing against the old implementation before the changes. Final local checks: `pnpm check` passes all 39 Node/PGlite tests, frontend/Edge typecheck, zero-warning lint, production build and regenerated `preview.html`. All 20 Chromium scenarios pass, including direct completion from each active status, kitchen-to-POS retention at a 390px viewport, and an API failure that keeps the ticket visible. Browser runs used the cloud instance's system Chromium 151.0.7922.173 through an ignored local config because bundled Playwright downloads are restricted. Independent read-only code review found no actionable issue. These tests do not prove Supabase/Deno or real iPhone behavior.
+
+Payment speech changed during the conversation: the owner first selected staff-confirmed PromptPay, then explicitly replaced it with **actual KBank receipt confirmation**, speaking “จ่ายเงิน [ยอด] บาทแล้ว”. The owner uses **K PLUS on iPhone**. A browser cannot consume another iPhone app's notification directly; a supported bank/merchant API or webhook is a prerequisite for a bank-confirmed feature. Do not silently fall back to staff-confirmed speech or mark bills paid based on a notification amount alone. No speech or automatic-bank-payment implementation is included in this kitchen release. Existing cashier-confirmed PromptPay behavior stays as before.
+
+The Supabase prerequisite is resolved. On 10 October the scoped, 30-day token supplied through environment settings successfully read the correct project and all six previous migration records. The live RPC body exactly matched the expected previous implementation. The Management API migration endpoint applied the tested SQL and assigned version `20261010034022`; the repository filename was updated to match. The installed body matches the tested source. `SECURITY INVOKER` and service-only execution were verified; anon/authenticated execution remains denied.
+
+Before/after fingerprints match for all eight checked tables: orders (0), order_items (0), payment_transactions (0), order_status_events (0), table_sessions (15), admins (2), menu_items (41 including inactive rows), and qr_entrypoints (9). This deployment executed no cleanup, order, payment or visit mutation. Counts describe that verification moment only; new restaurant activity may occur later. No real staff order was changed to test the new button. Apply neither this migration nor any old seeds/migrations again.
+
+Cloudflare's existing Git integration successfully deployed branch previews, so no Cloudflare API token is needed. Production frontend publication is pending merging PR #2 and verifying the production assets/CORS. The Edge handler interface is unchanged and needs no redeployment. Preserve the existing Supabase-mode Pages configuration and the shop's Auth/QR/data. The saved environment draft's earlier optional Cloudflare token requirement is unnecessary; never request it merely to publish through Git.
+
+The user explicitly deferred payment speech. Keep bank integration and the requested K PLUS/iPhone announcement out of this release.
 
 ## Menu corrections, submission recovery and live load test · 9 October 2026
 

@@ -83,7 +83,7 @@ export function priceLine(catalog: MenuItem[], input: CartInput): Line {
   return { ...input, freeNote, id: crypto.randomUUID(), name: item.name, variantName: variant.name, unit: item.unit, optionNames: names, unitSatang, totalSatang: unitSatang * input.quantity };
 }
 export function canTransition(from: Status, to: Status) {
-  return ({ new: ['preparing', 'cancelled'], preparing: ['ready', 'cancelled'], ready: ['served', 'cancelled'], served: [], cancelled: [] } as Record<Status, string[]>)[from].includes(to);
+  return ({ new: ['preparing', 'served', 'cancelled'], preparing: ['ready', 'served', 'cancelled'], ready: ['served', 'cancelled'], served: [], cancelled: [] } as Record<Status, string[]>)[from].includes(to);
 }
 export function parseBaht(value: string): number {
   if (!/^\d+(\.\d{1,2})?$/.test(value.trim())) throw new DomainError('กรุณาใส่จำนวนเงินบาท เช่น 150 หรือ 150.50');

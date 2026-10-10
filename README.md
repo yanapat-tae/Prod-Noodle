@@ -2,7 +2,7 @@
 
 Web app ภาษาไทยสำหรับร้าน 8 โต๊ะและสั่งกลับบ้าน ใช้ 🍜 แทนรูปอาหาร ไม่มีค่า Voice/AI ในรุ่นนี้
 
-**Current milestone:** online pilot with the owner’s full menu, named takeaway/village delivery, free kitchen notes, owner menu creation/renaming and safe same-request order retries. Supabase migrations and the updated staff API are deployed; the frontend release is verified on Cloudflare Pages (details in HANDOFF.md). Local checks and 16 Chromium scenarios pass; the [live eight-table test](docs/reports/2026-10-09-eight-table-test.md) created 40 dishes without duplicate orders; multi-device restaurant acceptance remains the next milestone. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md) when continuing from another machine or Codex Cloud. This is a web/PWA project, not an App Store app.
+**Current milestone:** the online pilot is deployed with the owner’s menu and safe same-request order retries. The next release adds one-step kitchen completion and is validated locally with 39 Node/PGlite tests and 20 Chromium scenarios; the new migration is applied, and production frontend publication is pending. See HANDOFF.md for the exact release state. The [live eight-table test](docs/reports/2026-10-09-eight-table-test.md) recorded duplicate-free ordering on 9 October; the owner reports that all 26 old test bills and related payments were cleared and all eight table visits closed on 10 October. Do not repeat that cleanup: new orders may exist. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md). This is a web/PWA project, not an App Store app.
 
 GitHub repository: [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`.
 
@@ -36,7 +36,7 @@ pnpm dev
 - ลูกค้าสั่งอาหาร ตรวจตะกร้า และดูสถานะ กลับบ้านต้องใส่ชื่อ แสดง “กลับบ้าน-ชื่อ” พร้อมเลขคิวแยกตามวัน
 - ติ๊กส่งหมู่บ้านเศรษฐสิริ วงแหวน-สุขาภิบาล2 แล้วต้องกรอกบ้านเลขที่/ซอยและเบอร์โทร ข้อมูลส่งต่อถึง POS/ครัว เป็นบริการส่งของร้าน ไม่มีการเชื่อมแพลตฟอร์ม Delivery
 - ปุ่มและแถวตัวเลือกสูงอย่างน้อย 56px ตัวอักษรลูกค้าหลัก 20px เว้นช่องกด 12px ใช้ฟอนต์เครื่อง ไม่โหลดรูปหรือฟอนต์ภายนอก
-- POS เปิดออเดอร์โต๊ะ/กลับบ้าน ห้องครัวเปลี่ยนสถานะ เปิดเสียงเตือน และปิดรอบโต๊ะ
+- POS เปิดออเดอร์โต๊ะ/กลับบ้าน ห้องครัวเปิดเสียงเตือน และปิดรอบโต๊ะ รุ่นถัดไปมีปุ่ม “เสร็จ/เสิร์ฟแล้ว” ครั้งเดียวจากออเดอร์ใหม่/กำลังทำ/พร้อมเสิร์ฟ เมื่อสำเร็จบิลออกจากครัว แต่บิลที่ยังไม่จ่ายยังอยู่ใน POS รับชำระได้ (ต้อง deploy migration ใหม่และ frontend ก่อนใช้บนเว็บจริง)
 - แคชเชียร์บันทึกรับเงินเต็มจำนวนด้วยเงินสด หรือยืนยันว่าตรวจรายการ PromptPay แล้ว Owner คืนเงินเต็มจำนวนได้
 - ยอดขายรายวัน/เดือน กราฟรายชั่วโมง สัดส่วนช่องทาง 10 เมนูขายดี และ CSV ที่เปิดใน Excel ได้
 - Delivery กรอกยอดรายวันหรือนำเข้า CSV; ยอดเดิมของวัน/ช่องทางถูกแทนที่เพื่อไม่บวกซ้ำ ยอดที่ไม่มีจำนวนออเดอร์แสดงว่าข้อมูลไม่ครบ
@@ -51,6 +51,8 @@ pnpm dev
 ลงฐานข้อมูลและ Owner แล้ว พร้อม deploy Edge Functions 3 ตัวและเว็บ https://prod-noodle.pages.dev; ตรวจ public menu API และ CORS ผ่านแล้ว (9 ต.ค. 2026) ไม่มี environment variable ใหม่สำหรับฟีเจอร์รอบนี้ ดู [ขั้นตอนติดตั้งคลาวด์](docs/cloud-setup.md) ก่อนเปิดให้โทรศัพท์หลายเครื่องสแกน QR ห้ามนำ PIN ทดลองไปใช้บนอินเทอร์เน็ต
 
 Voice, รูปอาหาร, Delivery partner API, ตรวจเงินโอนอัตโนมัติ, แบ่งจ่าย และ XLSX โดยตรงยังไม่เปิดในรุ่นนี้ CSV มี BOM ภาษาไทยและเปิดใน Excel ได้
+
+ความต้องการเสียงล่าสุด: “จ่ายเงิน [ยอด] บาทแล้ว” หลังยืนยันเงินเข้าจริงจากกสิกร ร้านใช้ K PLUS บน iPhone เว็บไม่สามารถอ่านแจ้งเตือนของแอป K PLUS ได้โดยตรง ต้องมีช่องทางยืนยันจากระบบรับชำระของธนาคาร เช่น API/webhook ก่อนทำฟีเจอร์นี้ ยังไม่เพิ่มเสียงจากการกดยืนยัน PromptPay ของพนักงาน และยังไม่มีการตรวจเงินโอนอัตโนมัติ
 
 ## การตรวจสอบ
 
@@ -131,8 +133,9 @@ Demo needs no database service; SQL tests use in-memory PGlite. On a new isolate
 
 - `20261009112857_owner_menu_rename.sql` — optional owner menu rename, retaining legacy callers and historical snapshots.
 - `20261009113319_owner_menu_corrections.sql` — targeted hotpot/ice-cream/rice-option corrections; custom dishes retained.
+- `20261010034022_one_step_kitchen_completion.sql` — applied on 10 October: allows `new`/`preparing`/`ready` directly to `served`, retaining legacy transitions, payment/refund behavior and service-only RPC permissions. Changes the function only; does not modify existing bills or table sessions.
 
-For the existing online pilot, all six migrations are already applied; do not rerun seeds or initial migrations. The first two hosted migration versions differ from the repository filenames; see HANDOFF.md before using CLI `db push`.
+For the existing online pilot, all seven migrations are already applied; do not rerun seeds or initial migrations. The first two hosted migration versions differ from the repository filenames; see HANDOFF.md before using CLI `db push`.
 All migrations and seeds belong in Git. Apply migrations once; add a new migration for future deployed changes instead of editing applied files. Seeds avoid overwriting owner menu prices and create no accounts, passwords or QR secrets. Disable public signup, create four Auth users and corresponding `admins` profiles, and generate QR entries through the owner UI. [Cloud setup](docs/cloud-setup.md) has the profile SQL and deployment steps. SQL Editor application does not populate CLI migration history automatically; reconcile it before using `supabase db push` later. Local JSON sales are not automatically migrated online.
 
 ## Development commands and toolchain
@@ -144,9 +147,9 @@ All migrations and seeds belong in Git. Apply migrations once; add a new migrati
 | `pnpm typecheck` | Strict frontend/HTML source + Edge source checks |
 | `pnpm check:edge` | Edge source check only; not a Deno runtime test |
 | `pnpm lint` | ESLint JS/TS/TSX with zero warnings |
-| `pnpm test` | 36 domain, HTTP, catalog and PostgreSQL tests |
+| `pnpm test` | 39 domain, HTTP, catalog and PostgreSQL tests |
 | `pnpm test:db` | PGlite migration/RPC tests only |
-| `pnpm test:browser` | 16 Chromium dashboard, takeaway, retry and menu-editor regressions using controlled API responses |
+| `pnpm test:browser` | 20 Chromium dashboard, kitchen/POS, takeaway, retry and menu-editor regressions using controlled API responses |
 | `pnpm build` | Frontend typecheck and build `dist/` |
 | `pnpm preview` | Static build preview; use `pnpm dev` for complete demo interaction |
 | `pnpm preview:html` | Rebuild the committed standalone HTML artifact |

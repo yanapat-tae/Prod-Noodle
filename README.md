@@ -2,7 +2,7 @@
 
 Web app ภาษาไทยสำหรับร้าน 8 โต๊ะและสั่งกลับบ้าน ใช้ 🍜 แทนรูปอาหาร ไม่มีค่า Voice/AI ในรุ่นนี้
 
-**Current milestone:** the online pilot is deployed with the owner’s menu and safe same-request order retries. The next release adds one-step kitchen completion and is validated locally with 39 Node/PGlite tests and 20 Chromium scenarios; the new migration is applied, and production frontend publication is pending. See HANDOFF.md for the exact release state. The [live eight-table test](docs/reports/2026-10-09-eight-table-test.md) recorded duplicate-free ordering on 9 October; the owner reports that all 26 old test bills and related payments were cleared and all eight table visits closed on 10 October. Do not repeat that cleanup: new orders may exist. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md). This is a web/PWA project, not an App Store app.
+**Current milestone:** the online pilot is deployed with the owner’s menu and safe same-request order retries. One-step kitchen completion is deployed on 10 October, with 39 Node/PGlite tests and 20 Chromium scenarios passing; the Supabase migration and production frontend assets are verified. See HANDOFF.md for the exact release state. The [live eight-table test](docs/reports/2026-10-09-eight-table-test.md) recorded duplicate-free ordering on 9 October; the owner reports that all 26 old test bills and related payments were cleared and all eight table visits closed on 10 October. Do not repeat that cleanup: new orders may exist. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md). This is a web/PWA project, not an App Store app.
 
 GitHub repository: [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`.
 
@@ -36,7 +36,7 @@ pnpm dev
 - ลูกค้าสั่งอาหาร ตรวจตะกร้า และดูสถานะ กลับบ้านต้องใส่ชื่อ แสดง “กลับบ้าน-ชื่อ” พร้อมเลขคิวแยกตามวัน
 - ติ๊กส่งหมู่บ้านเศรษฐสิริ วงแหวน-สุขาภิบาล2 แล้วต้องกรอกบ้านเลขที่/ซอยและเบอร์โทร ข้อมูลส่งต่อถึง POS/ครัว เป็นบริการส่งของร้าน ไม่มีการเชื่อมแพลตฟอร์ม Delivery
 - ปุ่มและแถวตัวเลือกสูงอย่างน้อย 56px ตัวอักษรลูกค้าหลัก 20px เว้นช่องกด 12px ใช้ฟอนต์เครื่อง ไม่โหลดรูปหรือฟอนต์ภายนอก
-- POS เปิดออเดอร์โต๊ะ/กลับบ้าน ห้องครัวเปิดเสียงเตือน และปิดรอบโต๊ะ รุ่นถัดไปมีปุ่ม “เสร็จ/เสิร์ฟแล้ว” ครั้งเดียวจากออเดอร์ใหม่/กำลังทำ/พร้อมเสิร์ฟ เมื่อสำเร็จบิลออกจากครัว แต่บิลที่ยังไม่จ่ายยังอยู่ใน POS รับชำระได้ (ต้อง deploy migration ใหม่และ frontend ก่อนใช้บนเว็บจริง)
+- POS เปิดออเดอร์โต๊ะ/กลับบ้าน ห้องครัวเปิดเสียงเตือน และปิดรอบโต๊ะ มีปุ่ม “เสร็จ/เสิร์ฟแล้ว” ครั้งเดียวจากออเดอร์ใหม่/กำลังทำ/พร้อมเสิร์ฟ เมื่อสำเร็จบิลออกจากครัว แต่บิลที่ยังไม่จ่ายยังอยู่ใน POS รับชำระได้ (เผยแพร่บนเว็บจริงแล้ว 10 ต.ค. 2026)
 - แคชเชียร์บันทึกรับเงินเต็มจำนวนด้วยเงินสด หรือยืนยันว่าตรวจรายการ PromptPay แล้ว Owner คืนเงินเต็มจำนวนได้
 - ยอดขายรายวัน/เดือน กราฟรายชั่วโมง สัดส่วนช่องทาง 10 เมนูขายดี และ CSV ที่เปิดใน Excel ได้
 - Delivery กรอกยอดรายวันหรือนำเข้า CSV; ยอดเดิมของวัน/ช่องทางถูกแทนที่เพื่อไม่บวกซ้ำ ยอดที่ไม่มีจำนวนออเดอร์แสดงว่าข้อมูลไม่ครบ

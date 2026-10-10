@@ -2,7 +2,7 @@
 
 Web app ภาษาไทยสำหรับร้าน 8 โต๊ะและสั่งกลับบ้าน ใช้ 🍜 แทนรูปอาหาร ไม่มีค่า Voice/AI ในรุ่นนี้
 
-**Current milestone:** the online pilot is deployed with the owner’s menu and safe same-request order retries. One-step kitchen completion is deployed on 10 October, with the original 39 Node/PGlite tests and 20 Chromium scenarios passing; the Supabase migration and production frontend assets are verified. The Coke menu label, distinct order/payment alert tones, and ten persistent ordering QR links are also deployed; 41 Node/PGlite tests and 28 Chromium scenarios pass. See HANDOFF.md for the exact release state. The [live eight-table test](docs/reports/2026-10-09-eight-table-test.md) recorded duplicate-free ordering on 9 October; the owner reports that all 26 old test bills and related payments were cleared and all eight table visits closed on 10 October. Do not repeat that cleanup: new orders may exist. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md). This is a web/PWA project, not an App Store app.
+**Current milestone:** the online pilot includes one-step kitchen completion, “น้ำอัดลม - โค้ก”, distinct order/payment alert tones, ten persistent QR links and safe same-request order retries. The follow-up code review hardens staff refresh/audio races and groups staff code into focused files; see [HANDOFF.md](HANDOFF.md) for validation and deployment status and [the review report](docs/reports/2026-10-10-code-review.md) for findings. The owner reported clearing 26 old test bills on 10 October; new orders have since been observed. **Do not repeat cleanup.** Start with HANDOFF.md and [AGENTS.md](AGENTS.md). This is a web/PWA project, not an App Store app.
 
 GitHub repository: [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`.
 
@@ -82,6 +82,7 @@ pnpm test:browser
 
 ```text
 src/                  React UI, authoritative pricing rules สำหรับ demo, API adapter
+src/staff/            Staff components, sound/QR helpers, session-safe state updates
 server/demo.mjs       API ในเครื่อง + ไฟล์ข้อมูลทดลอง
 supabase/migrations/  Database schema, RLS, transactional RPC และรายงาน
 supabase/functions/   public-api, customer-api, staff-api พร้อม auth guards
@@ -93,7 +94,7 @@ tests/               unit, HTTP integration, PostgreSQL integration
 docs/                ออกแบบ/ติดตั้ง/ผลตรวจ/ตัวอย่างหน้าจอ
 ```
 
-[แบบสถาปัตยกรรมเริ่มต้น](docs/architecture-baseline.md) · [ข้อกำหนดอ่านง่าย](docs/customer-accessibility.md) · [System prompt สำหรับ Voice ในอนาคต](supabase/functions/_shared/voice/system-prompt.th.txt)
+[โครงสร้างไฟล์ปัจจุบัน](docs/project-structure.md) · [แบบสถาปัตยกรรมเริ่มต้น](docs/architecture-baseline.md) · [ข้อกำหนดอ่านง่าย](docs/customer-accessibility.md) · [System prompt สำหรับ Voice ในอนาคต](supabase/functions/_shared/voice/system-prompt.th.txt)
 
 ## Current architecture
 
@@ -125,10 +126,13 @@ Node does not load `.env.local`: export optional demo variables into the shell. 
 
 ## Database setup and migration history
 
-Demo needs no database service; SQL tests use in-memory PGlite. On a new isolated Supabase trial project, apply all files in `supabase/migrations/` in filename order, then `supabase/seed.sql` and `supabase/menu-seed.sql`:
+Demo needs no database service; SQL tests use in-memory PGlite. On a **new isolated Supabase project only**, use this order: first the two initial migrations, then `supabase/seed.sql` and `supabase/menu-seed.sql`, then all remaining migrations in filename order. Later data migrations depend on those seeded tables/menu rows. The tracked migrations are:
 
 - `202610050001_initial_schema.sql` — schema, RLS, constraints, views and Realtime.
 - `202610050002_application_api.sql` — transactional RPCs, snapshots, retries and reporting.
+
+**Run `seed.sql`, then `menu-seed.sql` here before continuing:**
+
 - `20261008041620_order_details_and_menu_creation.sql` — optional legacy-compatible takeaway snapshots, free kitchen notes and owner-only menu creation.
 - `20261008041631_owner_menu_catalog.sql` — owner menu/prices and six categories, preserving historic order snapshots and retired rows.
 
@@ -140,7 +144,7 @@ Demo needs no database service; SQL tests use in-memory PGlite. On a new isolate
 - `20261010090139_persistent_ordering_qr.sql` — applied on 10 October: preserves existing printed QR hashes, adds durable display links and a remote takeaway point, with owner-only individual rotation.
 
 For the existing online pilot, all nine migrations are already applied; do not rerun seeds or initial migrations. The first two hosted migration versions differ from the repository filenames; see HANDOFF.md before using CLI `db push`.
-All migrations and seeds belong in Git. Apply migrations once; add a new migration for future deployed changes instead of editing applied files. Seeds avoid overwriting owner menu prices and create no accounts, passwords or QR secrets. Disable public signup, create four Auth users and corresponding `admins` profiles, and generate QR entries through the owner UI. [Cloud setup](docs/cloud-setup.md) has the profile SQL and deployment steps. SQL Editor application does not populate CLI migration history automatically; reconcile it before using `supabase db push` later. Local JSON sales are not automatically migrated online.
+All migrations and seeds belong in Git. Apply migrations once; add a new migration for future deployed changes instead of editing applied files. Seeds avoid overwriting owner menu prices and create no accounts, passwords or QR secrets. The last QR migration creates ten persistent entries. Disable public signup, create an owner Auth user/profile and up to three staff profiles as needed, and view the QR links through the owner UI. [Cloud setup](docs/cloud-setup.md) has the profile SQL and deployment steps. SQL Editor application does not populate CLI migration history automatically; reconcile it before using `supabase db push` later. Local JSON sales are not automatically migrated online.
 
 ## Development commands and toolchain
 
@@ -151,9 +155,9 @@ All migrations and seeds belong in Git. Apply migrations once; add a new migrati
 | `pnpm typecheck` | Strict frontend/HTML source + Edge source checks |
 | `pnpm check:edge` | Edge source check only; not a Deno runtime test |
 | `pnpm lint` | ESLint JS/TS/TSX with zero warnings |
-| `pnpm test` | 39 domain, HTTP, catalog and PostgreSQL tests |
+| `pnpm test` | Domain, HTTP, catalog, PostgreSQL and staff state/audio regressions |
 | `pnpm test:db` | PGlite migration/RPC tests only |
-| `pnpm test:browser` | 20 Chromium dashboard, kitchen/POS, takeaway, retry and menu-editor regressions using controlled API responses |
+| `pnpm test:browser` | Chromium dashboard, kitchen/POS, takeaway, retry, menu, QR, sound and session regressions using controlled API responses |
 | `pnpm build` | Frontend typecheck and build `dist/` |
 | `pnpm preview` | Static build preview; use `pnpm dev` for complete demo interaction |
 | `pnpm preview:html` | Rebuild the committed standalone HTML artifact |

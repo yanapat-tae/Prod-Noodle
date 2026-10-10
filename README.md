@@ -2,7 +2,7 @@
 
 Web app ภาษาไทยสำหรับร้าน 8 โต๊ะและสั่งกลับบ้าน ใช้ 🍜 แทนรูปอาหาร ไม่มีค่า Voice/AI ในรุ่นนี้
 
-**Current milestone:** the online pilot is deployed with the owner’s menu and safe same-request order retries. One-step kitchen completion is deployed on 10 October, with 39 Node/PGlite tests and 20 Chromium scenarios passing; the Supabase migration and production frontend assets are verified. See HANDOFF.md for the exact release state. The [live eight-table test](docs/reports/2026-10-09-eight-table-test.md) recorded duplicate-free ordering on 9 October; the owner reports that all 26 old test bills and related payments were cleared and all eight table visits closed on 10 October. Do not repeat that cleanup: new orders may exist. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md). This is a web/PWA project, not an App Store app.
+**Current milestone:** the online pilot is deployed with the owner’s menu and safe same-request order retries. One-step kitchen completion is deployed on 10 October, with the original 39 Node/PGlite tests and 20 Chromium scenarios passing; the Supabase migration and production frontend assets are verified. The next update adds a Coke menu label, distinct order/payment alert tones, and ten persistent ordering QR links; 41 Node/PGlite tests and 28 Chromium scenarios pass. See HANDOFF.md for the exact release state. The [live eight-table test](docs/reports/2026-10-09-eight-table-test.md) recorded duplicate-free ordering on 9 October; the owner reports that all 26 old test bills and related payments were cleared and all eight table visits closed on 10 October. Do not repeat that cleanup: new orders may exist. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md). This is a web/PWA project, not an App Store app.
 
 GitHub repository: [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`.
 
@@ -37,10 +37,11 @@ pnpm dev
 - ติ๊กส่งหมู่บ้านเศรษฐสิริ วงแหวน-สุขาภิบาล2 แล้วต้องกรอกบ้านเลขที่/ซอยและเบอร์โทร ข้อมูลส่งต่อถึง POS/ครัว เป็นบริการส่งของร้าน ไม่มีการเชื่อมแพลตฟอร์ม Delivery
 - ปุ่มและแถวตัวเลือกสูงอย่างน้อย 56px ตัวอักษรลูกค้าหลัก 20px เว้นช่องกด 12px ใช้ฟอนต์เครื่อง ไม่โหลดรูปหรือฟอนต์ภายนอก
 - POS เปิดออเดอร์โต๊ะ/กลับบ้าน ห้องครัวเปิดเสียงเตือน และปิดรอบโต๊ะ มีปุ่ม “เสร็จ/เสิร์ฟแล้ว” ครั้งเดียวจากออเดอร์ใหม่/กำลังทำ/พร้อมเสิร์ฟ เมื่อสำเร็จบิลออกจากครัว แต่บิลที่ยังไม่จ่ายยังอยู่ใน POS รับชำระได้ (เผยแพร่บนเว็บจริงแล้ว 10 ต.ค. 2026)
+- เปิดเสียงแจ้งเตือนและลองฟังได้: กระดิ่งสองจังหวะเมื่อออเดอร์เข้า และเสียงไล่โน้ตเมื่อบันทึกรับเงินสด/ยืนยันตรวจยอด PromptPay สำเร็จบนเครื่องที่กดยืนยัน ปรับเสียงสื่อของเครื่องและเปิดหน้าเว็บไว้
 - แคชเชียร์บันทึกรับเงินเต็มจำนวนด้วยเงินสด หรือยืนยันว่าตรวจรายการ PromptPay แล้ว Owner คืนเงินเต็มจำนวนได้
 - ยอดขายรายวัน/เดือน กราฟรายชั่วโมง สัดส่วนช่องทาง 10 เมนูขายดี และ CSV ที่เปิดใน Excel ได้
 - Delivery กรอกยอดรายวันหรือนำเข้า CSV; ยอดเดิมของวัน/ช่องทางถูกแทนที่เพื่อไม่บวกซ้ำ ยอดที่ไม่มีจำนวนออเดอร์แสดงว่าข้อมูลไม่ครบ
-- Owner แก้ชื่อเมนูเดิมหรือเพิ่มเมนูใหม่พร้อมขนาด/ราคา เลือกหมวดและกลุ่มตัวเลือกที่มีอยู่ เปลี่ยนราคา/สถานะหมด และสร้าง QR โต๊ะ 8 ใบ + Takeaway
+- Owner แก้ชื่อเมนูเดิมหรือเพิ่มเมนูใหม่พร้อมขนาด/ราคา เลือกหมวดและกลุ่มตัวเลือกที่มีอยู่ เปลี่ยนราคา/สถานะหมด และเปิดดู QR คงเดิม 10 ใบ: โต๊ะ 8 ใบ, กลับบ้านหน้าร้าน 1 ใบ, สั่งล่วงหน้า/ส่งใน LINE 1 ใบ มีปุ่มคัดลอกลิงก์และเปลี่ยนเฉพาะใบโดย Owner
 - หากส่งออเดอร์แล้วไม่ทราบผล จะเก็บตะกร้าเดิมไว้และให้ลองส่งด้วยรหัสเดิมเพื่อป้องกันบิลซ้ำ รวมถึงหลังโหลดหน้าใหม่
 - PWA manifest/icons และ service worker สำหรับ app shell ใน production build; เมื่อเน็ตหลุดจะไม่แสดงว่าส่งออเดอร์สำเร็จโดยไม่ได้รับคำตอบจากเซิร์ฟเวอร์
 
@@ -52,7 +53,7 @@ pnpm dev
 
 Voice, รูปอาหาร, Delivery partner API, ตรวจเงินโอนอัตโนมัติ, แบ่งจ่าย และ XLSX โดยตรงยังไม่เปิดในรุ่นนี้ CSV มี BOM ภาษาไทยและเปิดใน Excel ได้
 
-ความต้องการเสียงล่าสุด: “จ่ายเงิน [ยอด] บาทแล้ว” หลังยืนยันเงินเข้าจริงจากกสิกร ร้านใช้ K PLUS บน iPhone เว็บไม่สามารถอ่านแจ้งเตือนของแอป K PLUS ได้โดยตรง ต้องมีช่องทางยืนยันจากระบบรับชำระของธนาคาร เช่น API/webhook ก่อนทำฟีเจอร์นี้ ยังไม่เพิ่มเสียงจากการกดยืนยัน PromptPay ของพนักงาน และยังไม่มีการตรวจเงินโอนอัตโนมัติ
+ความต้องการเสียงล่าสุด: “จ่ายเงิน [ยอด] บาทแล้ว” หลังยืนยันเงินเข้าจริงจากกสิกร ร้านใช้ K PLUS บน iPhone เว็บไม่สามารถอ่านแจ้งเตือนของแอป K PLUS ได้โดยตรง ต้องมีช่องทางยืนยันจากระบบรับชำระของธนาคาร เช่น API/webhook ก่อนทำฟีเจอร์นี้ เสียงพูดยังเลื่อนไว้ ส่วนเสียงแจ้งเตือนสั้นหลังพนักงานยืนยันเงินสด/PromptPay ได้เพิ่มตามคำขอใหม่ ระบบยังไม่มีการตรวจเงินโอนอัตโนมัติ
 
 ## การตรวจสอบ
 
@@ -135,7 +136,10 @@ Demo needs no database service; SQL tests use in-memory PGlite. On a new isolate
 - `20261009113319_owner_menu_corrections.sql` — targeted hotpot/ice-cream/rice-option corrections; custom dishes retained.
 - `20261010034022_one_step_kitchen_completion.sql` — applied on 10 October: allows `new`/`preparing`/`ready` directly to `served`, retaining legacy transitions, payment/refund behavior and service-only RPC permissions. Changes the function only; does not modify existing bills or table sessions.
 
-For the existing online pilot, all seven migrations are already applied; do not rerun seeds or initial migrations. The first two hosted migration versions differ from the repository filenames; see HANDOFF.md before using CLI `db push`.
+- `20261010090132_coke_menu_name.sql` — applied on 10 October: changes only the soft-drink name to “น้ำอัดลม - โค้ก”.
+- `20261010090139_persistent_ordering_qr.sql` — applied on 10 October: preserves existing printed QR hashes, adds durable display links and a remote takeaway point, with owner-only individual rotation.
+
+For the existing online pilot, all nine migrations are already applied; do not rerun seeds or initial migrations. The first two hosted migration versions differ from the repository filenames; see HANDOFF.md before using CLI `db push`.
 All migrations and seeds belong in Git. Apply migrations once; add a new migration for future deployed changes instead of editing applied files. Seeds avoid overwriting owner menu prices and create no accounts, passwords or QR secrets. Disable public signup, create four Auth users and corresponding `admins` profiles, and generate QR entries through the owner UI. [Cloud setup](docs/cloud-setup.md) has the profile SQL and deployment steps. SQL Editor application does not populate CLI migration history automatically; reconcile it before using `supabase db push` later. Local JSON sales are not automatically migrated online.
 
 ## Development commands and toolchain

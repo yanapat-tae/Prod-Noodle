@@ -38,8 +38,9 @@ async function setup(page) {
 const notes = page => page.evaluate(() => window.soundNotes);
 const clear = page => page.evaluate(() => { window.soundNotes = []; });
 
-test('New orders ring once; reloads and reappearing orders stay silent; previews are distinct', async ({ page }) => {
+test('New orders ring once; reloads and reappearing orders stay silent; previews are distinct', async ({ page }, testInfo) => {
   const data = await setup(page);
+  await page.screenshot({ path: testInfo.outputPath('sounds-iphone-width.png'), fullPage: true });
   await expect.poll(() => notes(page)).toEqual([]);
   await page.getByRole('button', { name: 'ลองเสียงออเดอร์เข้า', exact: true }).click();
   const bell = await notes(page); expect(bell.length).toBeGreaterThan(1);

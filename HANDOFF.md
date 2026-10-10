@@ -4,7 +4,7 @@ Snapshot date: **10 October 2026, Asia/Bangkok**. Read together with README.md a
 
 ## Current project status
 
-The one-step kitchen migration and production frontend are deployed and verified on 10 October. Bank-confirmed payment speech is blocked on an actual bank payment-notification integration; the owner uses K PLUS on iPhone. No manual-confirmation payment speech was added. Release evidence and remaining real-device acceptance are in the 10 October section below.
+The one-step kitchen release is deployed; the newer Coke label, alert tones and ten persistent QR entries are validated and being deployed (latest section below). Bank-confirmed payment speech is blocked on an actual bank payment-notification integration; the owner uses K PLUS on iPhone. No manual-confirmation payment speech was added. Release evidence and remaining real-device acceptance are in the 10 October section below.
 
 The implemented milestone is the online restaurant pilot with the owner menu, named takeaway and village delivery, per-dish free notes, owner menu creation/renaming, corrected menu details and safe recovery from uncertain order submissions. React/Vite, Node demo, HTML preview and Supabase architecture are preserved. The database and staff API changes are deployed on project `emjktqzcvgjwtsgysljy`; the frontend release is verified on Cloudflare Pages. Live URL: `https://prod-noodle.pages.dev`. Previous URL/APP_ORIGIN configuration blockers are resolved. Real-device kitchen/POS acceptance is still required; no App Store app is being built.
 
@@ -18,12 +18,12 @@ This folder originally had no `.git`, remote or commit author. The project is no
 - Owner creates menus with one to eight sizes, prices and existing option groups, and renames existing dishes while preserving historical bills; stable draft codes make retries safe even after later price edits.
 - Eight-table sessions, daily takeaway queues, retry protection and historical price snapshots.
 - Four mock staff accounts, POS entry, kitchen status/sound, full cash or confirmed-PromptPay recording, owner refunds and close/reopen table visits.
-- Daily/monthly dashboard, hourly/channel/top-menu charts, CSV export, owner price/availability edits and nine QR entries.
+- Daily/monthly dashboard, hourly/channel/top-menu charts, CSV export, owner price/availability edits and ten persistent QR entries with explicit per-entry rotation.
 - GrabFood/LINE MAN daily summary/CSV replacement import, avoiding duplicate totals.
 - PWA shell, manifest/icons, hosting routing/headers and guarded online API source.
-- Seven SQL migrations, two seed files, RLS/grants, transaction RPCs, ledger/reporting, opaque customer tokens and staff Auth guards.
-- 39 Node/PGlite tests covering domain/HTTP/database behavior, order details, owner menu validation/retries/authorization, real catalog upgrades and historical bills, including the existing 40-request local burst.
-- 20 Chromium scenarios: seven dashboard/CSV cases, two takeaway/village flows, four owner menu creation/edit/retry flows, three uncertain-submit/reload cases and four one-step kitchen cases. All passed in the 10 October full run.
+- Nine SQL migrations, two seed files, RLS/grants, transaction RPCs, ledger/reporting, opaque customer tokens and staff Auth guards.
+- 41 Node/PGlite tests covering domain/HTTP/database behavior, order details, owner menu validation/retries/authorization, real catalog upgrades and historical bills, including the existing 40-request local burst.
+- 28 Chromium scenarios: seven dashboard/CSV cases, two takeaway/village flows, four owner menu creation/edit/retry flows, three uncertain-submit/reload cases four one-step kitchen cases, seven sound cases and one persistent-QR case. All passed in the latest 10 October full run.
 - Handoff tooling: pinned Node/pnpm, full typecheck/lint/check scripts, ESLint configuration, portable dependency installer and secret-safe example environment.
 
 ## Partially completed / intentionally deferred
@@ -45,6 +45,20 @@ This folder originally had no `.git`, remote or commit author. The project is no
 - Source typechecking uses a Deno shim; PGlite emulates Supabase Auth/roles. These checks are not a hosted integration test.
 - `pnpm preview` is a static build preview, not a complete demo backend. Use `pnpm dev` for demo interaction; online builds require correctly configured Supabase services.
 - SQL Editor installation does not record CLI migration history. Reconcile history before adopting `supabase db push`; do not rerun migrations against an existing schema blindly.
+
+## Coke label, distinct alert tones and persistent QR · 10 October 2026
+
+This newer request supersedes the previous deferral only for non-speech notification tones. The owner now wants a clear bell for incoming orders and a different loud cue after staff confirm cash or checked PromptPay. Bank-confirmed speech remains deferred. `soft-drink` is renamed to “น้ำอัดลม - โค้ก” without changing prices, availability, IDs or historical order snapshots; local saved catalogs upgrade once and retain custom owner names.
+
+The Web Audio player uses two bright bell strikes for orders and four ascending triangle notes for confirmed payments. The staff screen has an explicit enable/mute control and separate preview buttons. Sound starts muted on each page load because browser/iPhone playback needs a user gesture. Failed payments, passive payment updates from another device, initial order loads, repeated refreshes and reappearing known IDs do not play duplicate confirmations. Audio failures cannot change successful payment records. Hardware media volume and keeping the page active still matter; no real iPhone loudness/background guarantee is claimed.
+
+The old “generate QR” flow called `rotate_qr` for all nine points on every generation. The replacement shows ten durable links: tables 1–8, takeaway at the storefront, and takeaway ordered in advance/from LINE. Both takeaway links use the existing name and optional village-delivery form; no new delivery service is introduced. The owner can download or copy links repeatedly without changing them, and explicitly replace one card after confirmation. Optimistic revision checks and a retained request UUID protect retries and stale screens.
+
+The QR migration retains all existing row IDs and original token hashes, so currently valid printed QRs keep working. Since the original plaintext tokens were never stored, new stable display tokens are added as aliases; the images now displayed may differ from old printed copies, but both remain valid until that entry is explicitly replaced. Previously invalidated older copies cannot be recovered. Raw display tokens stay in the server-only QR table. Two tightly scoped SECURITY DEFINER RPCs check `auth.uid()` through the existing active-owner guard and expose listing/rotation only to the owner; anon and non-owner access is denied. The existing bootstrap RPC accepts original or display hashes. The old bulk rotation RPC refuses stale clients. Existing customer sessions, table visits, bills, authorization rules and ordering retries are retained. The frontend calls the new authenticated owner RPCs directly, so no Edge Function redeployment or new credentials are needed.
+
+Validation: `pnpm check` passes all 41 Node/PGlite tests, frontend/Edge typechecks, lint, build and HTML preview generation. All 28 Chromium scenarios pass, including 390px sound/QR screenshots and unclipped audible waveform rendering. SQL tests verify stable repeated listing, all old printed links, the extra remote takeaway point, only-owner access, individual rotation/retry/conflict behavior, legacy endpoint refusal and preserved bills/sessions. Reviewer-agent dispatch was unavailable due to its usage limit; source/security review was completed inline, not claimed as independent review. ESLint now ignores generated Playwright output, resolving a directory-removal race when checks and browser tests run together.
+
+Supabase migrations `20261010090132_coke_menu_name.sql` and `20261010090139_persistent_ordering_qr.sql` are applied and their filenames match hosted history. Before/after fingerprints match for orders (4), order_items (4), payment_transactions (4), order_status_events (8), table_sessions (19), customer_sessions (13), admins (2), menu_variants (62), all other menu_items (40), and the original nine QR row IDs/hashes/active flags. Only the requested menu name changed; ten unique display tokens, matching hashes and grants are verified. Production frontend publication is pending. Do not repeat any cleanup or rotate production QRs for testing. The read-only preflight saw 4 orders, 4 order items and 4 payment entries; these are newer than the prior kitchen-release snapshot and must be preserved.
 
 ## One-step kitchen completion and latest owner handoff · 10 October 2026
 

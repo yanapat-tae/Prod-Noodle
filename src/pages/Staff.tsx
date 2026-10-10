@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import QrCards from './QrCards.tsx';
+import { StaffStateSync, emptyStaffState } from '../staff/state-sync.ts';
 import { StaffSoundPlayer } from '../staff-sounds.ts';
 import type { StaffSound } from '../staff-sounds.ts';
 import { api, mode } from '../api.ts';
@@ -12,7 +13,7 @@ import MenuEditor from './MenuEditor.tsx';
 import { DeliveryDetails } from './TakeawayForm.tsx';
 type Tab = 'pos' | 'kitchen' | 'dashboard' | 'delivery' | 'menu' | 'qr' | 'accounts';
 const tabs: [Tab, string][] = [['pos', 'โต๊ะ / POS'], ['kitchen', 'ห้องครัว'], ['dashboard', 'ยอดขาย'], ['delivery', 'Delivery'], ['menu', 'จัดการเมนู'], ['qr', 'QR โต๊ะ'], ['accounts', 'บัญชีร้าน']];
-const emptyState: StaffState = { orders: [], visits: {}, summaries: [] };
+const emptyState = emptyStaffState();
 function Ticket({ order, identity, busy, onAction }: { order: Order; identity: Identity; busy: boolean; onAction: (order: Order, action: string, value?: string) => void }) {
   const target = canTransition(order.status, 'served') ? 'served' : undefined;
   return <article className={'ticket status-border-' + order.status}><div className="ticket-top"><div><h2>{orderLabel(order)}</h2><span className="muted">#{order.id.slice(0, 6).toUpperCase()} · {thaiTime(order.createdAt)}</span></div><span className={'status-badge status-' + order.status}>{statusNames[order.status]}</span></div><DeliveryDetails details={order.takeaway} /><div className="ticket-lines">{order.lines.map(line => <div key={line.id}><div><strong>{line.quantity} × {line.name}</strong><span>{money(line.totalSatang)}</span></div><p>{[line.variantName, ...line.optionNames, ...line.notes].join(' · ')}</p>{line.freeNote && <p className="kitchen-note">{line.freeNote}</p>}</div>)}</div><div className="ticket-total"><span>{order.refundedAt ? 'คืนเงินแล้ว' : order.paidAt ? '✓ ชำระแล้ว' : 'ยังไม่ชำระ'}</span><strong>{money(order.totalSatang)}</strong></div><div className="ticket-actions">{target && <button className="primary-action" disabled={busy} onClick={() => onAction(order, 'status', target)}>เสร็จ/เสิร์ฟแล้ว</button>}{!order.paidAt && order.status !== 'cancelled' && <button disabled={busy} onClick={() => onAction(order, 'payment')}>รับชำระเงิน</button>}{canTransition(order.status, 'cancelled') && <button className="danger-text" disabled={busy} onClick={() => onAction(order, 'status', 'cancelled')}>ยกเลิก</button>}{identity.role === 'owner' && order.paidAt && !order.refundedAt && <button className="danger-text" disabled={busy} onClick={() => onAction(order, 'refund')}>คืนเงินเต็มจำนวน</button>}</div></article>;
@@ -22,7 +23,7 @@ export default function Staff({ catalog, refreshMenu }: { catalog: MenuItem[]; r
   const [state, setState] = useState<StaffState>(emptyState); const [tab, setTab] = useState<Tab>('pos'); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false); const [filter, setFilter] = useState('all');
   const [compose, setCompose] = useState<{ channel: 'dine_in' | 'takeaway'; table: number | null } | null>(null); const [payment, setPayment] = useState<Order | null>(null); const [sound, setSound] = useState(false);
   const known = useRef<Set<string> | null>(null); const paidSounds = useRef(new Set<string>()); const actionInFlight = useRef(false);
-  const [sounds] = useState(() => new StaffSoundPlayer()); const [soundError, setSoundError] = useState(''); const loadInFlight = useRef(false); const loadAgain = useRef(false);
+  const [sounds] = useState(() => new StaffSoundPlayer()); const [soundError, setSoundError] = useState(''); const sessionSync = useRef<StaffStateSync | null>(null); const soundRequest = useRef(0);
   const playSound = useCallback((kind: StaffSound) => {
     void sounds.play(kind).then(ok => { if (!ok) { sounds.disable(); setSound(false); setSoundError('เสียงหยุดทำงาน กรุณาแตะเปิดเสียงอีกครั้ง'); } });
   }, [sounds]);
@@ -32,15 +33,42 @@ export default function Staff({ catalog, refreshMenu }: { catalog: MenuItem[]; r
     orders.forEach(order => known.current!.add(order.id));
     if (incoming) playSound('order');
   }, [playSound]);
-  useEffect(() => () => sounds.dispose(), [sounds]);
+  useEffect(() => () => { soundRequest.current++; sounds.dispose(); }, [sounds]);
   const refresh = useCallback(async (changed?: Order) => {
-    if (!identity) return;
-    if (changed) { observeOrders([changed], false); setState(previous => ({ ...previous, orders: [...previous.orders.filter(o => o.id !== changed.id), changed] })); return; }
-    if (loadInFlight.current) { loadAgain.current = true; return; } loadInFlight.current = true;
-    try { const value = await api.state(identity); observeOrders(value.orders, true); setState(value); } catch (e) { setError((e as Error).message); } finally { loadInFlight.current = false; if (loadAgain.current) { loadAgain.current = false; void refresh(); } }
-  }, [identity, observeOrders]);
+    if (changed) sessionSync.current?.accept(changed);
+    else await sessionSync.current?.refresh();
+  }, []);
   useEffect(() => { let alive = true; void api.restoreStaff().then(value => { if (alive) setIdentity(value); }).finally(() => { if (alive) setRestoring(false); }); return () => { alive = false; }; }, []);
-  useEffect(() => { if (!identity) return; known.current = null; paidSounds.current.clear(); void refresh(); const stop = api.watch(identity, changed => { void refresh(changed); }); const visible = () => { if (!document.hidden) void refresh(); }; document.addEventListener('visibilitychange', visible); return () => { stop(); document.removeEventListener('visibilitychange', visible); }; }, [identity, refresh]);
+  useEffect(() => {
+    if (!identity) return;
+    known.current = null; paidSounds.current.clear();
+    const sync = new StaffStateSync(() => api.state(identity), (value, changed) => {
+      observeOrders(changed ? [changed] : value.orders, !changed); setState(value);
+    }, error => setError((error as Error).message));
+    sessionSync.current = sync;
+    void sync.refresh();
+    const stop = api.watch(identity, changed => { if (changed) sync.accept(changed); else void sync.refresh(); });
+    const visible = () => { if (!document.hidden) void sync.refresh(); };
+    document.addEventListener('visibilitychange', visible);
+    return () => { sync.dispose(); sessionSync.current = null; stop(); document.removeEventListener('visibilitychange', visible); };
+  }, [identity, observeOrders]);
+
+  async function toggleSound() {
+    const request = ++soundRequest.current;
+    if (sound) { sounds.disable(); setSound(false); return; }
+    const enabled = await sounds.enable();
+    if (request !== soundRequest.current) return;
+    setSound(enabled); setSoundError(enabled ? '' : 'เปิดเสียงไม่ได้ กรุณาลองแตะอีกครั้งหรือเปิดเว็บใน Safari');
+  }
+  async function logout() {
+    soundRequest.current++; sounds.disable(); setSound(false); setBusy(true);
+    try {
+      await api.logout(identity!);
+      sessionSync.current?.dispose(); setIdentity(null); setState(emptyState);
+      setPayment(null); setCompose(null); setError(''); setNotice(''); setSoundError('');
+    } catch (error) { setError((error as Error).message); }
+    finally { setBusy(false); }
+  }
 
   async function login() { setBusy(true); setError(''); try { setIdentity(await api.login(account, password)); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }
   async function action(order: Order, kind: string, value?: string) {
@@ -50,11 +78,12 @@ export default function Staff({ catalog, refreshMenu }: { catalog: MenuItem[]; r
     actionInFlight.current = true; setBusy(true); setError('');
     if (kind === 'pay') void sounds.prepare();
     try {
-      if (kind === 'status') await api.status(identity!, order.id, value as Status);
-      else if (kind === 'refund') await api.refund(identity!, order.id);
+      if (kind === 'status') await refresh(await api.status(identity!, order.id, value as Status));
+      else if (kind === 'refund') await refresh(await api.refund(identity!, order.id));
       else {
         const paid = await api.pay(identity!, order.id, value!);
         if (paid.id !== order.id || !paid.paidAt) throw new Error('ยังไม่ได้รับการยืนยันบันทึกเงิน กรุณาโหลดออเดอร์ใหม่');
+        await refresh(paid);
         if (!order.paidAt && !paid.refundedAt && !paidSounds.current.has(paid.id)) {
           paidSounds.current.add(paid.id); playSound('payment');
         }
@@ -70,7 +99,7 @@ export default function Staff({ catalog, refreshMenu }: { catalog: MenuItem[]; r
   if (payment) return <main className="staff-container payment-screen"><button disabled={busy} onClick={() => setPayment(null)}>← กลับไปออเดอร์</button><h1>รับชำระเงิน · {orderLabel(payment)}</h1><div className="panel">{payment.lines.map(l => <div className="receipt-line" key={l.id}><span>{l.quantity} × {l.name}</span><strong>{money(l.totalSatang)}</strong></div>)}<div className="bill-total"><span>ยอดที่ต้องชำระ</span><strong>{money(payment.totalSatang)}</strong></div><p className="info-message">บันทึกหลังแคชเชียร์รับเงินหรือตรวจรายการโอนแล้ว</p><div className="payment-methods"><button className="primary-action" disabled={busy} onClick={() => void action(payment, 'pay', 'cash')}>รับเงินสดแล้ว</button><button disabled={busy} onClick={() => void action(payment, 'pay', 'promptpay')}>ตรวจยอด PromptPay แล้ว</button></div>{error && <p role="alert" className="error-message">{error}</p>}</div></main>;
   const activeOrders = state.orders.filter(o => !['served', 'cancelled'].includes(o.status));
   const visibleOrders = state.orders.filter(o => filter === 'all' ? (o.status !== 'cancelled' && (!o.paidAt || o.status !== 'served' || Boolean(o.visitId && state.visits[o.tableNumber!]?.id === o.visitId))) : filter === 'takeaway' ? o.channel === 'takeaway' && (o.status !== 'served' || !o.paidAt) && o.status !== 'cancelled' : o.tableNumber === Number(filter) && o.visitId === state.visits[filter]?.id);
-  return <div className="staff-app"><header className="staff-topbar"><div><strong>โปรด <span>หลังร้าน</span></strong><p>{identity.name} · {identity.role === 'owner' ? 'เจ้าของร้าน' : 'พนักงาน'}</p></div><div><button aria-pressed={sound} onClick={async () => { if (sound) { sounds.disable(); setSound(false); } else { const enabled = await sounds.enable(); setSound(enabled); setSoundError(enabled ? '' : 'เปิดเสียงไม่ได้ กรุณาลองแตะอีกครั้งหรือเปิดเว็บใน Safari'); } }}>{sound ? 'ปิดเสียงแจ้งเตือน' : 'เปิดเสียงแจ้งเตือน'}</button><button onClick={async () => { await api.logout(identity); sounds.disable(); setSound(false); setIdentity(null); setState(emptyState); }}>ออกจากระบบ</button></div></header><nav className="staff-nav" aria-label="หน้าจอร้าน">{tabs.filter(([key]) => identity.role === 'owner' || !['menu', 'qr', 'accounts'].includes(key)).map(([key, label]) => <button className={tab === key ? 'active' : ''} aria-current={tab === key ? 'page' : undefined} key={key} onClick={() => { setTab(key); setError(''); }}>{label}{key === 'kitchen' && activeOrders.length > 0 && <span>{activeOrders.length}</span>}</button>)}</nav><main className="staff-container">
+  return <div className="staff-app"><header className="staff-topbar"><div><strong>โปรด <span>หลังร้าน</span></strong><p>{identity.name} · {identity.role === 'owner' ? 'เจ้าของร้าน' : 'พนักงาน'}</p></div><div><button aria-pressed={sound} disabled={busy} onClick={() => void toggleSound()}>{sound ? 'ปิดเสียงแจ้งเตือน' : 'เปิดเสียงแจ้งเตือน'}</button><button disabled={busy} onClick={() => void logout()}>ออกจากระบบ</button></div></header><nav className="staff-nav" aria-label="หน้าจอร้าน">{tabs.filter(([key]) => identity.role === 'owner' || !['menu', 'qr', 'accounts'].includes(key)).map(([key, label]) => <button className={tab === key ? 'active' : ''} aria-current={tab === key ? 'page' : undefined} key={key} onClick={() => { setTab(key); setError(''); }}>{label}{key === 'kitchen' && activeOrders.length > 0 && <span>{activeOrders.length}</span>}</button>)}</nav><main className="staff-container">
     <section className="sound-controls" aria-label="เสียงแจ้งเตือน">
       <p>{sound ? 'เปิดเสียงแล้ว · กระดิ่ง = ออเดอร์เข้า / เสียงไล่โน้ต = รับเงินแล้ว' : 'เปิดเสียงแจ้งเตือน เพื่อฟังออเดอร์เข้าและการรับเงิน'}</p>
       {sound && <div><button onClick={() => playSound('order')}>ลองเสียงออเดอร์เข้า</button><button onClick={() => playSound('payment')}>ลองเสียงรับเงิน</button></div>}

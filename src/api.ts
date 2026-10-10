@@ -5,6 +5,7 @@ import { businessDate, salesReport } from './domain.ts';
 import { demoQr, qrLinks } from './qr.ts';
 import type { QrEntry, StoredQr } from './qr.ts';
 import { requestJson } from './http.ts';
+import { orderUpdates } from './staff/order-updates.ts';
 export const mode = import.meta.env.VITE_APP_MODE === 'supabase' ? 'supabase' : 'demo';
 const url = import.meta.env.VITE_SUPABASE_URL ?? '';
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
@@ -70,10 +71,18 @@ export const api = {
   },
   watch(identity: Staff, refresh: (order?: Order) => void) {
     if (!supabase) { const timer = setInterval(() => { if (!document.hidden) refresh(); }, 1000); return () => clearInterval(timer); }
-    let connected = false;
-    const channel = supabase.channel('staff-orders').on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, async payload => { if (payload.eventType === 'DELETE') { refresh(); return; } const { data, error } = await supabase!.from('orders').select(orderSelect).eq('id', payload.new.id).single(); if (error) refresh(); else refresh(mapOrder(data)); }).on('postgres_changes', { event: '*', schema: 'public', table: 'table_sessions' }, () => refresh()).subscribe(status => { connected = status === 'SUBSCRIBED'; if (connected) refresh(); });
+    let connected = false, active = true;
+    const updates = orderUpdates(async id => {
+      const { data, error } = await supabase!.from('orders').select(orderSelect).eq('id', id).single();
+      if (error) throw error;
+      return mapOrder(data);
+    }, refresh);
+    const channel = supabase.channel('staff-orders').on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
+      const deleted = payload.eventType === 'DELETE';
+      void updates.receive(deleted ? payload.old.id : payload.new.id, deleted);
+    }).on('postgres_changes', { event: '*', schema: 'public', table: 'table_sessions' }, () => { if (active) refresh(); }).subscribe(status => { connected = status === 'SUBSCRIBED'; if (active && connected) refresh(); });
     const timer = setInterval(() => { if (!connected && !document.hidden) refresh(); }, 30000);
-    return () => { clearInterval(timer); void supabase!.removeChannel(channel); };
+    return () => { active = false; updates.dispose(); clearInterval(timer); void supabase!.removeChannel(channel); };
   },
   async posOrder(identity: Staff, lines: CartInput[], total: number, channel: string, tableNumber: number | null, requestKey: string, takeaway?: TakeawayDetails) { return call<Order>('/staff/orders', { lines, expectedTotalSatang: total, channel, tableNumber, takeaway }, await staffToken(identity), requestKey); },
   async status(identity: Staff, id: string, status: Status) { return call<Order>(`/staff/orders/${id}/status`, { status }, await staffToken(identity)); },

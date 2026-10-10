@@ -2,6 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import type { CartInput, CustomerSession, DeliverySummary, MenuItem, Order, Staff, Status, TakeawayDetails } from './domain.ts';
 import type { NewMenuInput } from './menu-management.ts';
 import { businessDate, salesReport } from './domain.ts';
+import { demoQr, qrLinks } from './qr.ts';
+import type { QrEntry, StoredQr } from './qr.ts';
 import { requestJson } from './http.ts';
 export const mode = import.meta.env.VITE_APP_MODE === 'supabase' ? 'supabase' : 'demo';
 const url = import.meta.env.VITE_SUPABASE_URL ?? '';
@@ -87,9 +89,19 @@ export const api = {
     const end = new Date(from + 'T00:00:00Z'); if (period.length === 7) end.setUTCMonth(end.getUTCMonth() + 1); else end.setUTCDate(end.getUTCDate() + 1);
     const { data, error } = await supabase.rpc('staff_sales_report', { p_from: from, p_to: end.toISOString().slice(0, 10) }); if (error) throw new Error('โหลดรายงานไม่สำเร็จ'); return data;
   },
-  async qr(identity: Staff): Promise<{ label: string; url: string }[]> {
-    if (mode === 'demo') return [...Array.from({ length: 8 }, (_, i) => ({ label: 'โต๊ะ ' + (i + 1), url: location.origin + '/?table=' + (i + 1) })), { label: 'กลับบ้าน', url: location.origin + '/?table=takeaway' }];
-    return call('/staff/qr', {}, await staffToken(identity));
+  async qr(identity: Staff): Promise<QrEntry[]> {
+    if (mode === 'demo') return demoQr(identity, location.origin + '/');
+    if (!supabase) throw new Error('ยังไม่ได้ตั้งค่า Supabase');
+    const { data, error } = await supabase.rpc('owner_qr_entries');
+    if (error) throw new Error(error.code?.startsWith('PT') ? error.message : 'โหลด QR ไม่สำเร็จ กรุณาลองใหม่');
+    return qrLinks(data as StoredQr[], location.origin + '/');
+  },
+  async rotateQr(identity: Staff, entry: QrEntry, requestKey: string): Promise<QrEntry> {
+    if (mode === 'demo') return demoQr(identity, location.origin + '/', entry).find(value => value.key === entry.key)!;
+    if (!supabase) throw new Error('ยังไม่ได้ตั้งค่า Supabase');
+    const { data, error } = await supabase.rpc('owner_rotate_qr', { p_entry_key: entry.key, p_expected_revision: entry.revision, p_request_key: requestKey });
+    if (error) throw new Error(error.code?.startsWith('PT') ? error.message : 'ยังยืนยันการเปลี่ยน QR ไม่ได้ กรุณาโหลด QR เดิมเพื่อตรวจสอบ หรือลองปุ่มเดิมอีกครั้ง');
+    return qrLinks([data as StoredQr], location.origin + '/')[0];
   },
   async accounts(_identity: Staff): Promise<{ id: string; name: string; role: string; active: boolean; slot: number }[]> {
     if (!supabase) return Array.from({ length: 4 }, (_, i) => ({ id: 'demo-' + (i + 1), name: i ? 'พนักงาน ' + i : 'เจ้าของร้าน', role: i ? 'admin' : 'owner', active: true, slot: i + 1 }));

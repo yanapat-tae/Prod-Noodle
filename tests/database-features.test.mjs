@@ -34,6 +34,29 @@ before(async () => {
 });
 after(async () => db.close());
 
+test('SQL kitchen completion preserves snapshots, payment state and retry identity from every active status', async () => {
+  for (const steps of [[], ['preparing'], ['preparing', 'ready']]) {
+    const input = payload(); const key = randomUUID(); const order = await place(input, key);
+    for (const status of steps) await rpc('staff_order_action', [admin, order.id, 'status', status]);
+    const before = await scalar('select count(*) from public.payment_transactions');
+    const completed = await rpc('staff_order_action', [admin, order.id, 'status', 'served']);
+    assert.equal(completed.status, 'served');
+    assert.equal(completed.paidAt, null);
+    assert.deepEqual(completed.lines, order.lines);
+    assert.equal(completed.totalSatang, order.totalSatang);
+    assert.equal(await scalar('select count(*) from public.payment_transactions'), before);
+    assert.deepEqual(await rpc('staff_order_action', [admin, order.id, 'status', 'served']), completed);
+    assert.equal(await scalar("select count(*)::integer from public.order_status_events where order_id=$1 and next_status='served'", [order.id]), 1);
+    assert.equal((await place(input, key)).id, order.id);
+    await assert.rejects(() => rpc('staff_order_action', [admin, order.id, 'status', 'new']), error => error.code === 'PT409');
+    await assert.rejects(() => rpc('staff_order_action', [randomUUID(), order.id, 'status', 'served']), error => error.code === 'PT403');
+    await rpc('staff_order_action', [admin, order.id, 'pay', 'promptpay']);
+    await rpc('staff_order_action', [admin, order.id, 'pay', 'promptpay']);
+    assert.equal(await scalar("select count(*)::integer from public.payment_transactions where order_id=$1 and kind='capture'", [order.id]), 1);
+    await assert.rejects(() => rpc('staff_order_action', [admin, order.id, 'refund', null]), error => error.code === 'PT403');
+  }
+});
+
 test('free notes and takeaway details survive retries, reads and price changes', async () => {
   const input = payload({ lines: [{ ...line, freeNote: ' \tแยกถุง 🍜\n ' }], takeaway: { ...takeaway, customerName: '  คุณเอ\n' } });
   const key = randomUUID();

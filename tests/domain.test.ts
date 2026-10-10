@@ -1,9 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { starterCatalog } from '../src/catalog.ts';
-import { priceLine,parseBaht,salesReport,csvCell,businessDate } from '../src/domain.ts';
+import { priceLine,parseBaht,salesReport,csvCell,businessDate,canTransition } from '../src/domain.ts';
 import type { CartInput,Order } from '../src/domain.ts';
 const noodle:CartInput={itemCode:'soft-pork-noodles',variantCode:'normal',quantity:2,options:[{groupCode:'noodle',optionCode:'mama',quantity:1},{groupCode:'broth',optionCode:'clear',quantity:1}],notes:[]};
+test('Kitchen completion skips intermediate states while terminal orders cannot reopen',()=>{
+ for (const status of ['new','preparing','ready'] as const) assert.equal(canTransition(status,'served'),true,status);
+ for (const status of ['served','cancelled'] as const) {
+  for (const target of ['new','preparing','ready','served','cancelled'] as const) assert.equal(canTransition(status,target),false);
+ }
+ assert.equal(canTransition('new','preparing'),true);
+ assert.equal(canTransition('preparing','ready'),true);
+});
 test('Server pricing validates required choices, prices each bowl and rejects unavailable/foreign options',()=>{
  assert.equal(priceLine(starterCatalog,noodle).totalSatang,11000);
  assert.throws(()=>priceLine(starterCatalog,{...noodle,options:[]}),/เลือกเส้น/);

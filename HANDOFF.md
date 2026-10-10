@@ -1,8 +1,10 @@
 # Handoff: prod-noodle-pos
 
-Snapshot date: **9 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
+Snapshot date: **10 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. The latest section below supersedes older release and test-data status. This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
 
 ## Current project status
+
+The one-step kitchen release is implemented and validated locally, but has not been deployed. Bank-confirmed payment speech is blocked on an actual bank payment-notification integration; the owner uses K PLUS on iPhone. No manual-confirmation payment speech was added. Details and deployment prerequisites are in the 10 October section below.
 
 The implemented milestone is the online restaurant pilot with the owner menu, named takeaway and village delivery, per-dish free notes, owner menu creation/renaming, corrected menu details and safe recovery from uncertain order submissions. React/Vite, Node demo, HTML preview and Supabase architecture are preserved. The database and staff API changes are deployed on project `emjktqzcvgjwtsgysljy`; the frontend release is verified on Cloudflare Pages. Live URL: `https://prod-noodle.pages.dev`. Previous URL/APP_ORIGIN configuration blockers are resolved. Real-device kitchen/POS acceptance is still required; no App Store app is being built.
 
@@ -43,6 +45,22 @@ This folder originally had no `.git`, remote or commit author. The project is no
 - Source typechecking uses a Deno shim; PGlite emulates Supabase Auth/roles. These checks are not a hosted integration test.
 - `pnpm preview` is a static build preview, not a complete demo backend. Use `pnpm dev` for demo interaction; online builds require correctly configured Supabase services.
 - SQL Editor installation does not record CLI migration history. Reconcile history before adopting `supabase db push`; do not rerun migrations against an existing schema blindly.
+
+## One-step kitchen completion and latest owner handoff · 10 October 2026
+
+Before edits, the clean cloud checkout was on branch `work` at `492ef40`, matching remote `main`; the newest README/HANDOFF commit was also `492ef40`. Baseline `pnpm check` passed all 36 Node/PGlite tests, and all 16 Chromium scenarios passed. Read-only live probes found the existing `index-DUO-GUVk.js` frontend asset and 40 menu items, consistent with the 9 October deployment. These probes do not verify database migration history or current order counts; management credentials were unavailable.
+
+The owner reports that on 10 October all 26 old test bills and related payment records were cleared, and visits for all eight tables were closed. Menus, accounts and QR entries were retained. This newer report supersedes the older statement that live test orders remain new/unpaid. It was not independently queried in this session. **Never repeat the cleanup:** orders may have arrived afterward. No live order/payment/visit mutation, cleanup, seed, QR rotation or account change was performed during this work.
+
+The shared ticket now has a single “เสร็จ/เสิร์ฟแล้ว” button. Domain rules (used by the demo server and HTML mock) allow active `new`, `preparing` and `ready` orders directly to `served`. The new migration `20261010031000_one_step_kitchen_completion.sql` applies the same rule to `staff_order_action` while retaining intermediate transitions for older clients. Repeating completion returns the existing order without a duplicate status event. Terminal orders cannot reopen. Completion preserves item/price snapshots and leaves payment state unchanged; unpaid served bills remain in POS and still block table closing. Existing cancellation, full-payment, owner-only refund, authenticated staff and service-only RPC restrictions are preserved.
+
+Regression tests were observed failing against the old implementation before the changes. Final local checks: `pnpm check` passes all 39 Node/PGlite tests, frontend/Edge typecheck, zero-warning lint, production build and regenerated `preview.html`. All 20 Chromium scenarios pass, including direct completion from each active status, kitchen-to-POS retention at a 390px viewport, and an API failure that keeps the ticket visible. Browser runs used the cloud instance's system Chromium 151.0.7922.173 through an ignored local config because bundled Playwright downloads are restricted. Independent read-only code review found no actionable issue. These tests do not prove Supabase/Deno or real iPhone behavior.
+
+Payment speech changed during the conversation: the owner first selected staff-confirmed PromptPay, then explicitly replaced it with **actual KBank receipt confirmation**, speaking “จ่ายเงิน [ยอด] บาทแล้ว”. The owner uses **K PLUS on iPhone**. A browser cannot consume another iPhone app's notification directly; a supported bank/merchant API or webhook is a prerequisite for a bank-confirmed feature. Do not silently fall back to staff-confirmed speech or mark bills paid based on a notification amount alone. No speech or automatic-bank-payment implementation is included in this kitchen release. Existing cashier-confirmed PromptPay behavior stays as before.
+
+Deployment is still pending. The new migration has only been applied in local PGlite tests; the prepared frontend build is demo-mode validation, not the online deployment artifact. Apply only the new function migration to the existing project after inspecting its current function definition and migration history; do not use a blind `db push`, rerun old migrations/seeds, or clean live data. Then build and deploy the Supabase-mode frontend to the existing Pages project, preserving public environment values, owner-created menus, Auth, QR and existing data. The Edge handler interface is unchanged and does not need redeployment for this status-rule change. Verify CORS, auth guards and the published asset; leave real order mutation for the owner's acceptance test.
+
+The environment had no usable Supabase management or Cloudflare deployment bindings/CLI credentials. A saved configuration draft adds requirements `SUPABASE_ACCESS_TOKEN` for `api.supabase.com` and `CLOUDFLARE_API_TOKEN` for `api.cloudflare.com`, plus the exact site/project domains and `api.github.com` for GitHub review metadata. No credential values were supplied or printed. Git read works with the platform proxy; GitHub API access was blocked during probing. Enter scoped credentials securely in Environment settings and apply the needed network configuration before retrying deployment. Saving that draft does not itself apply credentials, run scripts or publish. Do not claim this release is live until migration and frontend publication are verified.
 
 ## Menu corrections, submission recovery and live load test · 9 October 2026
 

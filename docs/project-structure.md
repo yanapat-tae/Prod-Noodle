@@ -1,41 +1,56 @@
-# โครงสร้างที่เขียนแล้ว
+# โครงสร้างไฟล์ปัจจุบัน
 
 ```text
-prod-noodle-pos/
+Prod-Noodle/
 ├── src/
-│   ├── App.tsx, main.tsx              # แยก Staff เป็น lazy chunk
-│   ├── api.ts                        # Demo/Supabase adapter + Realtime
-│   ├── domain.ts                     # Types, pricing, validation, demo reports
-│   ├── catalog.ts                    # เมนูเริ่มต้น 14 รายการ
+│   ├── App.tsx, main.tsx             # Customer entry + lazy staff screen
+│   ├── api.ts                       # Demo/Supabase adapter, Auth, Realtime
+│   ├── domain.ts                    # Types, pricing, validation, reports
+│   ├── catalog.ts                   # เมนูต้นฉบับ 38 รายการ; live มี Owner เพิ่มเอง
 │   ├── pages/
-│   │   ├── Customer.tsx              # QR session + status
-│   │   ├── Ordering.tsx              # เมนู/ตัวเลือก/ตะกร้า ใช้ซ้ำใน POS
-│   │   ├── Staff.tsx                 # Login/POS/Kitchen/Delivery/Menu/QR/Accounts
-│   │   └── Dashboard.tsx             # Recharts + CSV
-│   └── styles/                       # UI + accessibility tokens
-├── server/demo.mjs                   # API/ข้อมูลกลางบนเครื่อง
+│   │   ├── Customer.tsx             # QR session + customer order status
+│   │   ├── Ordering.tsx             # Shared customer/POS menu and cart
+│   │   ├── Staff.tsx                # Login, screen composition, staff actions
+│   │   ├── Dashboard.tsx            # Charts and CSV
+│   │   ├── MenuEditor.tsx           # Owner menu creation/editing
+│   │   └── TakeawayForm.tsx         # Shared takeaway/delivery details
+│   ├── staff/
+│   │   ├── Ticket.tsx               # Kitchen/POS order card
+│   │   ├── Delivery.tsx             # Daily summary entry and CSV import
+│   │   ├── Accounts.tsx             # Staff profile display
+│   │   ├── QrCards.tsx, qr.ts       # Ten persistent links and owner controls
+│   │   ├── sounds.ts                # Bell/receipt cues and audio lifecycle
+│   │   ├── state-sync.ts            # Per-login snapshots + incremental updates
+│   │   └── order-updates.ts         # Reject out-of-order Realtime reads
+│   └── styles/                      # UI and accessibility styles
+├── preview/                         # Standalone HTML entry and mock API
+├── preview.html                     # Generated, intentionally tracked
+├── server/demo.mjs                  # Localhost API and demo persistence
 ├── supabase/
-│   ├── config.toml
-│   ├── migrations/
-│   │   ├── 202610050001_initial_schema.sql
-│   │   └── 202610050002_application_api.sql
-│   ├── seed.sql, menu-seed.sql
+│   ├── migrations/                  # Nine immutable deployed migrations
+│   ├── seed.sql, menu-seed.sql       # Bootstrap tables/options/menu
 │   ├── queries/sales_reports.sql
 │   └── functions/
-│       ├── public-api/index.ts       # Catalog/QR session
-│       ├── customer-api/index.ts     # Own orders/create
-│       ├── staff-api/index.ts        # JWT/role + guarded mutations
-│       ├── deno.json
-│       └── _shared/
-│           ├── http.ts               # Auth, CORS, RPC error handling
-│           └── voice/                # Prompt/schemas เผื่อภายหลัง ไม่ deploy
-├── public/                           # PWA, icons, Pages headers, CSV template
-├── scripts/                          # Dev, seed/icons generators, pilot load
-├── tests/                            # Domain, HTTP, PGlite, local Deno type shim
-├── docs/                             # Cloud setup, verification, architecture
-└── package.json, pnpm-lock.yaml, .env.example
+│       ├── public-api/              # Catalog/QR session
+│       ├── customer-api/            # Own orders and retry-safe submission
+│       ├── staff-api/               # JWT/role checks and guarded mutations
+│       └── _shared/                 # Auth/CORS helpers; deferred voice samples
+├── public/                          # PWA, icons, Pages headers, CSV template
+├── scripts/                         # Dev/setup/build, seeds/icons, pilot tests
+├── tests/
+│   ├── *.test.ts, *.test.mjs         # Domain, HTTP, PGlite, audio/state regressions
+│   └── browser/                     # Controlled-API Chromium regressions
+├── docs/
+│   ├── history/                     # Dated handoffs; not current setup steps
+│   ├── reports/                     # Review and live-test evidence
+│   └── previews/                    # Reference screenshots
+└── AGENTS.md, README.md, HANDOFF.md   # Rules, setup guide, current continuation
 ```
 
-Database mutation ทุกเส้นทางผ่าน RPC ที่คำนวณราคาจาก DB และทำ transaction เดียว ลูกค้าไม่อ่านตารางตรง Staff อ่านด้วย RLS; orders/table_sessions เท่านั้นที่ subscribe Realtime ทุกเมนูใช้ 🍜; ไม่มี Voice endpoint, menu photos หรือ remote font
+Database writes go through server-validated transactional RPCs. Customers cannot read the order tables directly; staff reads use JWT/RLS. Orders and table sessions use Realtime. The local demo and HTML mock share the UI but do not represent production authentication or sales.
 
-การรัน/deploy/ขอบเขตดู README.md และ cloud-setup.md ส่วน architecture-baseline.md เป็นแผนแรกที่มีฟีเจอร์เผื่อเฟสถัดไป
+Keep staff-specific components/helpers together in `src/staff/`; keep shared customer/POS components in `src/pages/`. Update `preview/api.ts` when mock API behavior changes and regenerate `preview.html` after UI changes. Do not edit the generated HTML directly.
+
+`.local-data/`, dependencies, build output, browser reports, real `.env` files and local sales stay ignored. Applied migrations remain in place with their original contents. For a new database, follow the explicit seed/migration order in [cloud setup](cloud-setup.md); do not run that setup against the live pilot.
+
+Use [README](../README.md) for commands and [HANDOFF](../HANDOFF.md) for current status. [The architecture baseline](architecture-baseline.md) contains older plans and deferred features.

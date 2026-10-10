@@ -127,7 +127,7 @@ test('Audio failure cannot turn a successfully recorded payment into a failed pa
 test('Both cues render audible distinct waveforms with headroom instead of clipping', async ({ page }) => {
   await setup(page);
   const result = await page.evaluate(async () => {
-    const { scheduleStaffSound } = await import('/src/staff-sounds.ts');
+    const { scheduleStaffSound } = await import('/src/staff/sounds.ts');
     const sounds = [];
     for (const kind of ['order', 'payment']) {
       const context = new OfflineAudioContext(1, 48000 * 2, 48000);

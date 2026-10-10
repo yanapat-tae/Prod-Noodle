@@ -1,6 +1,6 @@
 // HTML preview only: all state belongs to this browser, never to the shop's DB.
-import { demoQr } from '../src/qr.ts';
-import type { QrEntry } from '../src/qr.ts';
+import { demoQr } from '../src/staff/qr.ts';
+import type { QrEntry } from '../src/staff/qr.ts';
 import { starterCatalog, catalogVersion, upgradeSavedCatalog } from '../src/catalog.ts';
 import { businessDate, canTransition, DomainError, priceLine, salesReport, validateSummary, validateTakeaway } from '../src/domain.ts';
 import type { CartInput, CustomerSession, DeliverySummary, MenuItem, Order, Staff, Status, TakeawayDetails } from '../src/domain.ts';

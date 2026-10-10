@@ -2,7 +2,7 @@
 
 Web app ภาษาไทยสำหรับร้าน 8 โต๊ะและสั่งกลับบ้าน ใช้ 🍜 แทนรูปอาหาร ไม่มีค่า Voice/AI ในรุ่นนี้
 
-**Current milestone:** the online pilot is deployed with the owner’s menu and safe same-request order retries. The next release adds one-step kitchen completion and is validated locally with 39 Node/PGlite tests and 20 Chromium scenarios; deployment of its new migration and frontend is pending. See HANDOFF.md for the exact release state. The [live eight-table test](docs/reports/2026-10-09-eight-table-test.md) recorded duplicate-free ordering on 9 October; the owner reports that all 26 old test bills and related payments were cleared and all eight table visits closed on 10 October. Do not repeat that cleanup: new orders may exist. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md). This is a web/PWA project, not an App Store app.
+**Current milestone:** the online pilot is deployed with the owner’s menu and safe same-request order retries. The next release adds one-step kitchen completion and is validated locally with 39 Node/PGlite tests and 20 Chromium scenarios; the new migration is applied, and production frontend publication is pending. See HANDOFF.md for the exact release state. The [live eight-table test](docs/reports/2026-10-09-eight-table-test.md) recorded duplicate-free ordering on 9 October; the owner reports that all 26 old test bills and related payments were cleared and all eight table visits closed on 10 October. Do not repeat that cleanup: new orders may exist. Start with [HANDOFF.md](HANDOFF.md) and [AGENTS.md](AGENTS.md). This is a web/PWA project, not an App Store app.
 
 GitHub repository: [yanapat-tae/Prod-Noodle](https://github.com/yanapat-tae/Prod-Noodle), branch `main`.
 
@@ -133,9 +133,9 @@ Demo needs no database service; SQL tests use in-memory PGlite. On a new isolate
 
 - `20261009112857_owner_menu_rename.sql` — optional owner menu rename, retaining legacy callers and historical snapshots.
 - `20261009113319_owner_menu_corrections.sql` — targeted hotpot/ice-cream/rice-option corrections; custom dishes retained.
-- `20261010031000_one_step_kitchen_completion.sql` — next release, not yet deployed: allows `new`/`preparing`/`ready` directly to `served`, retaining legacy transitions, payment/refund behavior and service-only RPC permissions. Changes the function only; does not modify existing bills or table sessions.
+- `20261010034022_one_step_kitchen_completion.sql` — applied on 10 October: allows `new`/`preparing`/`ready` directly to `served`, retaining legacy transitions, payment/refund behavior and service-only RPC permissions. Changes the function only; does not modify existing bills or table sessions.
 
-For the existing online pilot, all six migrations are already applied; do not rerun seeds or initial migrations. The first two hosted migration versions differ from the repository filenames; see HANDOFF.md before using CLI `db push`.
+For the existing online pilot, all seven migrations are already applied; do not rerun seeds or initial migrations. The first two hosted migration versions differ from the repository filenames; see HANDOFF.md before using CLI `db push`.
 All migrations and seeds belong in Git. Apply migrations once; add a new migration for future deployed changes instead of editing applied files. Seeds avoid overwriting owner menu prices and create no accounts, passwords or QR secrets. Disable public signup, create four Auth users and corresponding `admins` profiles, and generate QR entries through the owner UI. [Cloud setup](docs/cloud-setup.md) has the profile SQL and deployment steps. SQL Editor application does not populate CLI migration history automatically; reconcile it before using `supabase db push` later. Local JSON sales are not automatically migrated online.
 
 ## Development commands and toolchain

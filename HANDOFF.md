@@ -1,8 +1,14 @@
 # Handoff: prod-noodle-pos
 
-Snapshot date: **10 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. Current instructions are here; dated release evidence is preserved in [the history archive](docs/history/2026-10-handoff.md). This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
+Snapshot date: **11 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. Current instructions are here; dated release evidence is preserved in [the history archive](docs/history/2026-10-handoff.md). This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
 
 ## Current project status
+
+The full menu-management implementation is complete on branch `feat/full-menu-management`, including per-menu sizes/options/defaults/limits, ordering, archive/restore, configurable customer copy, shared customer preview, fried egg +10 baht on the two existing owner basil dishes, and ice-cream 3/4 toppings with removable default peanuts. **This branch is not deployed or merged yet.** The latest hosted check still shows only the original nine migrations. Deployment is blocked because the configured Supabase access token lacks `edge_functions_read`; add Edge Functions Read/Write permissions on this project and update `SUPABASE_ACCESS_TOKEN` in Codex settings. Do not paste a token into chat. Database permissions are present; no new SQL or Edge deployment was attempted.
+
+Final code revision `630c902` passes `pnpm check` with 64/64 Node/PGlite tests, both typechecks, lint, build and regenerated HTML, plus 37/37 Chromium scenarios; exact final totals and review evidence are recorded in [the menu release report](docs/reports/2026-10-11-menu-management.md). Follow [the owner guide](docs/menu-management.md). Resume at the deployment steps in [the existing plan](docs/superpowers/plans/2026-10-10-menu-management.md), preserving the branch and commits. Deploy the two new migrations and `staff-api` together with the tested frontend; keep the PR as a draft until the backend can be installed. Physical iPhone/Safari and authenticated hosted-owner acceptance remain untested.
+
+Read-only preflight on 11 October found newer activity than the previous handoff: 9 orders, 5 payment entries and 10 QR entries. These are historical observations, not cleanup targets. Existing menu and price fields, accounts, QR rows, orders and snapshots were fingerprinted privately under ignored `.local-data/deploy-menu/`; rerun preflight immediately before deployment because the shop can receive new orders.
 
 The one-step kitchen release, Coke label, distinct alert tones and ten persistent QR entries are deployed and verified on 10 October. Bank-confirmed payment speech is blocked on an actual bank payment-notification integration; the owner uses K PLUS on iPhone. No manual-confirmation payment speech was added. Release evidence is in the history archive; real-device acceptance remains outstanding.
 

@@ -99,8 +99,10 @@
 
 **Files:** README/HANDOFF, menu review and deployment report; ignored deployment helpers only.
 
-- [ ] Run `pnpm check` and full Chromium suite. Inspect small/large phone screenshots; resolve regressions.
-- [ ] Dispatch one fresh whole-branch reviewer per executing-plans; fix important findings with RED→GREEN and relevant/full checks.
-- [ ] Read hosted migration history/Edge deployment config and fingerprint protected data; deploy only new tested migrations and staff-api. No production test orders, payment actions or QR changes.
-- [ ] Push small commits, create/attach PR, merge tested source, verify Cloudflare success/current assets and public menu/options. Use read-only hosted checks for server rule installation and preservation.
+- [x] Run `pnpm check` and full Chromium suite. Inspect small/large phone screenshots; resolve regressions.
+- [x] Dispatch one fresh whole-branch reviewer per executing-plans; fix important findings with RED→GREEN and relevant/full checks.
+- [x] Read hosted migration history and fingerprint protected data. Newer live orders confirmed; no cleanup or mutation.
+- [ ] Restore token Edge Functions Read/Write permissions, then deploy only new tested migrations and staff-api. No production test orders, payment actions or QR changes.
+- [ ] Push small commits and create/attach a draft PR.
+- [ ] After backend deployment, merge tested source and verify Cloudflare success/current assets and public menu/options. Use read-only hosted checks for server rule installation and preservation.
 - [ ] Record exact checks/deployment/current commit in README/HANDOFF; final clean Git status and concise acceptance notes.

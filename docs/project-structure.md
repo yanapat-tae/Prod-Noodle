@@ -7,14 +7,17 @@ Prod-Noodle/
 │   ├── api.ts                       # Demo/Supabase adapter, Auth, Realtime
 │   ├── domain.ts                    # Types, pricing, validation, reports
 │   ├── catalog.ts                   # เมนูต้นฉบับ 38 รายการ; live มี Owner เพิ่มเอง
+│   ├── menu-admin.ts, menu-presets.ts # Validated owner mutations, customer copy, requested options
 │   ├── pages/
 │   │   ├── Customer.tsx             # QR session + customer order status
+│   │   ├── MenuOptions.tsx          # Shared customer/POS/owner preview options
 │   │   ├── Ordering.tsx             # Shared customer/POS menu and cart
 │   │   ├── Staff.tsx                # Login, screen composition, staff actions
 │   │   ├── Dashboard.tsx            # Charts and CSV
 │   │   ├── MenuEditor.tsx           # Owner menu creation/editing
 │   │   └── TakeawayForm.tsx         # Shared takeaway/delivery details
 │   ├── staff/
+│   │   ├── menu/                    # Owner draft, variant/group/copy form components
 │   │   ├── Ticket.tsx               # Kitchen/POS order card
 │   │   ├── Delivery.tsx             # Daily summary entry and CSV import
 │   │   ├── Accounts.tsx             # Staff profile display
@@ -27,7 +30,7 @@ Prod-Noodle/
 ├── preview.html                     # Generated, intentionally tracked
 ├── server/demo.mjs                  # Localhost API and demo persistence
 ├── supabase/
-│   ├── migrations/                  # Nine immutable deployed migrations
+│   ├── migrations/                  # Immutable SQL history; new menu schema/options migrations
 │   ├── seed.sql, menu-seed.sql       # Bootstrap tables/options/menu
 │   ├── queries/sales_reports.sql
 │   └── functions/

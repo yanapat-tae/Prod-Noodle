@@ -12,11 +12,11 @@
 2. `supabase/migrations/202610050002_application_api.sql`
 3. `supabase/seed.sql`
 4. `supabase/menu-seed.sql`
-5. migrations ที่เหลือทั้งหมดเรียงตามชื่อไฟล์ ตั้งแต่ `20261008041620_order_details_and_menu_creation.sql` จนถึง `20261010090139_persistent_ordering_qr.sql`
+5. migrations ที่เหลือทั้งหมดเรียงตามชื่อไฟล์ ตั้งแต่ `20261008041620_order_details_and_menu_creation.sql` จนถึงสอง migrations ใหม่ `20261011010000_menu_management.sql` และ `20261011010001_requested_menu_options.sql`
 
 ต้องลง seed ก่อน migrations ส่วนหลัง เพราะมีการอ้างอิงเมนูและโต๊ะ 1–8 ที่ seed สร้างไว้ โดยเฉพาะ persistent QR หากรัน migrations ทั้งหมดก่อน seed จะติดตั้งไม่สำเร็จ Project ที่ใช้อยู่ให้ apply เฉพาะ migrations ใหม่ที่ยังไม่ลง
 
-สอง migration แรกของ project ปัจจุบันมี version `20261007000812` และ `20261007000819` บน Supabase ซึ่งต่างจากชื่อไฟล์ใน repo ต้องเทียบ migration history ก่อนใช้ CLI `db push` อย่า apply schema เดิมซ้ำ อีกเจ็ด migrations ใช้ version ตรงกันทั้ง repo/remote ดูรายชื่อครบใน [README](../README.md#database-setup-and-migration-history)
+สอง migration แรกของ project ปัจจุบันมี version `20261007000812` และ `20261007000819` บน Supabase ซึ่งต่างจากชื่อไฟล์ใน repo ต้องเทียบ migration history ก่อนใช้ CLI `db push` อย่า apply schema เดิมซ้ำ อีกเจ็ด migrations ที่ลงแล้วใช้ version ตรงกันทั้ง repo/remote; สอง menu-management migrations ใหม่ยังรอ deploy ดูรายชื่อครบใน [README](../README.md#database-setup-and-migration-history)
 
 Seed ไม่สร้าง QR secrets หรือรหัสผ่าน และไม่ทับราคาที่ Owner แก้ เมนูครบ 38 รายการจากภาพร้าน; ดู [รายการและราคา](menu-review.md) Owner เพิ่มเมนูใหม่ ขนาด ราคา และเลือกกลุ่มตัวเลือกผ่าน UI ได้แล้ว ไม่ต้องแก้ SQL เพื่อเพิ่มอาหาร
 
@@ -104,3 +104,7 @@ node scripts/load-pilot.mjs
 RPC รุ่นทดลองใช้ advisory lock เดียวสำหรับ mutation สั้น ๆ ของร้านหนึ่งร้าน เพื่อตรวจราคา/คิว/ปิดโต๊ะแบบ atomic จึงต้องวัด queue latency บน shared CPU จริงก่อนพิจารณาแยก lock หรือเพิ่ม resource ไม่ใช้ผล localhost อ้างความสามารถ Free
 
 Delivery รุ่นนี้เป็น summary ไม่ใช่ partner API และไม่สรุปค่าธรรมเนียมหรือยอดรับเงินจริงจากแพลตฟอร์ม ค่าธรรมเนียมที่ไม่ทราบเก็บ NULL ไม่เติม 0 ให้ดูเหมือนทราบ
+
+## งานจัดการเมนูที่รอ deploy · 11 ต.ค. 2026
+
+โค้ดและสอง migrations ใหม่อยู่ใน branch `feat/full-menu-management` อย่า merge frontend ก่อนอัปเดต backend Token ที่ผูกกับ Codex ขณะตรวจตอบ 403 ว่าขาด `edge_functions_read` ต้องให้ Application services → Edge Functions มี Read/Write โดยคงสิทธิ์ Database สำหรับ migrations ไว้ แล้วบันทึก `SUPABASE_ACCESS_TOKEN` ใน Codex Environment settings ไม่ใส่ใน `VITE_` หรือ Git ตรวจประวัติและ fingerprint ใหม่ก่อน apply เฉพาะสอง migrations ใหม่นี้และ deploy `staff-api`; ห้าม replay seed หรือ rotate QR ดู [แผนที่บันทึกไว้](superpowers/plans/2026-10-10-menu-management.md)

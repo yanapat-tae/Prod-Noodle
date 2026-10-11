@@ -1,6 +1,6 @@
 # โปรด · QR Ordering & POS ทดลอง
 
-งานจัดการเมนูเต็มรูปแบบใน branch `feat/full-menu-management` ตรวจผ่านในเครื่องแล้ว แต่ยังไม่ขึ้นเว็บจริง: token สำหรับ deploy ยังขาดสิทธิ์ Edge Functions ดู [สถานะและขั้นตอนต่อ](HANDOFF.md)
+งานจัดการเมนูเต็มรูปแบบและการเอาลิงก์ “พนักงาน” ออกจากหน้าลูกค้าใน branch `feat/full-menu-management` ตรวจผ่านในเครื่องแล้ว แต่ยังไม่ขึ้นเว็บจริง: token สำหรับ deploy ยังขาดสิทธิ์ Edge Functions ดู [สถานะและขั้นตอนต่อ](HANDOFF.md) และ [วิธีตั้งค่า token](docs/cloud-setup.md#supabase-access-token-for-codex-deployment) พนักงานเข้า `/admin` โดยตรงได้ตามเดิม
 
 
 Web app ภาษาไทยสำหรับร้าน 8 โต๊ะและสั่งกลับบ้าน ใช้ 🍜 แทนรูปอาหาร ไม่มีค่า Voice/AI ในรุ่นนี้

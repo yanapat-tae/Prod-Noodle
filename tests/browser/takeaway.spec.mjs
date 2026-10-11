@@ -15,6 +15,7 @@ async function setup(page) {
     await route.fulfill({json:body});
   });
   await page.goto('/?table=takeaway');
+  await expect(page.locator('a[href="/admin"]')).toHaveCount(0);
   await page.getByRole('button',{name:'เลือกเมนูนี้'}).click();
   await page.getByLabel('หมายเหตุถึงครัว').fill('ไม่ใส่น้ำแข็ง · แยกถุง');
   await page.getByRole('button',{name:/เพิ่มลงตะกร้า/}).click();

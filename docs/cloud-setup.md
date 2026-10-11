@@ -36,6 +36,16 @@ insert into public.admins(auth_user_id,account_slot,display_name,role) values
 
 ## 2. Deploy Edge Functions
 
+### Supabase access token for Codex deployment
+
+1. เปิด [Access Tokens](https://supabase.com/dashboard/account/tokens) แล้วเลือก **Generate new token** หาก token เดิมแก้สิทธิ์ไม่ได้ ให้สร้างใหม่
+2. ตั้งชื่อ เช่น `prod-noodle-deploy` และอายุ **30 days** ตามที่เจ้าของเลือก
+3. เลือก Resource access **Project**, องค์กร **Yanapat-tae**, project **prod-noodle-pilot** โดยตรวจว่า project ref คือ `emjktqzcvgjwtsgysljy`
+4. ใน Permissions เปิด **Application services → Edge Functions** ให้มีทั้ง **Read และ Write** และคงสิทธิ์ Database ที่ใช้ deploy migrations เดิมไว้ ไม่ต้องเลือกสิทธิ์เต็มทั้งบัญชี
+5. กด **Review access → Generate** แล้วคัดลอกค่าที่ได้ไปแทน secret **SUPABASE_ACCESS_TOKEN** ใน **Codex Environment settings** ของ environment ที่ใช้กับ repository นี้ ไม่ใส่ในแชตหรือ `VITE_`
+
+Token นี้ใช้จัดการ/deploy เท่านั้น ไม่ใช่ key สำหรับหน้าเว็บ ข้อความ `Missing required permission(s): edge_functions_read` หมายถึง token ยังอ่าน Edge Functions ไม่ได้ ต้องมีทั้งสิทธิ์อ่านและเขียนก่อน deploy รุ่นเมนูใหม่ คง PR เป็น draft จนกว่าจะตรวจสิทธิ์และติดตั้ง backend ได้
+
 ใช้ Supabase CLI ของผู้ใช้ หรือ workflow สำหรับ deploy จากบัญชีของเจ้าของโปรเจกต์:
 
 ```sh

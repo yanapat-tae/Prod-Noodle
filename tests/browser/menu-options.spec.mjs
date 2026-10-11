@@ -15,6 +15,7 @@ async function open(page, item) {
   });
   await page.goto('/?table=1');
   await page.getByRole('button', { name: 'เลือกเมนูนี้' }).click();
+  await expect(page.locator('a[href="/admin"]')).toHaveCount(0);
 }
 test('Ice cream keeps four toppings on size change until corrected and peanuts never consume the quota', async ({
   page,

@@ -22,6 +22,8 @@ Final code revision `630c9026db85282998db82376fa61f8dd8105eb4` passed `pnpm chec
 
 ## Deployment status and preservation
 
+Customer-header follow-up removes the staff entry from all shared customer ordering pages (tables, storefront takeaway and remote/LINE takeaway), while `/admin` remains directly accessible with the existing authorization. A browser assertion reproduced the old staff link before the change. After the minimal header edit, `pnpm check` passes 64/64 tests, typechecks, lint, build and HTML generation; five targeted customer-options, takeaway/village and persistent-QR Chromium scenarios pass. The previous 37-scenario run predates this follow-up; the full browser suite was not repeated for this narrow edit. This frontend change is also pending deployment.
+
 **Not deployed or merged.** Supabase migration history still contains the original nine versions, latest `20261010090139`. The live order function matches the previously applied source. The token can read migration/database metadata but `/functions` returns HTTP 403 with `Missing required permission(s): edge_functions_read`. Edge Functions Read/Write permissions and an updated environment token are required before the tested stack can deploy.
 
 Read-only preflight found 9 orders, 11 order items, 30 order-option snapshots, 5 payment entries, 18 status events, 23 table sessions, 13 customer sessions, 2 staff profiles and 10 QR entries. Those counts are observations, never a cleanup target. Hashes of protected rows and original menu/price fields are saved privately in ignored `.local-data/deploy-menu/`. No live order, payment, session, QR, seed or migration was changed during this task.

@@ -115,5 +115,9 @@ Private pre/post snapshots are in ignored `.local-data/pos-improvement/`; do not
 Implementation commit: `3b40e2b`; verification evidence commit: `009aed9`.
 Pushed branch `fix/pos-bills-permissions-20261011` with normal push.
 Draft [PR #7](https://github.com/yanapat-tae/Prod-Noodle/pull/7) created and attached.
-No force push, merge, Edge deployment or frontend deployment performed.
+No force push, merge, Edge deployment or production frontend deployment performed.
+Cloudflare automatically built the pushed preview branch (35f75b2c / 3dc3960);
+backend is still the old production version, so this preview is not bill acceptance.
+Production canonical deployment remains b6ef471a / main d8b8e4a.
+A production-configured local frontend build using existing public variables passed.
 Final documentation commit records this handoff; check current branch head before release.

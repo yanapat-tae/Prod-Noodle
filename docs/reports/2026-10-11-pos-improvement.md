@@ -99,4 +99,10 @@ Refresh หน้ารับเงินเดิม ทดสอบเงิ�
 
 Git: implementation `3b40e2b`, evidence `009aed9`, branch
 `fix/pos-bills-permissions-20261011`, [draft PR #7](https://github.com/yanapat-tae/Prod-Noodle/pull/7).
-PR ยังไม่ merge; Edge/Pages ไม่ได้ deploy รุ่นนี้ ไม่มี force push
+PR ยังไม่ merge; Edge/Pages Production ไม่ได้ deploy รุ่นนี้ ไม่มี force push
+Cloudflare สร้าง branch preview อัตโนมัติหลัง push: deployment
+`35f75b2c-c44f-4206-b264-6762a6493488` commit `3dc3960` ผ่าน build
+preview นี้ยังใช้ Backend เดิม จึงไม่ใช่ bill acceptance หรือการเผยแพร่ Production
+Production canonical deployment `b6ef471a-52b5-4ab5-aa14-492a5894e0c8`
+ยังอยู่ main `d8b8e4a`. [Production-configured build](pos-2026-10-11/production-configured-build.txt)
+ผ่านโดยใช้ public variables เดิม ไม่มี privileged keys ใน frontend

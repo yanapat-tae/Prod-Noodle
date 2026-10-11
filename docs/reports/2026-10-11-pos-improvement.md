@@ -63,13 +63,13 @@
 
 ## หลักฐานและข้อจำกัด
 
-- [pnpm check log](pos-2026-10-11/check.log): typecheck frontend+Edge, lint zero warnings,
+- [pnpm check log](pos-2026-10-11/check.txt): typecheck frontend+Edge, lint zero warnings,
   73/73 unit/integration/PGlite tests, build, generated preview.html ผ่าน
 - [Native PostgreSQL](pos-2026-10-11/native-postgres.json): PostgreSQL18.4 แยก localhost,
   8 backend PIDs จริง ออเดอร์ซ้ำเหลือ1 และรับเงินพร้อมกัน receipt1 ledger8000 satang
   race สั่งก่อน→payment409; จ่ายก่อน→คำสั่งใหม่ได้ visit ใหม่ Hosted เป็น PG17 จึงไม่ใช่
   หลักฐานความจุ/transaction acceptance บน hosted production
-- [Browser log](pos-2026-10-11/browser.log): **43/43 ผ่าน** รวม mobile 390px, bill/payment retry, menu reorder และ customer session renewal
+- [Browser log](pos-2026-10-11/browser.txt): **43/43 ผ่าน** รวม mobile 390px, bill/payment retry, menu reorder และ customer session renewal
 - Chromium ใช้ `/usr/bin/chromium` เพราะ Playwright download host ถูก network policy
   ไม่อนุญาต ใช้ temporary config กำหนด executable (ไม่มีเปลี่ยน TLS/trust store)
 - ผู้ตรวจแยกพบและยืนยันแก้ customer token rollover, replay overwrite และ Preview closed

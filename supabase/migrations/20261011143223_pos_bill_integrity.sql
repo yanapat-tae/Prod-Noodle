@@ -399,4 +399,3 @@ begin
  return (select coalesce(jsonb_agg(public.order_json(id) order by created_at,id),'[]') from public.orders where customer_session_id=c.id);
 end $$;
 commit;
-

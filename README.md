@@ -1,6 +1,6 @@
 # โปรด · QR Ordering & POS ทดลอง
 
-งานจัดการเมนูเต็มรูปแบบและการเอาลิงก์ “พนักงาน” ออกจากหน้าลูกค้าใน branch `feat/full-menu-management` ตรวจผ่านในเครื่องแล้ว แต่ยังไม่ขึ้นเว็บจริง: token สำหรับ deploy ยังขาดสิทธิ์ Edge Functions ดู [สถานะและขั้นตอนต่อ](HANDOFF.md) และ [วิธีตั้งค่า token](docs/cloud-setup.md#supabase-access-token-for-codex-deployment) พนักงานเข้า `/admin` โดยตรงได้ตามเดิม
+งานจัดการเมนูเต็มรูปแบบและการเอาลิงก์ “พนักงาน” ออกจากหน้าสั่งอาหารของลูกค้าเผยแพร่แล้วผ่าน [PR #6](https://github.com/yanapat-tae/Prod-Noodle/pull/6) เมื่อ 11 ต.ค. 2026 ลงเฉพาะสอง migrations ใหม่และ `staff-api` ก่อน frontend โดยรักษาบิล ราคาเดิม และ QR ทั้ง 10 ใบ ดู [หลักฐาน deployment และสิ่งที่ต้องตรวจบน iPhone](docs/reports/2026-10-11-menu-deployment.md) พนักงานเข้า `/admin` โดยตรงได้ตามเดิม
 
 
 Web app ภาษาไทยสำหรับร้าน 8 โต๊ะและสั่งกลับบ้าน ใช้ 🍜 แทนรูปอาหาร ไม่มีค่า Voice/AI ในรุ่นนี้
@@ -148,7 +148,7 @@ Demo needs no database service; SQL tests use in-memory PGlite. On a **new isola
 - `20261011010000_menu_management.sql` — per-menu option/copy/order metadata, revision checks, owner-only transactional editing and archive/restore; authoritative variant quotas and unchanged historical snapshots.
 - `20261011010001_requested_menu_options.sql` — ice-cream toppings/peanuts and +10 baht fried egg for the two existing owner basil dishes; retains their prices.
 
-For the existing online pilot, check the current deployment record in HANDOFF.md before applying the two new menu migrations; the original nine are already applied; do not rerun seeds or initial migrations. The first two hosted migration versions differ from the repository filenames; see HANDOFF.md before using CLI `db push`.
+The existing online pilot has all eleven migrations, including both menu migrations. Do not rerun migrations or seeds. The first two hosted versions and the two menu versions differ from repository filenames; see HANDOFF.md and the deployment report for mappings before adopting CLI `db push`.
 All migrations and seeds belong in Git. Apply migrations once; add a new migration for future deployed changes instead of editing applied files. Seeds avoid overwriting owner menu prices and create no accounts, passwords or QR secrets. The last QR migration creates ten persistent entries. Disable public signup, create an owner Auth user/profile and up to three staff profiles as needed, and view the QR links through the owner UI. [Cloud setup](docs/cloud-setup.md) has the profile SQL and deployment steps. SQL Editor application does not populate CLI migration history automatically; reconcile it before using `supabase db push` later. Local JSON sales are not automatically migrated online.
 
 ## Development commands and toolchain

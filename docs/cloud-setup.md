@@ -1,6 +1,6 @@
 # ต่อ Supabase Free และ Cloudflare Pages
 
-สถานะ 10 ต.ค. 2026: project `emjktqzcvgjwtsgysljy` มีโต๊ะ 8 จุดสั่งกลับบ้าน 2 จุด และเมนูออนไลน์ 40 รายการที่เปิดขาย ทั้ง 9 migrations ลงครบแล้ว เว็บจริงคือ https://prod-noodle.pages.dev ดู [HANDOFF](../HANDOFF.md) สำหรับรุ่นล่าสุดและ [บันทึกย้อนหลัง](history/2026-10-handoff.md) สำหรับหลักฐานเดิม ห้ามรัน migrations/seed หรือการล้างข้อมูลเดิมซ้ำ
+สถานะ 11 ต.ค. 2026: project `emjktqzcvgjwtsgysljy` มีโต๊ะ 8 จุดสั่งกลับบ้าน 2 จุด และเมนูออนไลน์ 41 รายการที่เปิดขาย ทั้ง 11 migrations ลงแล้ว และ `staff-api` v5 กับ frontend ของ PR #6 เผยแพร่ที่ https://prod-noodle.pages.dev ดู [HANDOFF](../HANDOFF.md) และ [หลักฐาน deployment](reports/2026-10-11-menu-deployment.md) ห้ามรัน migrations/seed หรือการล้างข้อมูลเดิมซ้ำ
 
 ## 1. สร้าง Supabase project ทดลองแยก
 
@@ -16,7 +16,7 @@
 
 ต้องลง seed ก่อน migrations ส่วนหลัง เพราะมีการอ้างอิงเมนูและโต๊ะ 1–8 ที่ seed สร้างไว้ โดยเฉพาะ persistent QR หากรัน migrations ทั้งหมดก่อน seed จะติดตั้งไม่สำเร็จ Project ที่ใช้อยู่ให้ apply เฉพาะ migrations ใหม่ที่ยังไม่ลง
 
-สอง migration แรกของ project ปัจจุบันมี version `20261007000812` และ `20261007000819` บน Supabase ซึ่งต่างจากชื่อไฟล์ใน repo ต้องเทียบ migration history ก่อนใช้ CLI `db push` อย่า apply schema เดิมซ้ำ อีกเจ็ด migrations ที่ลงแล้วใช้ version ตรงกันทั้ง repo/remote; สอง menu-management migrations ใหม่ยังรอ deploy ดูรายชื่อครบใน [README](../README.md#database-setup-and-migration-history)
+สอง migration แรกของ project ปัจจุบันมี version `20261007000812` และ `20261007000819` บน Supabase ซึ่งต่างจากชื่อไฟล์ใน repo ต้องเทียบ migration history ก่อนใช้ CLI `db push` อย่า apply schema เดิมซ้ำ อีกเจ็ด migrations เดิมใช้ version ตรงกันทั้ง repo/remote; สอง menu-management migrations ลงแล้วด้วย hosted versions `20261011071952` และ `20261011071957` ซึ่งต่างจากชื่อไฟล์ `20261011010000` และ `20261011010001` ดูรายชื่อครบใน [README](../README.md#database-setup-and-migration-history)
 
 Seed ไม่สร้าง QR secrets หรือรหัสผ่าน และไม่ทับราคาที่ Owner แก้ เมนูครบ 38 รายการจากภาพร้าน; ดู [รายการและราคา](menu-review.md) Owner เพิ่มเมนูใหม่ ขนาด ราคา และเลือกกลุ่มตัวเลือกผ่าน UI ได้แล้ว ไม่ต้องแก้ SQL เพื่อเพิ่มอาหาร
 
@@ -115,6 +115,6 @@ RPC รุ่นทดลองใช้ advisory lock เดียวสำห�
 
 Delivery รุ่นนี้เป็น summary ไม่ใช่ partner API และไม่สรุปค่าธรรมเนียมหรือยอดรับเงินจริงจากแพลตฟอร์ม ค่าธรรมเนียมที่ไม่ทราบเก็บ NULL ไม่เติม 0 ให้ดูเหมือนทราบ
 
-## งานจัดการเมนูที่รอ deploy · 11 ต.ค. 2026
+## งานจัดการเมนูที่เผยแพร่แล้ว · 11 ต.ค. 2026
 
-โค้ดและสอง migrations ใหม่อยู่ใน branch `feat/full-menu-management` อย่า merge frontend ก่อนอัปเดต backend Token ที่ผูกกับ Codex ขณะตรวจตอบ 403 ว่าขาด `edge_functions_read` ต้องให้ Application services → Edge Functions มี Read/Write โดยคงสิทธิ์ Database สำหรับ migrations ไว้ แล้วบันทึก `SUPABASE_ACCESS_TOKEN` ใน Codex Environment settings ไม่ใส่ใน `VITE_` หรือ Git ตรวจประวัติและ fingerprint ใหม่ก่อน apply เฉพาะสอง migrations ใหม่นี้และ deploy `staff-api`; ห้าม replay seed หรือ rotate QR ดู [แผนที่บันทึกไว้](superpowers/plans/2026-10-10-menu-management.md)
+PR #6 merge และเผยแพร่แล้ว ตรวจสิทธิ์ token สำเร็จ และ apply เฉพาะสอง migrations ใหม่ก่อน deploy `staff-api` v5 จากนั้นจึง merge frontend ไม่ได้ replay seed ล้างบิล หรือ rotate QR ดู [หลักฐานและการเทียบข้อมูลเดิม](reports/2026-10-11-menu-deployment.md) งานถัดไปคือ authenticated Owner และ iPhone/Safari acceptance ตาม checklist โดยใช้ QR เดิม

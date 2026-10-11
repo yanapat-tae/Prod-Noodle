@@ -112,4 +112,8 @@ Owner should test each login and iPhone/Safari; profiles already exist, so do no
 [Rollback procedure](POS-ROLLBACK.md) retains receipts/ledger and subsequent owner edits.
 Private pre/post snapshots are in ignored `.local-data/pos-improvement/`; do not commit secrets/sales.
 
-Git commit/PR will be recorded after verification and push. No force push or merge performed.
+Implementation commit: `3b40e2b`; verification evidence commit: `009aed9`.
+Pushed branch `fix/pos-bills-permissions-20261011` with normal push.
+Draft [PR #7](https://github.com/yanapat-tae/Prod-Noodle/pull/7) created and attached.
+No force push, merge, Edge deployment or frontend deployment performed.
+Final documentation commit records this handoff; check current branch head before release.

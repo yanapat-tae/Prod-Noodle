@@ -96,3 +96,7 @@ is_staff/owner QR เป็น SECURITY DEFINER ที่จำกัดสิ�
 งานถัดไป: อนุมัติ coordinated release ตาม PR, apply เฉพาะ bill migration ที่ยังไม่ลง,
 deploy staff/public Edge แล้ว frontend, ตรวจ read-only hosted API/assets และให้พนักงาน
 Refresh หน้ารับเงินเดิม ทดสอบเงินจริงเฉพาะเมื่อเจ้าของอนุญาตและประสานครัวแล้ว
+
+Git: implementation `3b40e2b`, evidence `009aed9`, branch
+`fix/pos-bills-permissions-20261011`, [draft PR #7](https://github.com/yanapat-tae/Prod-Noodle/pull/7).
+PR ยังไม่ merge; Edge/Pages ไม่ได้ deploy รุ่นนี้ ไม่มี force push

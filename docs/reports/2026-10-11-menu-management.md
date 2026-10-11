@@ -1,6 +1,6 @@
 # Menu management implementation and review · 11 October 2026
 
-Base `b279bbcad1d2fc683d351bc6964ce3969060c16e`; branch `feat/full-menu-management`. The existing workspace changes and approved design/plan were retained. Existing one-step kitchen, sound, billing and persistent-QR behavior remains covered by the regression suite.
+Base `b279bbcad1d2fc683d351bc6964ce3969060c16e`; branch `feat/full-menu-management`, [draft PR #6](https://github.com/yanapat-tae/Prod-Noodle/pull/6). The existing workspace changes and approved design/plan were retained. Existing one-step kitchen, sound, billing and persistent-QR behavior remains covered by the regression suite.
 
 ## Implemented behavior
 

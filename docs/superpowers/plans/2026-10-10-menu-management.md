@@ -103,6 +103,7 @@
 - [x] Dispatch one fresh whole-branch reviewer per executing-plans; fix important findings with RED→GREEN and relevant/full checks.
 - [x] Read hosted migration history and fingerprint protected data. Newer live orders confirmed; no cleanup or mutation.
 - [ ] Restore token Edge Functions Read/Write permissions, then deploy only new tested migrations and staff-api. No production test orders, payment actions or QR changes.
-- [ ] Push small commits and create/attach a draft PR.
+- [x] Push small commits and create/attach draft [PR #6](https://github.com/yanapat-tae/Prod-Noodle/pull/6).
 - [ ] After backend deployment, merge tested source and verify Cloudflare success/current assets and public menu/options. Use read-only hosted checks for server rule installation and preservation.
-- [ ] Record exact checks/deployment/current commit in README/HANDOFF; final clean Git status and concise acceptance notes.
+- [x] Record exact local checks, code commit, draft PR and deployment blocker in README/HANDOFF; clean Git status.
+- [ ] After deployment, record hosted/Cloudflare evidence and real-device acceptance.

@@ -1,6 +1,6 @@
 # Owner Menu Management Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Let the owner maintain menu order, lifecycle, variants, modifiers and customer copy, including the requested egg and ice-cream changes.
 
@@ -42,11 +42,11 @@
 - `MenuMutation` is `{kind:'save',menu:MenuDefinition,expectedRevision:number}` or `{kind:'archive'|'restore',code:string,expectedRevision:number}` or `{kind:'reorder',category:string,entries:{code:string,revision:number}[]}` (entire active category).
 - Export `menuDefinition(item)`, `validateMenuDefinition(input,categories)`, `publicCatalog(items)` and `applyMenuMutation(items,categories,mutation): MenuItem[]`. Pure immutable updates; callers enforce actor/request replay.
 
-- [ ] Write regressions: small four toppings rejects; large four passes; peanuts outside quota; disabled/archived choices reject; shared modifier edits leave another item unchanged; stale revision conflicts; reorder exact membership and revision checks; restore preserves data.
-- [ ] Run `node --test tests/menu-admin.test.mjs` and observe failures.
-- [ ] Implement typed helpers and validation. Category/order defaults preserve original order; customer copy falls back to existing text. Peanut group has required include/omit choices, default include, explicit omission name reaches snapshots.
-- [ ] Upgrade ice cream only when local catalog version is older; preserve custom edits/prices on later opens. Add egg to existing matching requested basil dishes, without creating extra starter dishes.
-- [ ] Run `pnpm test` and typecheck. Commit domain/model changes.
+- [x] Write regressions: small four toppings rejects; large four passes; peanuts outside quota; disabled/archived choices reject; shared modifier edits leave another item unchanged; stale revision conflicts; reorder exact membership and revision checks; restore preserves data.
+- [x] Run `node --test tests/menu-admin.test.mjs` and observe failures.
+- [x] Implement typed helpers and validation. Category/order defaults preserve original order; customer copy falls back to existing text. Peanut group has required include/omit choices, default include, explicit omission name reaches snapshots.
+- [x] Upgrade ice cream only when local catalog version is older; preserve custom edits/prices on later opens. Add egg to existing matching requested basil dishes, without creating extra starter dishes.
+- [x] Run `pnpm test` and typecheck. Commit domain/model changes.
 
 ### Task 2: PostgreSQL catalog management and authoritative pricing
 
@@ -60,9 +60,9 @@
 - Extend catalog JSON with metadata/defaults and deterministic sort. Owner includes archived/disabled entries; public excludes them. Category list comes from categories even if all dishes are archived.
 - Replace place_order only as needed for enabled/per-item names/per-variant limits; keep original retry checks, authorization, transactional snapshots and totals.
 
-- [ ] Write PGlite tests for owner access, all mutation kinds, conflicting/replayed keys, stale revisions, legacy revision changes, shared option isolation, variant removal, historical snapshots, order retry after archive, and 3/4 topping +1000 egg pricing. Run and observe failure.
-- [ ] Implement new migration and targeted data migration: ice cream plus live basil codes `menu-842c7cad-52b4-4221-b9fd-37dd2e4344ef` and `menu-cea2ec9a-f037-475c-885e-a4dd03a537da` if present; preserve prices. Fresh seeded DB does not invent owner dishes.
-- [ ] Run `node --test tests/menu-admin-db.test.mjs tests/database-features.test.mjs tests/qr.test.mjs`. Verify grants and no old migration diffs; commit.
+- [x] Write PGlite tests for owner access, all mutation kinds, conflicting/replayed keys, stale revisions, legacy revision changes, shared option isolation, variant removal, historical snapshots, order retry after archive, and 3/4 topping +1000 egg pricing. Run and observe failure.
+- [x] Implement new migration and targeted data migration: ice cream plus live basil codes `menu-842c7cad-52b4-4221-b9fd-37dd2e4344ef` and `menu-cea2ec9a-f037-475c-885e-a4dd03a537da` if present; preserve prices. Fresh seeded DB does not invent owner dishes.
+- [x] Run `node --test tests/menu-admin-db.test.mjs tests/database-features.test.mjs tests/qr.test.mjs`. Verify grants and no old migration diffs; commit.
 
 ### Task 3: API, Node and HTML integration
 

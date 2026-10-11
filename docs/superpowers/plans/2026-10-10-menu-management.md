@@ -91,9 +91,9 @@
 
 **Interfaces:** consume Task 1 types/validation, Task 3 API and Task 4 preview. Menu list uses owner catalog plus separate category list. Preserve stable variant/group/option codes in drafts and UUID keys for new entries.
 
-- [ ] Write browser tests for create/edit full configuration, per-item modifiers/defaults/variant limits, mobile reorder, archive/restore, all-archived category creation, preview text, double submit, lost-response retry and stale revision error with retained draft. Observe failures.
-- [ ] Implement search/category/archive filters, up/down ordering and unified form. Expose fields from the spec, clear validation, available/enabled toggles and confirm archive. Keep draft while requests fail; reuse request key for unchanged retries; refresh owner/public catalogs after success.
-- [ ] Run editor/options/browser regressions, typecheck/lint and regenerate HTML; commit.
+- [x] Write browser tests for create/edit full configuration, per-item modifiers/defaults/variant limits, mobile reorder, archive/restore, all-archived category creation, preview text, double submit, lost-response retry and stale revision error with retained draft. Observe failures.
+- [x] Implement search/category/archive filters, up/down ordering and unified form. Expose fields from the spec, clear validation, available/enabled toggles and confirm archive. Keep draft while requests fail; reuse request key for unchanged retries; refresh owner/public catalogs after success.
+- [x] Run editor/options/browser regressions, typecheck/lint and regenerate HTML; commit.
 
 ### Task 6: Review, deploy and handoff
 

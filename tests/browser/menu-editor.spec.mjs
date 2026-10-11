@@ -249,3 +249,20 @@ for (const failedPath of ['/api/menu', '/api/staff/menu/manage']) {
     },
   );
 }
+
+test('All-menu neighbors cross category boundaries; repeated moves and reload retain order', async ({page}) => {
+  const {mutations}=await openMenu(page);
+  const before=await page.locator('.inventory-row h2').allTextContents();
+  const target=before.at(-1);
+  await row(page,target).getByRole('button',{name:'เลื่อนลง',exact:true}).isDisabled().then(value=>expect(value).toBe(true));
+  for(let n=0;n<2;n++){
+    await row(page,target).getByRole('button',{name:'เลื่อนขึ้น',exact:true}).click();
+    await expect(page.locator('.inventory-row h2').nth(before.length-2-n)).toHaveText(target);
+    await expect(row(page,target).getByRole('button',{name:'เลื่อนขึ้น',exact:true})).toBeEnabled();
+  }
+  expect(mutations.every(m=>m.payload.category==='all')).toBe(true);
+  await page.reload();
+  await page.getByRole('button',{name:'จัดการเมนู',exact:true}).click();
+  await expect(page.locator('.inventory-row h2').nth(before.length-3)).toHaveText(target);
+  await expect(page.locator('.inventory-row').first().getByRole('button',{name:'เลื่อนขึ้น',exact:true})).toBeDisabled();
+});

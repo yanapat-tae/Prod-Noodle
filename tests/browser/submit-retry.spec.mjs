@@ -50,3 +50,27 @@ test('a definite price rejection allows editing and creates a new key for a chan
  expect(requests[1].key).not.toBe(requests[0].key);
  expect(requests[1].input.lines[0].quantity).toBe(2);
 });
+test('closed bill rollover persists new customer token before an uncertain response and reload retry',async({page})=>{
+ const requests=[];let renewed=false,accepted=false,lose=true;
+ await page.route('**/api/**',async route=>{
+  const req=route.request(),path=new URL(req.url()).pathname;
+  if(path==='/api/menu')return route.fulfill({json:menu});
+  if(path==='/api/menu/categories')return route.fulfill({json:[]});
+  if(path==='/api/customer/session'){
+   if(req.headers().authorization==='Bearer old-token')renewed=true;
+   return route.fulfill({json:{token:renewed?'new-token':'old-token',channel:'dine_in',tableNumber:1,visitId:renewed?'next-visit':'closed-visit'}});
+  }
+  if(req.method()==='GET')return route.fulfill({json:[]});
+  const token=req.headers().authorization,key=req.headers()['idempotency-key'],input=req.postDataJSON();requests.push({token,key});
+  if(token==='Bearer old-token')return route.fulfill({status:401,json:{error:'รอบโต๊ะปิดแล้ว'}});
+  accepted=true;if(lose)return route.abort('failed');
+  return route.fulfill({json:{id:'accepted-once',channel:'dine_in',tableNumber:1,visitId:'next-visit',status:'new',createdAt:'2026-10-11T01:00:00Z',totalSatang:1000,lines:input.lines.map(l=>({...l,id:'line',name:'น้ำเปล่า',variantName:'ปกติ',unit:'ขวด',optionNames:[],unitSatang:1000,totalSatang:1000}))}});
+ });
+ await page.goto('/?table=1');await page.getByRole('button',{name:'เลือกเมนูนี้'}).click();
+ await page.getByRole('button',{name:/เพิ่มลงตะกร้า/}).click();await page.getByRole('button',{name:/ดูตะกร้า/}).click();
+ await page.getByRole('button',{name:/ยืนยันส่งออเดอร์/}).click();await expect(page.getByRole('alert')).toContainText('ยังยืนยัน');
+ expect(accepted).toBe(true);expect(await page.evaluate(()=>sessionStorage.getItem('prod-session:1'))).toBe('new-token');
+ lose=false;await page.reload();await page.getByRole('button',{name:/ลองส่งรายการเดิมอีกครั้ง/}).click();
+ await expect(page.getByRole('heading',{name:'โต๊ะ 1'})).toBeVisible();
+ expect(requests.at(-1).token).toBe('Bearer new-token');expect(new Set(requests.map(r=>r.key)).size).toBe(1);
+});

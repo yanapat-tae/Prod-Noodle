@@ -1,6 +1,7 @@
 import { hash,HttpError,randomToken,rpc,serve,service,token } from '../_shared/http.ts';
 serve('public-api',async(req,path,body)=>{
   const db=service();
+  if (req.method==='GET'&&path==='/menu/categories') return rpc(db,'menu_categories_json');
   if (req.method==='GET'&&path==='/menu') return rpc(db,'menu_catalog');
   if (req.method==='POST'&&path==='/customer/session') {
     if (typeof body.entry!=='string'||!/^[0-9a-f]{64}$/.test(body.entry)) throw new HttpError('กรุณาสแกน QR ของร้าน');

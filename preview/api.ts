@@ -1,4 +1,7 @@
 // HTML preview only: all state belongs to this browser, never to the shop's DB.
+import { prepareBillPayment } from '../src/bill-payment.ts';
+import { RequestFailure } from '../src/http.ts';
+import type { BillPaymentInput, StoredBillReceipt } from '../src/bill-payment.ts';
 import { demoQr } from '../src/staff/qr.ts';
 import type { QrEntry } from '../src/staff/qr.ts';
 import { starterCatalog, catalogVersion, upgradeSavedCatalog, menuCategories } from '../src/catalog.ts';
@@ -13,7 +16,7 @@ export const supabase = null;
 export interface StaffState { orders: Order[]; visits: Record<string, { id: string }>; summaries: DeliverySummary[] }
 interface StoredSession extends CustomerSession { sessionId: string; entry: string }
 interface PreviewOrder extends Order { customerSessionId: string | null }
-interface State extends StaffState { catalogVersion?: number; menuRequests?: Record<string, string>; ownerMenuRequests?: Record<string, string>; catalog: MenuItem[]; orders: PreviewOrder[]; sessions: Record<string, StoredSession>; requests: Record<string, { signature: string; orderId: string }>; counters: Record<string, number> }
+interface State extends StaffState { billPayments?: Record<string,StoredBillReceipt>; catalogVersion?: number; menuRequests?: Record<string, string>; ownerMenuRequests?: Record<string, string>; catalog: MenuItem[]; orders: PreviewOrder[]; sessions: Record<string, StoredSession>; requests: Record<string, { signature: string; orderId: string }>; counters: Record<string, number> }
 const STORAGE = 'prod-standalone-html-v1';
 const STAFF_STORAGE = 'prod-standalone-html-staff';
 const ENTRY_STORAGE = 'prod-standalone-html-entry';
@@ -62,7 +65,7 @@ function save() { try { local.setItem(STORAGE, JSON.stringify(data)); } catch { 
 const copy = <T,>(value: T): T => structuredClone(value);
 const profiles = Array.from({ length: 4 }, (_, i) => ({ id: 'html-' + (i + 1), name: i ? 'พนักงาน ' + i : 'เจ้าของร้าน (ตัวอย่าง)', role: i ? 'admin' as const : 'owner' as const, token: 'html-preview-' + (i + 1) }));
 function checkStaff(staff: Staff, owner = false) { if (!profiles.some(p => p.id === staff.id) || (owner && staff.role !== 'owner')) throw new DomainError('เฉพาะเจ้าของร้านเท่านั้น'); }
-function checkSession(session: CustomerSession) { const current = data.sessions[session.token]; if (!current || (current.visitId && data.visits[current.tableNumber!]?.id !== current.visitId)) throw new DomainError('รอบโต๊ะปิดแล้ว กรุณาเลือกโต๊ะอีกครั้ง'); return current; }
+function checkSession(session: CustomerSession, receiptOnly = false) { const current = data.sessions[session.token]; if (!current || (!receiptOnly && current.visitId && data.visits[current.tableNumber!]?.id !== current.visitId)) throw new RequestFailure('รอบโต๊ะปิดแล้ว กรุณาเลือกโต๊ะอีกครั้ง',401); return current; }
 function create(payload: { lines: CartInput[]; expectedTotalSatang: number; channel: string; tableNumber: number | null; takeaway?: TakeawayDetails }, key: string, scope: string, customerId: string | null): Order {
   const signature = JSON.stringify({ payload, scope }); const previous = data.requests[key];
   if (previous) { if (previous.signature !== signature) throw new DomainError('รหัสอ้างอิงนี้ใช้กับคำขออื่นแล้ว'); return copy(data.orders.find(o => o.id === previous.orderId)!); }
@@ -85,6 +88,7 @@ export function resetPreview() { data = sampleState(); local.removeItem(STAFF_ST
 window.addEventListener('storage', event => { if (event.key === STORAGE) { data = restore(); window.dispatchEvent(new Event('prod-html-data')); } });
 export const api = {
   activeEntry,
+  async categories() { return copy(menuCategories); },
   async menu() { return publicCatalog(data.catalog); },
   async bootstrap(value: string, oldToken?: string): Promise<CustomerSession> {
     if (!/^(?:[1-8]|takeaway)$/.test(value)) throw new DomainError('เลขโต๊ะไม่ถูกต้อง');
@@ -94,8 +98,8 @@ export const api = {
     const session: StoredSession = { token: crypto.randomUUID(), sessionId: crypto.randomUUID(), entry: value, channel: table ? 'dine_in' : 'takeaway', tableNumber: table, visitId: table ? data.visits[table].id : null };
     data.sessions[session.token] = session; save(); return copy(session);
   },
-  async customerOrders(session: CustomerSession) { const current = checkSession(session); return copy(data.orders.filter(o => o.customerSessionId === current.sessionId)); },
-  async createOrder(session: CustomerSession, lines: CartInput[], total: number, key: string, takeaway?: TakeawayDetails) { const current = checkSession(session); return create({ lines, expectedTotalSatang: total, channel: current.channel, tableNumber: current.tableNumber, takeaway }, key, current.sessionId, current.sessionId); },
+  async customerOrders(session: CustomerSession) { const current = checkSession(session,true); return copy(data.orders.filter(o => o.customerSessionId === current.sessionId)); },
+  async createOrder(session: CustomerSession, lines: CartInput[], total: number, key: string, takeaway?: TakeawayDetails) { const current = checkSession(session,!!data.requests[key]); return create({ lines, expectedTotalSatang: total, channel: current.channel, tableNumber: current.tableNumber, takeaway }, key, current.sessionId, current.sessionId); },
   async login(account: string, password: string) { if (password !== '1234') throw new DomainError('รหัสทดลองคือ 1234'); const profile = profiles.find((p, i) => account === 'demo-' + (i + 1)); if (!profile) throw new DomainError('บัญชีไม่ถูกต้อง'); local.setItem(STAFF_STORAGE, JSON.stringify(profile)); return copy(profile); },
   async restoreStaff(): Promise<Staff> { try { const raw = local.getItem(STAFF_STORAGE); if (raw) return JSON.parse(raw); } catch { /* Use preview owner. */ } return copy(profiles[0]); },
   async logout(_identity: Staff) { local.removeItem(STAFF_STORAGE); },
@@ -104,6 +108,17 @@ export const api = {
   async posOrder(identity: Staff, lines: CartInput[], total: number, channel: string, tableNumber: number | null, key: string, takeaway?: TakeawayDetails) { checkStaff(identity); return create({ lines, expectedTotalSatang: total, channel, tableNumber, takeaway }, key, identity.id, null); },
   async status(identity: Staff, id: string, status: Status) { checkStaff(identity); const order = findOrder(id); if (order.status !== status) { if (!canTransition(order.status, status)) throw new DomainError('สถานะเปลี่ยนไปแล้ว'); if (status === 'cancelled' && order.paidAt && !order.refundedAt) throw new DomainError('กรุณาคืนเงินก่อนยกเลิก'); order.status = status; save(); } return copy(order); },
   async pay(identity: Staff, id: string, method: string) { checkStaff(identity); const order = findOrder(id); if (order.status === 'cancelled' || !['cash','promptpay'].includes(method)) throw new DomainError('รับชำระรายการนี้ไม่ได้'); if (!order.paidAt) { order.paidAt = new Date().toISOString(); order.paymentMethod = method; save(); } return copy(order); },
+  async payBill(identity: Staff, id: string, input: BillPaymentInput, key: string) {
+    checkStaff(identity);
+    const settlement = prepareBillPayment(data.orders, data.billPayments ?? {}, identity.id, id, key, input);
+    if (data.billPayments?.[settlement.receipt.id]) return copy(settlement.receipt);
+    const paid = new Map(settlement.receipt.orders.map(o=>[o.id,o]));
+    data.orders = data.orders.map(o=>({...o,...paid.get(o.id)}));
+    data.billPayments ??= {}; data.billPayments[settlement.receipt.id] = settlement;
+    const anchor = findOrder(id);
+    if (anchor.visitId && data.visits[anchor.tableNumber!]?.id === anchor.visitId) delete data.visits[anchor.tableNumber!];
+    save(); return copy(settlement.receipt);
+  },
   async refund(identity: Staff, id: string) { checkStaff(identity, true); const order = findOrder(id); if (!order.paidAt) throw new DomainError('ยังไม่ได้ชำระ'); if (!order.refundedAt) { order.refundedAt = new Date().toISOString(); order.refundedSatang = order.totalSatang; save(); } return copy(order); },
   async close(identity: Staff, table: number) { checkStaff(identity); const visit = data.visits[table]; if (visit && data.orders.some(o => o.visitId === visit.id && (!['served','cancelled'].includes(o.status) || (o.status !== 'cancelled' && !o.paidAt)))) throw new DomainError('กรุณาส่งมอบและเคลียร์การชำระเงินก่อนปิดโต๊ะ'); delete data.visits[table]; save(); return { ok: true }; },
   async delivery(identity: Staff, summaries: DeliverySummary[]) { checkStaff(identity, true); summaries.forEach(validateSummary); for (const summary of summaries) { const index = data.summaries.findIndex(s => s.date === summary.date && s.channel === summary.channel); if (index < 0) data.summaries.push(copy(summary)); else data.summaries[index] = copy(summary); } save(); return { ok: true }; },

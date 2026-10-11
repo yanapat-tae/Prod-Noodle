@@ -1,6 +1,6 @@
 # ต่อ Supabase Free และ Cloudflare Pages
 
-สถานะ 11 ต.ค. 2026: project `emjktqzcvgjwtsgysljy` มีโต๊ะ 8 จุดสั่งกลับบ้าน 2 จุด และเมนูออนไลน์ 41 รายการที่เปิดขาย ทั้ง 11 migrations ลงแล้ว และ `staff-api` v5 กับ frontend ของ PR #6 เผยแพร่ที่ https://prod-noodle.pages.dev ดู [HANDOFF](../HANDOFF.md) และ [หลักฐาน deployment](reports/2026-10-11-menu-deployment.md) ห้ามรัน migrations/seed หรือการล้างข้อมูลเดิมซ้ำ
+สถานะ 11 ต.ค. 2026: project `emjktqzcvgjwtsgysljy` มีโต๊ะ 8 จุดสั่งกลับบ้าน 2 จุด และเมนูออนไลน์ 41 รายการที่เปิดขาย ทั้ง 11 migrations ลงแล้ว และ `staff-api` v5 กับ frontend ของ PR #6 เผยแพร่ที่ https://prod-noodle.pages.dev ดู [HANDOFF](../HANDOFF.md) และ [หลักฐาน deployment](reports/2026-10-11-menu-deployment.md) ส่วนบัญชี/หมายเหตุมี migration เพิ่มแล้ว ดู [POS Progress](POS-IMPROVEMENT-PROGRESS.md) สำหรับสถานะล่าสุด ห้ามรัน migrations/seed หรือการล้างข้อมูลเดิมซ้ำ
 
 ## 1. สร้าง Supabase project ทดลองแยก
 
@@ -22,7 +22,7 @@ Seed ไม่สร้าง QR secrets หรือรหัสผ่าน �
 
 เริ่มทดสอบด้วยบัญชี Owner และ profile slot 1 ก่อน แล้วเพิ่มพนักงานใน slot 2–4 เมื่อพร้อม ไม่จำเป็นต้องสร้างบัญชีพนักงานสมมติเพื่อเริ่มทดสอบ
 
-ปิด public signup ใน Auth แล้วสร้าง Owner และพนักงานที่ต้องการ รวมไม่เกิน 4 บัญชีผ่านหน้า Auth ของ Supabase ให้เจ้าของกำหนดอีเมลและรหัสผ่านเอง จากนั้นเพิ่ม profile (แทน UUID และชื่อให้ตรงผู้ใช้จริง):
+ปิด public signup ใน Auth แล้วสร้าง Owner และพนักงานที่ต้องการ รวมไม่เกิน 6 บัญชีผ่านหน้า Auth ของ Supabase ให้เจ้าของกำหนดอีเมลและรหัสผ่านเอง จากนั้นเพิ่ม profile (แทน UUID และชื่อให้ตรงผู้ใช้จริง):
 
 ```sql
 insert into public.admins(auth_user_id,account_slot,display_name,role) values
@@ -32,7 +32,7 @@ insert into public.admins(auth_user_id,account_slot,display_name,role) values
  ('ADMIN_3_AUTH_UUID',4,'พนักงาน 3','admin');
 ```
 
-ช่อง account_slot 1–4 มี UNIQUE/CHECK บังคับไม่ให้มีเกิน 4 profile รหัสผ่านเก็บใน Supabase Auth เท่านั้น ไม่มีช่องรหัสผ่านในตาราง admins
+หลัง migration `pos_profiles_and_note` ช่อง account_slot 1–6 มี UNIQUE/CHECK บังคับไม่ให้มีเกิน 6 profile รหัสผ่านเก็บใน Supabase Auth เท่านั้น ไม่มีช่องรหัสผ่านในตาราง admins
 
 ## 2. Deploy Edge Functions
 

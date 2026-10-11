@@ -3,6 +3,8 @@ import type { CartInput, Line, MenuItem, Order, TakeawayDetails } from '../domai
 import { StickyAction } from './StickyAction.tsx';
 import MenuOptions from './MenuOptions.tsx';
 import TakeawayForm from './TakeawayForm.tsx';
+import { api } from '../api.ts';
+import type { MenuCategory } from '../menu-admin.ts';
 import { RequestFailure } from '../http.ts';
 import { DomainError, money, priceLine, validateTakeaway } from '../domain.ts';
 interface Props { catalog: MenuItem[]; context: string; storageKey: string; onSubmit: (lines: CartInput[], total: number, key: string, takeaway?: TakeawayDetails) => Promise<Order>; onSubmitted: (order: Order) => void; onRefresh: () => Promise<MenuItem[]>; onExit?: () => void; isTakeaway?: boolean }
@@ -20,11 +22,12 @@ export default function Ordering({ catalog, context, storageKey, onSubmit, onSub
   const [selected, setSelected] = useState<MenuItem | null>(null);
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
-  const categoryPicker = useRef<HTMLDetailsElement>(null);
   useEffect(() => { sessionStorage.setItem(storageKey, JSON.stringify({ cart, takeaway, request: request.current })); }, [cart, takeaway, storageKey]);
   useEffect(() => { window.scrollTo(0, 0); heading.current?.focus(); }, [selected, view]);
   const total = cart.reduce((s, l) => s + l.totalSatang, 0); const count = cart.reduce((s, l) => s + l.quantity, 0);
-  const categories = [...new Map(catalog.map(m => [m.category, m.categoryName])).entries()];
+  const [databaseCategories, setDatabaseCategories] = useState<MenuCategory[]>([]);
+  useEffect(() => { let active = true; void api.categories().then(value => { if (active) setDatabaseCategories(value); }).catch(() => { if (active) setError('โหลดหมวดอาหารไม่สำเร็จ กรุณาลองโหลดหน้าใหม่'); }); return () => { active = false; }; }, []);
+  const categories = databaseCategories.length ? databaseCategories.map(c => [c.code, c.name]) : [...new Map(catalog.map(m => [m.category, m.categoryName])).entries()];
   function choose(item: MenuItem) { setSelected(item); setError(''); }
   function add(input: CartInput) {
     const line = priceLine(catalog, input);
@@ -70,7 +73,7 @@ export default function Ordering({ catalog, context, storageKey, onSubmit, onSub
     {onExit && <button className="text-back" onClick={onExit}>← กลับไป POS</button>}
     <div className="customer-intro"><div className="context-label"><span className="status-dot" />{context}</div><h1 ref={heading} tabIndex={-1}>เลือกอาหารที่ชอบ</h1><p>แตะเมนู แล้วเลือกเส้นได้เลย</p></div>
     <label className="menu-search">ค้นหาเมนู<input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="เช่น เย็นตาโฟ หมูกรอบ น้ำลำไย" /></label>
-    <details ref={categoryPicker} className="category-picker"><summary>หมวดอาหาร · {category === 'all' ? 'ทั้งหมด' : categories.find(c => c[0] === category)?.[1]}</summary><nav className="category-nav" aria-label="หมวดอาหาร"><button className={category === 'all' ? 'active' : ''} aria-pressed={category === 'all'} onClick={() => { setCategory('all'); categoryPicker.current!.open = false; }}>ทั้งหมด</button>{categories.map(([code, name]) => <button key={code} className={category === code ? 'active' : ''} aria-pressed={category === code} onClick={() => { setCategory(code); categoryPicker.current!.open = false; }}>{name}</button>)}</nav></details>
+    <nav className="category-nav" aria-label="หมวดอาหาร"><button className={category === 'all' ? 'active' : ''} aria-pressed={category === 'all'} onClick={() => setCategory('all')}>ทั้งหมด</button>{categories.map(([code, name]) => <button key={code} className={category === code ? 'active' : ''} aria-pressed={category === code} onClick={() => setCategory(code)}>{name}</button>)}</nav>
     <div className="menu-section-heading"><h2>{category === 'all' ? 'เมนูของร้าน' : categories.find(c => c[0] === category)?.[1]}</h2><span className="supporting-text">ราคาเริ่มต้น</span></div>
     <div className="menu-list">{catalog.filter(m => (category === 'all' || m.category === category) && (m.name + ' ' + m.description + ' ' + m.categoryName).includes(search.trim())).map(item => <article key={item.code} className={'menu-card' + (!item.available ? ' sold-out' : '')}><div className="menu-card-copy"><span className="menu-placeholder" aria-hidden="true">🍜</span><div><h3 className="menu-title">{item.name}</h3>{item.description && <p className="supporting-text">{item.description}</p>}<strong className="menu-price">{money(item.variants[0].priceSatang)}</strong></div></div><button className="choose-action" disabled={!item.available} onClick={() => choose(item)}>{item.available ? 'เลือกเมนูนี้' : 'เมนูหมดชั่วคราว'}<span aria-hidden="true">{item.available ? ' →' : ''}</span></button></article>)}</div>
     <p className="sr-only" role="status" aria-live="polite">{notice}</p>

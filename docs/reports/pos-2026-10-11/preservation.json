@@ -1,0 +1,74 @@
+{
+  "historicalRows": [
+    {
+      "table": "orders",
+      "existingRows": 28,
+      "preserved": true,
+      "newRows": 0
+    },
+    {
+      "table": "order_items",
+      "existingRows": 60,
+      "preserved": true,
+      "newRows": 0
+    },
+    {
+      "table": "order_item_options",
+      "existingRows": 102,
+      "preserved": true,
+      "newRows": 0
+    },
+    {
+      "table": "payment_transactions",
+      "existingRows": 29,
+      "preserved": true,
+      "newRows": 0
+    },
+    {
+      "table": "order_status_events",
+      "existingRows": 55,
+      "preserved": true,
+      "newRows": 0
+    },
+    {
+      "table": "table_sessions",
+      "existingRows": 39,
+      "preserved": true,
+      "newRows": 0
+    },
+    {
+      "table": "customer_sessions",
+      "existingRows": 19,
+      "preserved": true,
+      "newRows": 0
+    },
+    {
+      "table": "qr_entrypoints",
+      "existingRows": 10,
+      "preserved": true,
+      "newRows": 0
+    },
+    {
+      "table": "menu_variants",
+      "existingRows": 63,
+      "preserved": true,
+      "newRows": 0
+    },
+    {
+      "table": "menu_items",
+      "existingRows": 42,
+      "preserved": true,
+      "newRows": 0
+    },
+    {
+      "table": "admins",
+      "existingRows": 6,
+      "preserved": true,
+      "newRows": 0
+    }
+  ],
+  "catalogCount": 41,
+  "catalogSequencePreserved": true,
+  "uniqueSortPositions": true,
+  "grassJellyNote": true
+}

@@ -32,20 +32,22 @@ shared global order; category reorder keeps unrelated menu positions unchanged.
   น้ำเก๊กฮวย, น้ำลำไย, น้ำอัดลม - โค้ก, น้ำเปล่า, น้ำแข็งเปล่า.
 - grass-jelly (303f2418...) is เฉาก๊วยโบราณ; live prep_notes currently empty.
 
-## Tracking — latest session result
+## Tracking — released result
 
-PASS below is explicitly scoped to the recorded tests. All seven scopes were inspected
-and implemented; full production acceptance is incomplete until coordinated release.
+All seven implementation scopes passed the recorded automated checks and were
+released after explicit user approval. PASS is scoped to these checks; actual
+password logins, physical iPhone and successful hosted payment transactions remain
+NOT TESTED. No real-money/production acceptance transactions were created.
 
-| Task | Acceptance status | Completed evidence / remaining work |
+| Task | Verified status | Production evidence / remaining acceptance |
 |---|---|---|
-| 1 Bill rounds / atomic settlement | BLOCKED | Local SQL/HTTP/UI PASS; native 8-device races PASS; pending coordinated release |
-| 2 Top-menu exclusions | BLOCKED | Verified live identities; isolated report tests PASS; pending report migration/frontend |
-| 3 Thai Chuay Thai payment | BLOCKED | Manual confirmation/receipt/report/retry tests PASS; pending migration/Edge/frontend |
-| 4 Six accounts / permissions | PASS | Live six exact profiles, active + confirmed; Staff require_actor(owner) denied; no real password logins tested |
-| 5 Direct category buttons | BLOCKED | Chromium 390px filter/cart PASS; pending category endpoint/frontend deployment |
-| 6 Grass-jelly note | PASS | Live prep_notes updated; two fresh API reads confirm persistence; other fields/variants unchanged |
-| 7 Persistent reorder | BLOCKED | SQL revisions/membership and browser repeated moves/reload PASS; pending global-order migration/UI |
+| 1 Bill rounds / atomic settlement | PASS (automated) | SQL + Edge deployed; native 8-device races passed; successful hosted settlement NOT TESTED |
+| 2 Top-menu exclusions | PASS | Hosted read-only report under all3 Staff identities preserves gross and excludes drinks; ranking unchanged |
+| 3 Thai Chuay Thai payment | PASS (automated + guard) | Manual UI/receipt/report tests; hosted unconfirmed scan rejected PT400; successful hosted capture NOT TESTED |
+| 4 Six accounts / permissions | PASS | Exact six profiles active/confirmed; owner reads and Staff/RLS/RPC denial checks passed; actual password logins NOT TESTED |
+| 5 Direct category buttons | PASS (browser + API) | Chromium390px/cart passed; hosted category endpoint returns6; production assets match; physical iPhone NOT TESTED |
+| 6 Grass-jelly note | PASS | Hosted note persisted through fresh API/SQL reads; other fields unchanged |
+| 7 Persistent reorder | PASS (automated + readback) | Repeated/category/global/stale/reload tests passed; live sequence preserved, unique positions and catalog/owner reads; hosted owner reorder interaction NOT TESTED |
 
 ## Files and migrations
 
@@ -56,13 +58,14 @@ and implemented; full production acceptance is incomplete until coordinated rele
   `src/staff/Accounts.tsx`; regenerated `preview.html`.
 - Edge: `supabase/functions/public-api/index.ts`, `supabase/functions/staff-api/index.ts`.
 - `20261011143222_pos_profiles_and_note.sql` **APPLIED**, hosted version
-  `20261011145139`, name `pos_profiles_and_note`. Hosted history now twelve migrations.
+  `20261011145139`, name `pos_profiles_and_note`. Hosted history now thirteen migrations (including the approved bill release below).
   Do not replay this or the eleven earlier migrations/seeds.
 - `supabase/operations/20261011_requested_staff_profiles.sql` **EXECUTED ONCE**.
   Exact Auth users already existed; inserted only four missing profiles and renamed
   two existing owners. Reread profiles before any future run; do not duplicate Auth.
-- `20261011143223_pos_bill_integrity.sql` **NOT APPLIED**. Bill receipts, ledger FK,
-  atomic settlement, menu order/report/RPC changes are staged for coordinated release.
+- `20261011143223_pos_bill_integrity.sql` **APPLIED ONCE**, hosted version
+  `20261011161310`, name `pos_bill_integrity`. Bill receipts, ledger FK, atomic settlement,
+  menu order/report/RPC changes are live. Do not replay this migration.
 - Added `tests/bill-payment.test.ts`, `tests/pos-bill-db.test.mjs`,
   `tests/pos-improvement.test.ts`, `tests/staff-profiles.test.mjs`,
   `tests/browser/pos-improvement.spec.mjs`, `scripts/test-postgres-concurrency.mjs`.
@@ -92,46 +95,48 @@ and implemented; full production acceptance is incomplete until coordinated rele
   DEFINER notices, intentional server-only request-table RLS info, and disabled leaked
   password protection. Details/remediation links in the report; no new definer added.
 - Physical iPhone/Safari, six actual password logins, real production bill/payment
-  transactions, production new UI and live capacity: **NOT TESTED**.
+  transactions and live capacity: **NOT TESTED**. Production assets and read-only APIs verified below.
 
-## Deployment and next action
+## Deployment and next action — approved and completed
 
-Only the compatible profile/note migration and exact-profile operation are live.
-Bill migration, new Edge handlers and frontend are **NOT DEPLOYED**. Current production
-still has the old bill/report/category/reorder behavior. This avoids applying the
-legacy-payment rejection before the compatible client/endpoint is available.
+User approved merge/deploy. PR #7 merged as `b1304e7e12a0a042ad864c907450349b987c8d5f`,
+release head `a77f7fa`. No force push or account/profile replay.
 
-Prepare a reviewed PR, then request one coordinated merge/deployment decision;
-AGENTS.md treats deployment as a separate task. After approval, reread Git and hosted
-history, apply only the pending bill migration, deploy public/staff Edge with existing
-custom authentication, publish production-configured frontend, verify hosted reads/
-assets, and have existing staff tabs refresh. No real-money tests without authorization.
-Owner should test each login and iPhone/Safari; profiles already exist, so do not recreate users.
+- `public-api` v3 and `staff-api` v6 ACTIVE; retrieved deployed source matches local
+  entrypoint, deno.json and shared handler exactly. Existing custom auth retained;
+  `customer-api` v2 unchanged. New routes are guarded by active Auth profile checks.
+- `pos_bill_integrity` applied once as hosted `20261011161310`; table RLS enabled,
+  payment RPC executable only by service_role, not anon/authenticated.
+- Cloudflare Production deployment `999da28a-d08a-4960-b23d-ece4a84f805e` SUCCESS,
+  branch main / merge b1304e7. `/`, `/admin`, manifest and SW HTTP200. Served HTML and
+  all four JS/CSS files exactly match the production-configured build (public variables only).
+- Fresh merged-tree pnpm check:73/73 + typechecks/lint/build/HTML PASS. UI source is
+  unchanged from 43/43 browser tests; prior native8-connection races remain applicable.
+- Pre/post existing-row hashes preserved across11 tables: orders28, items60,
+  options102, payments29, status events55, visits39, customer sessions19, QR10,
+  variants63, menu original fields42, profiles6. No new rows or financial writes.
+  Global sort/revision initialization is intentional; prior visible41-menu sequence
+  remains identical, positions unique, prep note unchanged and owner catalogs readable.
+- Hosted READ ONLY checks: all3 Staff can read reports and receipts, excluded drinks
+  absent from top and gross matches existing sales events, Thai payment method present.
+  Staff owner RPC EXECUTE denied; nonstaff RLS exposes no orders and report returns403;
+  all3 owners pass menu catalog guards. Unconfirmed Thai scan returnsPT400 before writes.
+- HTTP checks: public catalog/category200, unauthenticated payment/menu401,
+  untrusted origin403, valid preflight204. No paid/accepted production test order used.
+- Supabase security advisors unchanged: existing guarded definer notices,
+  server-only request-table RLS info and disabled leaked-password protection.
 
-[Detailed Thai report and evidence](reports/2026-10-11-pos-improvement.md).
-[Rollback procedure](POS-ROLLBACK.md) retains receipts/ledger and subsequent owner edits.
-Private pre/post snapshots are in ignored `.local-data/pos-improvement/`; do not commit secrets/sales.
+Staff must refresh existing POS tabs to receive the new combined-bill UI; legacy
+single-order dine-in payment deliberately returns409. Owner should verify six real
+logins and physical iPhone/Safari, then coordinate any live order/payment acceptance
+with staff/kitchen. Real-money tests remain unapproved and NOT TESTED.
 
-Implementation commit: `3b40e2b`; verification evidence commit: `009aed9`.
-Pushed branch `fix/pos-bills-permissions-20261011` with normal push.
-Draft [PR #7](https://github.com/yanapat-tae/Prod-Noodle/pull/7) created and attached.
-No force push, merge, Edge deployment or production frontend deployment performed.
-Cloudflare automatically built the pushed preview branch (35f75b2c / 3dc3960);
-backend is still the old production version, so this preview is not bill acceptance.
-Production canonical deployment remains b6ef471a / main d8b8e4a.
-A production-configured local frontend build using existing public variables passed.
-Final documentation commit records this handoff; check current branch head before release.
+[Thai report and committed evidence](reports/2026-10-11-pos-improvement.md).
+[Rollback](POS-ROLLBACK.md) preserves populated receipts/ledger and later owner edits.
+Private pre/post snapshots and prior Edge source are in ignored
+`.local-data/pos-improvement/`; never commit secrets or raw sales exports.
 
-## Approved release continuation
-
-User approved merge/deploy of PR #7. Fresh Git status was clean and PR head 7d28db9
-matched the approved branch, main d8b8e4a. Hosted history still had twelve migrations;
-profile/note preparation will not be rerun. Fresh source/DB snapshots match prior
-function/profile state. Re-ran pnpm check on the release tree: 73/73 tests, both
-typechecks, lint, build and preview passed. Added the existing mutation advisory lock
-at the start of the pending migration to serialize its initialization with shop
-writes. UI source is unchanged from the 43/43 browser-tested version.
-
-Rollout order: backward-compatible new public/staff Edge handlers, pending bill SQL,
-then approved main merge/Cloudflare production publication and preservation/API checks.
-Live transactional acceptance, physical iPhone and password logins remain untested.
+Implementation3b40e2b, evidence009aed9, approved releasea77f7fa,
+[merged PR #7](https://github.com/yanapat-tae/Prod-Noodle/pull/7), merge b1304e7.
+This documentation commit records the verified release. Cloudflare may automatically
+redeploy documentation-only follow-ups; application assets are unchanged.

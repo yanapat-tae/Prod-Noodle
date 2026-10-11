@@ -2,17 +2,18 @@
 
 แก้โค้ดของระบบเดิมครบทั้ง 7 ขอบเขต ไม่มีการสร้างระบบใหม่ รีเซ็ตฐานข้อมูล
 ล้างบิล หมุน QR สร้าง Auth ซ้ำ หรือทดสอบรับเงินจริง ผล PASS ด้านโค้ดหมายถึง
-การทดสอบในระบบแยกเท่านั้น หน้าเว็บ Production และระบบบิลใหม่ยังไม่ได้ Deploy
+การทดสอบในระบบแยกเท่านั้น หน้าเว็บ Production และระบบบิลใหม่ Deploy แล้วหลังได้รับอนุมัติ
+PR #7 merge `b1304e7`; Cloudflare Production `999da28a-d08a-4960-b23d-ece4a84f805e` SUCCESS
 
 | งาน | ผลทดสอบจริง | สถานะ Production |
 |---|---|---|
-| 1 รวมบิลหลายรอบ | PASS: SQL/HTTP/UI + 8 PostgreSQL connections | BLOCKED: รอ release พร้อมกัน |
-| 2 เมนูขายดี | PASS: IDs/codes จริง, ไม่ตัดรายได้, คงจัดอันดับเดิม | BLOCKED: report migration/UI ยังไม่เผยแพร่ |
-| 3 สแกนไทยช่วยไทย | PASS: ยืนยันแยก, receipt/report, retry ไม่รับเงินซ้ำ | BLOCKED: migration/Edge/UI ยังไม่เผยแพร่ |
+| 1 รวมบิลหลายรอบ | PASS: SQL/HTTP/UI + 8 PostgreSQL connections | Deploy แล้ว; hosted settlement สำเร็จ NOT TESTED |
+| 2 เมนูขายดี | PASS: IDs/codes จริง, ไม่ตัดรายได้, คงจัดอันดับเดิม | Hosted report อ่านด้วย Staff ทั้ง3 ยอดรวมตรงข้อมูลเดิม |
+| 3 สแกนไทยช่วยไทย | PASS: ยืนยันแยก, receipt/report, retry ไม่รับเงินซ้ำ | Deploy แล้ว; hosted ยืนยัน=false ถูกปฏิเสธ;เงินจริง NOT TESTED |
 | 4 บัญชี/สิทธิ์ | PASS: live Auth UID/profile/SQL guards และ isolated RLS/API/UI | แก้จริงครบ 6; login ด้วยรหัสจริง NOT TESTED |
-| 5 ปุ่มหมวดอาหาร | PASS: Chromium 390px filter/cart/no overflow | BLOCKED: UI/category endpoint ยังไม่เผยแพร่ |
+| 5 ปุ่มหมวดอาหาร | PASS: Chromium 390px filter/cart/no overflow | Deploy แล้ว; API6หมวด/production assets ตรวจตรง |
 | 6 หมายเหตุเฉาก๊วย | PASS: hosted SQL และ API สอง fresh reads | บันทึกจริงถาวรแล้ว |
-| 7 จัดลำดับเมนู | PASS: all/category, stale revision, repeated moves/reload | BLOCKED: migration/UI ยังไม่เผยแพร่ |
+| 7 จัดลำดับเมนู | PASS: all/category, stale revision, repeated moves/reload | Deploy แล้ว; ตำแหน่ง unique/ลำดับเดิมคงอยู่; live reorder interaction NOT TESTED |
 
 ## Root cause และการแก้
 
@@ -44,8 +45,8 @@
   (`303f2418-751b-43ae-b195-1e5526b94245`) เฉาก๊วยโบราณ
 - `supabase/operations/20261011_requested_staff_profiles.sql`: **EXECUTED ONCE**
   อ้าง Auth เดิมเท่านั้น มี guard UID/email/occupied slot และ transaction rollback
-- `20261011143223_pos_bill_integrity.sql`: **NOT APPLIED** เพิ่ม bill receipt/ledger FK,
-  pay RPC, report, catalog ordering, retry/customer receipt behavior; เตรียม release พร้อม Edge/UI
+- `20261011143223_pos_bill_integrity.sql`: **APPLIED ONCE** hosted `20261011161310` เพิ่ม bill receipt/ledger FK,
+  pay RPC, report, catalog ordering, retry/customer receipt behavior; release พร้อม Edge/UI แล้ว
 - [แนวทาง rollback](../POS-ROLLBACK.md) รักษา populated receipt/ledger ห้าม reset/drop data
 - ก่อน/หลังงานจริง fingerprint ตรงกันทั้ง 9 ชุด: orders 28, items 60, option snapshots 102,
   payments 29, visits 39, customer sessions 19, QR 10, menu original fields 42, variants 63
@@ -93,16 +94,24 @@ is_staff/owner QR เป็น SECURITY DEFINER ที่จำกัดสิ�
 [Leaked password protection](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)
 ยังปิดอยู่ เจ้าของพิจารณาเปิดหากแพ็กเกจรองรับ ไม่มีการแก้ Auth settings โดยพลการ
 
-งานถัดไป: อนุมัติ coordinated release ตาม PR, apply เฉพาะ bill migration ที่ยังไม่ลง,
-deploy staff/public Edge แล้ว frontend, ตรวจ read-only hosted API/assets และให้พนักงาน
-Refresh หน้ารับเงินเดิม ทดสอบเงินจริงเฉพาะเมื่อเจ้าของอนุญาตและประสานครัวแล้ว
+งานถัดไป: ให้พนักงาน Refresh หน้ารับเงินเดิม, ทดสอบ Login ทั้ง6 และ iPhone/Safariจริง ทดสอบเงินจริงเฉพาะเมื่อเจ้าของอนุญาตและประสานครัวแล้ว
 
 Git: implementation `3b40e2b`, evidence `009aed9`, branch
-`fix/pos-bills-permissions-20261011`, [draft PR #7](https://github.com/yanapat-tae/Prod-Noodle/pull/7).
-PR ยังไม่ merge; Edge/Pages Production ไม่ได้ deploy รุ่นนี้ ไม่มี force push
+`fix/pos-bills-permissions-20261011`, [merged PR #7](https://github.com/yanapat-tae/Prod-Noodle/pull/7).
+PR merge แล้วหลังอนุมัติ; Edge/Pages Production Deploy แล้ว ไม่มี force push
 Cloudflare สร้าง branch preview อัตโนมัติหลัง push: deployment
 `35f75b2c-c44f-4206-b264-6762a6493488` commit `3dc3960` ผ่าน build
-preview นี้ยังใช้ Backend เดิม จึงไม่ใช่ bill acceptance หรือการเผยแพร่ Production
-Production canonical deployment `b6ef471a-52b5-4ab5-aa14-492a5894e0c8`
-ยังอยู่ main `d8b8e4a`. [Production-configured build](pos-2026-10-11/production-configured-build.txt)
+Preview ดังกล่าวสร้างก่อนอนุมัติและตอนนั้นใช้ Backend เดิม จึงไม่ใช่ bill acceptance หรือการเผยแพร่ Production
+Production หลังอนุมัติเป็น `999da28a-d08a-4960-b23d-ece4a84f805e`
+main merge `b1304e7`. [Production-configured build](pos-2026-10-11/production-configured-build.txt)
 ผ่านโดยใช้ public variables เดิม ไม่มี privileged keys ใน frontend
+
+## หลักฐานหลังอนุมัติ Deploy
+
+- [Merged check](pos-2026-10-11/merged-check.txt):73/73 ผ่าน รวม Type Check/Lint/Build/Preview
+- [Production build](pos-2026-10-11/deployed-build.txt) และ [asset hashes](pos-2026-10-11/production-assets.json): HTML/JS/CSS ตรงกับเว็บจริงทุกไฟล์
+- [API smoke](pos-2026-10-11/api-smoke.json): menu/categories200, unauth payment/menu401, untrusted origin403, preflight204
+- [Preservation](pos-2026-10-11/preservation.json): existing row hashes11ตารางตรงกันทั้งหมด รวม status events55 และ profiles6 ไม่มีธุรกรรมทดสอบใหม่
+- public-api v3 hash fbb9ba73..., staff-api v6 hash48b3202c... ACTIVE; retrieved source ทุกไฟล์ตรงกับrelease
+- Hosted READ ONLY transaction: Staff ทั้ง3 อ่านreportสำเร็จ grossตรงsales_events, ไม่มีdrinkในtop, Thai methodปรากฏ; Staff owner RPC ถูกปฏิเสธ, nonstaff RLS ไม่เห็นorders/report403, Ownerทั้ง3อ่านmenu catalogได้; scan confirmed=false ปฏิเสธPT400ก่อนเขียน
+- Actual password logins, physical iPhone และ successful hosted order/payment/reorder interaction ยัง NOT TESTED ไม่มีการรับเงิน/คืนเงินจริงทดสอบ

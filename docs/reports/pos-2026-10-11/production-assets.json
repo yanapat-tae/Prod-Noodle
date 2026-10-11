@@ -1,0 +1,46 @@
+{
+  "deploymentId": "999da28a-d08a-4960-b23d-ece4a84f805e",
+  "environment": "production",
+  "status": "success",
+  "commit": "b1304e7e12a0a042ad864c907450349b987c8d5f",
+  "pages": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/admin",
+      "status": 200
+    },
+    {
+      "path": "/manifest.webmanifest",
+      "status": 200
+    },
+    {
+      "path": "/sw.js",
+      "status": 200
+    }
+  ],
+  "assets": [
+    {
+      "path": "assets/Staff-C9_KgDSJ.js",
+      "status": 200,
+      "sha256": "8c5b201062098118e2b235588a581db36e133fe2102d50e0d4c835ae5811834d"
+    },
+    {
+      "path": "assets/Staff-OvVhElWy.css",
+      "status": 200,
+      "sha256": "5817f0793650cdf81663e30cc75f2922bc965b3922baaf798bf6789207de41c0"
+    },
+    {
+      "path": "assets/index-B90z--X4.css",
+      "status": 200,
+      "sha256": "610e76d149499c1d5e772b1a443daf050fa9ebf719e5ac914ab4e5232f02aab9"
+    },
+    {
+      "path": "assets/index-C7J_7nZj.js",
+      "status": 200,
+      "sha256": "822c61aa847a6e09e30cafb0cc1539d453d172f374307ee43a03fee4b271695e"
+    }
+  ]
+}

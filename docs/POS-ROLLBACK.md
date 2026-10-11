@@ -10,8 +10,9 @@ migrations, delete receipts, remove ledger allocations, or recreate Auth account
    revision / prep_notes, six requested profiles, and financial/table fingerprints.
    Local captures live in ignored `.local-data/pos-improvement/`; no secrets or sales
    exports should be committed. Keep an owner-controlled backup before ending the session.
-3. Run check + browser + isolated native PostgreSQL concurrency test. Inspect migration
-   and verified Email/UIDs. Apply only the new migration, then the exact-profile operation.
+3. Run the appropriate checks and inspect verified Email/UIDs and hosted history.
+   Both POS migrations and the exact-profile operation are already applied for this
+   release; do not replay them. Future releases apply only verified unapplied versions.
 4. Deploy the public-api and staff-api with existing custom-auth configuration; build
    the frontend using public keys only and deploy to the existing Pages project.
    Existing open tabs must refresh: legacy single-round dine-in payment intentionally

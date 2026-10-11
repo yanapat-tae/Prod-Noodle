@@ -1,0 +1,42 @@
+[
+  {
+    "path": "public-api/menu",
+    "method": "GET",
+    "status": 200
+  },
+  {
+    "path": "public-api/menu/categories",
+    "method": "GET",
+    "status": 200
+  },
+  {
+    "path": "staff-api/staff/orders/00000000-0000-4000-8000-000000000001/pay-bill",
+    "method": "POST",
+    "status": 401
+  },
+  {
+    "path": "staff-api/staff/menu/manage",
+    "method": "GET",
+    "status": 401
+  },
+  {
+    "path": "staff-api/staff/menu/manage",
+    "method": "POST",
+    "status": 401
+  },
+  {
+    "path": "staff-api/staff/menu/manage",
+    "method": "GET",
+    "status": 403
+  },
+  {
+    "path": "staff-api/staff/orders/00000000-0000-4000-8000-000000000001/pay-bill",
+    "method": "OPTIONS",
+    "status": 204
+  },
+  {
+    "path": "public-api/menu",
+    "method": "GET",
+    "status": 403
+  }
+]

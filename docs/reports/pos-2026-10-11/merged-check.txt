@@ -1,0 +1,110 @@
+$ pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm preview:html
+$ tsc --noEmit && tsc -p tsconfig.edge.json
+$ eslint . --max-warnings 0
+$ node --test tests/*.test.ts tests/*.test.mjs
+✔ Payment planning preserves data until persistence; retries and concurrent receipts cannot double capture (9.674015ms)
+✔ Real menu migration replaces the trial catalog while preserving retired dishes and historical bills (2418.499986ms)
+✔ saved demo catalog gains real menus while preserving owner prices and custom dishes (2.193386ms)
+✔ menu corrections preserve owner names and prices while restricting crispy-pork rice toppings (1.490443ms)
+✔ Coke rename preserves saved prices, availability, custom names and historical lines (0.203919ms)
+✔ SQL kitchen completion preserves snapshots, payment state and retry identity from every active status (2635.090741ms)
+✔ free notes and takeaway details survive retries, reads and price changes (16.743803ms)
+✔ invalid free notes and takeaway inputs roll back the whole order (14.248159ms)
+✔ owner menu creation copies deterministic active templates and preserves price overrides (36.014686ms)
+✔ menu creation rejects malformed payloads, duplicate groups and non-owner actors atomically (19.082888ms)
+✔ menu creation and order mutation RPCs remain service-only security invoker functions (15.076752ms)
+✔ staff menu creation endpoint checks the owner before calling the database (2.216571ms)
+✔ owner cannot create a menu with an empty option template (4.514215ms)
+✔ owner menu rename preserves snapshots, trims Unicode and retains legacy price edits (9.249563ms)
+✔ invalid renames and non-owner edits roll back menu, availability and prices (12.335268ms)
+✔ both menu edit signatures are service-only security invoker functions (5.345822ms)
+✔ staff rename checks owner and rejects non-string JSON names before the RPC (1.4223ms)
+✔ PostgreSQL transactions, pricing, permissions, table lifecycle and reporting (2369.608045ms)
+Local demo burst: 40 requests completed in 95 ms; not a Supabase capacity benchmark.
+✔ Demo HTTP: shared state, retries, authorization, burst queues, price snapshots and payment lifecycle (224.895095ms)
+✔ Kitchen completion skips intermediate states while terminal orders cannot reopen (1.023247ms)
+✔ Server pricing validates required choices, prices each bowl and rejects unavailable/foreign options (5.349157ms)
+✔ Exact money parsing, Bangkok business date, and safe CSV cells (13.404424ms)
+✔ Reporting counts paid orders once; refund uses its own date; summaries replace detail only on that channel/day (2.641734ms)
+✔ network retries require an idempotency key for writes and retain the exact request (286.75922ms)
+✔ Demo kitchen completion is repeatable, preserves unpaid bills and enforces staff authorization (117.324157ms)
+✔ Owner menu HTTP reads/writes preserve categories, retry identity and old orders (88.746694ms)
+✔ Edge menu management guards both methods before the owner RPC and passes the request key (2.308931ms)
+✔ Menu RPCs require service role and an active owner, including read access (2186.989434ms)
+✔ Server prices requested ice-cream limits, explicit peanut omission and fried egg (37.532258ms)
+✔ Per-menu override isolates shared choices, snapshots survive removal and exact retries survive archival (74.898127ms)
+✔ Owner keys bind actor/payload, retries precede revisions, legacy edits also conflict (27.367122ms)
+✔ Reordering checks exact membership and revisions; archive all retains category for create and restore (48.345675ms)
+✔ Invalid nested data rolls back and disabled choices reject stale orders (43.03348ms)
+✔ Ice cream enforces 3/4 toppings by size; peanuts use a separate choice and omission reaches the kitchen (4.551501ms)
+✔ Archived menus and disabled options/groups cannot be ordered from a stale cart (0.309758ms)
+✔ Full menu edits are immutable, local to one item and guarded by revision (3.868568ms)
+✔ Archive/restore and category reorder preserve data and reject incomplete or stale order lists (0.819439ms)
+✔ Menu validation rejects unreachable variant limits, invalid defaults, disabled required choices and unknown fields (1.160154ms)
+✔ Creation still works with all menus archived and public catalog hides disabled choices (0.558014ms)
+✔ Requested presets upgrade only once, retain custom prices and never duplicate owner dishes (0.528289ms)
+✔ new menu validation trims display text and returns an independent normalized value (1.751658ms)
+✔ new menu validation rejects malformed objects, missing fields and unexpected fields (0.470842ms)
+✔ new menu codes use bounded slugs and categories must already exist (0.338972ms)
+✔ new menu text limits count Unicode codepoints and reject non-text or blank required fields (0.401246ms)
+✔ new menu variants require one to eight unique valid codes and positive integer satang prices (0.632656ms)
+✔ new menu option groups must be distinct existing catalog groups with at most eight choices (0.782753ms)
+✔ new menu preparation notes are distinct trimmed text with bounded count and length (0.592977ms)
+✔ new menu validation rejects sparse arrays instead of returning incomplete entries (0.200213ms)
+✔ menu mapping uses catalog category and option templates without sharing mutable data (0.623242ms)
+✔ new menu option templates follow stable code order instead of catalog display order (0.368166ms)
+✔ menu rename validates Unicode names and rejects blank, oversized, non-text and NUL values (0.412193ms)
+✔ HTTP orders retain takeaway contact and kitchen notes; owner menu creation retries safely (84.57796ms)
+✔ HTTP owner renames atomically while old order snapshots and legacy edits remain intact (69.077887ms)
+✔ Two rounds settle once, close bill, retain kitchen state and new order creates new bill (2404.955545ms)
+✔ Stale same-total membership, missing confirmation, unknown method and disabled actor cannot pay (21.252147ms)
+✔ Parallel devices receive one receipt and order/payment race rejects unseen rounds (19.495122ms)
+✔ Report keeps drink revenue and payment method while ranking only food; refunds remain single (28.779336ms)
+✔ Global reorder validates membership/revisions and persists across fresh reads; note alters only prep text (36.958242ms)
+✔ Top menus exclude the six drink/ice codes but revenue still includes them (16.013549ms)
+✔ All-menu ordering moves across categories and category ordering preserves unrelated slots (4.478991ms)
+✔ Ten persistent QR entries preserve printed links and only the owner can explicitly rotate one entry (2464.516055ms)
+✔ Requested profiles use existing exact Auth users, preserve other users and repeat safely; mismatch rolls back (1842.444478ms)
+✔ A burst of order notifications cannot queue minutes of bells ahead of a payment (1.497534ms)
+✔ An old playback failure after mute/re-enable cannot disable the new audio session (0.374747ms)
+✔ Disabling sound while enable is pending prevents a late resume from enabling it (0.183938ms)
+✔ A failed older enable cannot silence a newer successful enable (0.262867ms)
+✔ Concurrent refresh requests coalesce without keeping an action busy through continuous polling (1.394528ms)
+✔ Disposing a staff session ignores pending failures and cancels queued refreshes (0.228575ms)
+✔ Out-of-order Realtime reads cannot regress status, but different orders update independently (0.296048ms)
+✔ Delete, stale failures, and stopped subscriptions cannot reinsert an old order (0.352843ms)
+✔ Free-text kitchen notes are trimmed, preserved and bounded independently of preset notes (5.065979ms)
+✔ Takeaway details require a name and village deliveries require contact and address (0.930586ms)
+✔ Takeaway tickets display names and retain queue identifiers, including legacy orders (0.301696ms)
+ℹ tests 73
+ℹ suites 0
+ℹ pass 73
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 19864.71953
+$ tsc --noEmit && vite build
+vite v8.3.2 building client environment for production...
+transforming...
+✓ 697 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.85 kB │ gzip:   0.49 kB
+dist/assets/Staff-OvVhElWy.css    1.96 kB │ gzip:   0.67 kB
+dist/assets/index-B90z--X4.css   19.86 kB │ gzip:   4.88 kB
+dist/assets/index-Dxhc-dKM.js   270.79 kB │ gzip:  83.50 kB
+dist/assets/Staff-JNrMv8Vc.js   457.99 kB │ gzip: 131.61 kB
+
+✓ built in 337ms
+$ node scripts/build-html-preview.mjs
+vite v8.3.2 building client environment for production...
+transforming...
+✓ 652 modules transformed.
+rendering chunks...
+computing gzip size...
+.html-preview-build/style.css    22.78 kB │ gzip:   5.36 kB
+.html-preview-build/preview.js  743.87 kB │ gzip: 217.83 kB
+
+✓ built in 377ms
+Saved preview.html: 749 KB; no server, CDN, API, or signup required.

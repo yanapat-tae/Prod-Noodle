@@ -1,6 +1,6 @@
 # ต่อ Supabase Free และ Cloudflare Pages
 
-สถานะ 11 ต.ค. 2026: project `emjktqzcvgjwtsgysljy` มีโต๊ะ 8 จุดสั่งกลับบ้าน 2 จุด และเมนูออนไลน์ 41 รายการที่เปิดขาย ทั้ง 11 migrations ลงแล้ว และ `staff-api` v5 กับ frontend ของ PR #6 เผยแพร่ที่ https://prod-noodle.pages.dev ดู [HANDOFF](../HANDOFF.md) และ [หลักฐาน deployment](reports/2026-10-11-menu-deployment.md) ส่วนบัญชี/หมายเหตุมี migration เพิ่มแล้ว ดู [POS Progress](POS-IMPROVEMENT-PROGRESS.md) สำหรับสถานะล่าสุด ห้ามรัน migrations/seed หรือการล้างข้อมูลเดิมซ้ำ
+สถานะล่าสุด 11 ต.ค. 2026: project `emjktqzcvgjwtsgysljy` มี 13 hosted migrations, public-api v3/staff-api v6 และ PR #7 เผยแพร่ Production แล้วที่ https://prod-noodle.pages.dev ดู [POS Progress](POS-IMPROVEMENT-PROGRESS.md) สำหรับ mappings และหลักฐานล่าสุด ห้าม replay migrations/seed หรือสร้าง Auth ซ้ำ
 
 ## 1. สร้าง Supabase project ทดลองแยก
 

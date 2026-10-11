@@ -125,19 +125,34 @@ Retain the low-cost architecture: static frontend + Supabase online, local JSON 
 
 Track source, package/lock/config files, migrations/seeds, documentation, icons, and `preview.html` (under 1 MB; retained for the user's account-free review). Ignore `.env*` except `.env.example`, `.local-data/`, dependency stores, node_modules, build intermediates and `dist/`. Existing ignored local data remains outside Git. No existing work or history should be deleted, rewritten or force-pushed.
 
-## POS improvement continuation · 11 October 2026
+## POS improvement release · 11 October 2026
 
 Read [POS progress](docs/POS-IMPROVEMENT-PROGRESS.md) and Git status before resuming.
-All seven scopes have implemented changes and automated evidence; coordinated release
-is pending. The safe preparation migration is already applied live as hosted version
-`20261011145139` (`pos_profiles_and_note`), mapped to repository
-`20261011143222_pos_profiles_and_note.sql`. There are now twelve hosted migrations.
-The six exact existing Auth users have verified active POS profiles: เต้, ปลั๊ก,
-พี่ปราง = owner; พ่อ, ฟ้า, แม่ = admin (restricted Staff). Do not recreate Auth users
-or rerun the profile operation without readback. The grass-jelly preparation note
-persists through fresh hosted API reads. Financial rows and all prices remain intact.
+All seven implementation scopes are tested and deployed after the user's explicit
+approval. [PR #7](https://github.com/yanapat-tae/Prod-Noodle/pull/7) merged as `b1304e7`.
 
-`20261011143223_pos_bill_integrity.sql` has NOT been applied. It must be released
-with the new staff/public Edge code and frontend. Current production still uses the
-previous bill/payment/reorder UI. See [rollback](docs/POS-ROLLBACK.md). Do not claim
-physical iPhone, six authenticated logins or hosted payment acceptance were tested.
+Hosted migration history now thirteen entries. New mappings:
+
+- `20261011143222_pos_profiles_and_note.sql` → hosted `20261011145139`,
+  name `pos_profiles_and_note` (already applied before approval).
+- `20261011143223_pos_bill_integrity.sql` → hosted `20261011161310`,
+  name `pos_bill_integrity` (applied once during approved release).
+
+Do not replay migrations/seeds or the exact-profile operation. All six requested
+Auth users already exist and active POS profiles are correct: เต้, ปลั๊ก, พี่ปราง = owner;
+พ่อ, ฟ้า, แม่ = admin (restricted Staff). Do not recreate users or reset their passwords.
+
+`public-api` v3 and `staff-api` v6 ACTIVE; deployed source matches the release.
+`customer-api` v2 unchanged. Cloudflare Production `999da28a-d08a-4960-b23d-ece4a84f805e`
+SUCCESS on main merge b1304e7. Served HTML/JS/CSS matches production-configured build;
+public catalog41/categories6, protected API401/untrusted origin403 checks passed.
+All existing row hashes across11 tables remain unchanged except intentional global
+menu sort/revision normalization; visible menu sequence and note remain correct.
+
+Fresh merged checks73/73, prior unchanged UI Chromium43/43 and native PostgreSQL8
+connection races passed. Hosted read-only Staff/owner/report/RLS checks also passed.
+No production test order/payment/refund was created. Physical iPhone/Safari, real
+password logins and successful hosted transaction/reorder interaction remain NOT TESTED.
+Have staff refresh existing tabs: legacy single-order dine-in payment returns409.
+See [rollback](docs/POS-ROLLBACK.md) and [evidence](docs/reports/2026-10-11-pos-improvement.md).
+Docs-only follow-ups may trigger another automatic Pages build; application assets are unchanged.

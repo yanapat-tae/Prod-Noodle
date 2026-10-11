@@ -220,3 +220,32 @@ test('Existing menu saves name, price, availability and independent group choice
   await row(page, 'ชามโปรดหมูท่วม').getByRole('button', { name: 'แก้ไข', exact: true }).click();
   await expect(page.getByLabel('ชื่อตัวเลือก 1.1', { exact: true })).toHaveValue('เส้นเล็ก');
 });
+
+for (const failedPath of ['/api/menu', '/api/staff/menu/manage']) {
+  test(
+    'A confirmed reorder with failed ' + failedPath + ' refresh retries only reads and moves once',
+    async ({ page }) => {
+      const { mutations } = await openMenu(page);
+      await page.getByLabel('กรองหมวดหมู่', { exact: true }).selectOption('drinks');
+      let failures = 2;
+      await page.route('**' + failedPath, async (route) => {
+        if (route.request().method() === 'GET' && failures-- > 0) await route.abort('failed');
+        else await route.fallback();
+      });
+      await row(page, 'น้ำอัญชันมะนาว')
+        .getByRole('button', { name: 'เลื่อนขึ้น', exact: true })
+        .click();
+      await expect(page.getByRole('alert')).toContainText('บันทึกสำเร็จแล้ว');
+      await expect(
+        row(page, 'น้ำอัญชันมะนาว').getByRole('button', { name: 'เลื่อนขึ้น', exact: true }),
+      ).toBeDisabled();
+      await page.getByRole('button', { name: 'โหลดเมนูล่าสุด', exact: true }).click();
+      await expect(page.getByRole('alert')).toHaveCount(0);
+      expect(mutations).toHaveLength(1);
+      await expect(page.locator('.inventory-row').nth(1)).toContainText('น้ำอัญชันมะนาว');
+      await expect(
+        row(page, 'น้ำอัญชันมะนาว').getByRole('button', { name: 'เลื่อนขึ้น', exact: true }),
+      ).toBeEnabled();
+    },
+  );
+}

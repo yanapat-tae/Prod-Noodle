@@ -45,6 +45,9 @@ export function withRequestedOptions(item: MenuItem): MenuItem {
         : [];
   return {
     ...item,
+    ...(item.code === 'mahachai-ice-cream'
+      ? { copy: { variantLabel: 'ขนาดไอศกรีม', ...item.copy } }
+      : {}),
     groups: [
       ...item.groups,
       ...structuredClone(

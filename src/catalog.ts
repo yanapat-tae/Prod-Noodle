@@ -72,7 +72,7 @@ export const starterCatalog: MenuItem[] = [
   dish('water', 'น้ำเปล่า', 'drinks', 10, null, [], 'ขวด'),
   dish('ice', 'น้ำแข็งเปล่า', 'drinks', 2, null, [], 'แก้ว'),
   dish('grass-jelly', 'เฉาก๊วยโบราณ', 'desserts', 25, null, [], 'ถ้วย'),
-  { ...dish('mahachai-ice-cream', 'ไอศกรีมมหาชัย', 'desserts', 30, 40, iceCreamGroups, 'ถ้วย'), variants: [{code:'normal',name:'เล็ก',priceSatang:3000},{code:'special',name:'ใหญ่',priceSatang:4000}] },
+  { ...dish('mahachai-ice-cream', 'ไอศกรีมมหาชัย', 'desserts', 30, 40, iceCreamGroups, 'ถ้วย'), copy: { variantLabel: 'ขนาดไอศกรีม' }, variants: [{code:'normal',name:'เล็ก',priceSatang:3000},{code:'special',name:'ใหญ่',priceSatang:4000}] },
 ];
 
 // Upgrade local demos once without dropping orders, custom menus or owner price edits.

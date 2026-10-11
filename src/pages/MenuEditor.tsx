@@ -31,6 +31,7 @@ export default function MenuEditor({
   const [error, setError] = useState(''),
     [notice, setNotice] = useState(''),
     [busy, setBusy] = useState(false);
+  const [needsRefresh, setNeedsRefresh] = useState(false);
   const submitting = useRef(false),
     request = useRef<{ signature: string; key: string } | null>(null);
   useEffect(() => {
@@ -52,8 +53,27 @@ export default function MenuEditor({
     setData(latest);
     return latest;
   }
-  async function run(mutation: MenuMutation, message: string, closeDraft = false) {
+  async function syncCatalog() {
+    const [latest] = await Promise.all([api.menuAdmin(identity), refresh()]);
+    setData(latest);
+    setNeedsRefresh(false);
+  }
+  async function retryRefresh() {
     if (submitting.current) return;
+    submitting.current = true;
+    setBusy(true);
+    try {
+      await syncCatalog();
+      setError('');
+    } catch {
+      setError('บันทึกสำเร็จแล้ว แต่โหลดเมนูล่าสุดไม่สำเร็จ กรุณาลองโหลดอีกครั้ง');
+    } finally {
+      submitting.current = false;
+      setBusy(false);
+    }
+  }
+  async function run(mutation: MenuMutation, message: string, closeDraft = false) {
+    if (submitting.current || needsRefresh) return;
     submitting.current = true;
     setBusy(true);
     setError('');
@@ -63,10 +83,17 @@ export default function MenuEditor({
       if (request.current?.signature !== signature)
         request.current = { signature, key: crypto.randomUUID() };
       await api.manageMenu(identity, mutation, request.current.key);
-      await Promise.all([reload(), refresh()]);
       request.current = null;
       if (closeDraft) setDraft(null);
       setNotice(message);
+      try {
+        await syncCatalog();
+      } catch {
+        setNeedsRefresh(true);
+        setError(
+          'บันทึกสำเร็จแล้ว แต่โหลดเมนูล่าสุดไม่สำเร็จ กรุณากดโหลดเมนูล่าสุด ไม่ต้องบันทึกซ้ำ',
+        );
+      }
     } catch (error) {
       setError(
         error instanceof RequestFailure && error.uncertain
@@ -79,7 +106,7 @@ export default function MenuEditor({
     }
   }
   function save() {
-    if (!draft || !data || submitting.current) return;
+    if (!draft || !data || submitting.current || needsRefresh) return;
     try {
       const menu = definitionFromDraft(draft, data.categories);
       void run(
@@ -160,6 +187,11 @@ export default function MenuEditor({
           {notice}
         </p>
       )}
+      {needsRefresh && (
+        <button disabled={busy} onClick={() => void retryRefresh()}>
+          โหลดเมนูล่าสุด
+        </button>
+      )}
       {!data ? (
         <>
           <p>กำลังโหลดเมนู…</p>
@@ -216,7 +248,7 @@ export default function MenuEditor({
           }}
         >
           <h2>{draft.revision ? 'แก้ไขเมนู' : 'เพิ่มเมนูใหม่'}</h2>
-          <fieldset className="menu-editor-fields" disabled={busy}>
+          <fieldset className="menu-editor-fields" disabled={busy || needsRefresh}>
             <label>
               ชื่อเมนู
               <input
@@ -315,7 +347,7 @@ export default function MenuEditor({
           </p>
           <button
             className="primary-action"
-            disabled={busy}
+            disabled={busy || needsRefresh}
             onClick={() =>
               start(newDraft(category === 'all' ? (data.categories[0]?.code ?? '') : category))
             }
@@ -370,12 +402,12 @@ export default function MenuEditor({
                     </small>
                   </div>
                   <div className="menu-row-actions">
-                    <button disabled={busy} onClick={() => start(editDraft(item))}>
+                    <button disabled={busy || needsRefresh} onClick={() => start(editDraft(item))}>
                       แก้ไข
                     </button>
                     {item.archived ? (
                       <button
-                        disabled={busy}
+                        disabled={busy || needsRefresh}
                         onClick={() =>
                           void run(
                             {
@@ -391,18 +423,21 @@ export default function MenuEditor({
                       </button>
                     ) : (
                       <>
-                        <button disabled={busy || position === 0} onClick={() => reorder(item, -1)}>
+                        <button
+                          disabled={busy || needsRefresh || position === 0}
+                          onClick={() => reorder(item, -1)}
+                        >
                           เลื่อนขึ้น
                         </button>
                         <button
-                          disabled={busy || position === siblings.length - 1}
+                          disabled={busy || needsRefresh || position === siblings.length - 1}
                           onClick={() => reorder(item, 1)}
                         >
                           เลื่อนลง
                         </button>
                         <button
                           className="danger-text"
-                          disabled={busy}
+                          disabled={busy || needsRefresh}
                           onClick={() => {
                             if (
                               window.confirm(

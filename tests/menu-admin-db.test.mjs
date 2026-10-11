@@ -94,6 +94,7 @@ test('Menu RPCs require service role and an active owner, including read access'
 });
 test('Server prices requested ice-cream limits, explicit peanut omission and fried egg', async () => {
   const ice = await item('mahachai-ice-cream');
+  assert.equal(ice.copy.variantLabel, 'ขนาดไอศกรีม');
   const toppings = ice.groups.find((g) => g.code === 'ice-toppings');
   assert.deepEqual(
     toppings.options.map((o) => o.name),

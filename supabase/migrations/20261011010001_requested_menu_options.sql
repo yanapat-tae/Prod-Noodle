@@ -22,4 +22,6 @@ begin
   end loop;
  end loop;
 end $$;
+update public.menu_items set customer_copy=customer_copy||'{"variantLabel":"ขนาดไอศกรีม"}'::jsonb
+ where code='mahachai-ice-cream' and not (customer_copy ? 'variantLabel');
 commit;

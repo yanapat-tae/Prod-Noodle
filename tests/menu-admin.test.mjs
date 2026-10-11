@@ -214,6 +214,8 @@ test('Requested presets upgrade only once, retain custom prices and never duplic
   assert.equal(catalogVersion, 5);
   assert.equal(result[0].variants[0].priceSatang, 3500);
   assert.equal(result[0].groups[0].options[1].name, 'ฟักทองเชื่อม');
+  assert.equal(result[0].copy.variantLabel, 'ขนาดไอศกรีม');
+  result[0].copy.variantLabel = 'ถ้วยที่เจ้าของตั้งชื่อ';
   assert.equal(result[1].groups[0].options[0].priceSatang, 1000);
   result[0].groups[0].options[1].name = 'ชื่อที่เจ้าของแก้';
   assert.deepEqual(upgradeSavedCatalog(result, 5), result);

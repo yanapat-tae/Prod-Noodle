@@ -16,6 +16,11 @@ export const defaultCopy: CustomerCopy = {
   variantLabel: 'ขนาดอาหาร', instructions: 'เลือกแบบที่ชอบ ก่อนเพิ่มลงตะกร้า',
   notesLabel: 'หมายเหตุถึงครัว', notesPlaceholder: 'เช่น ไม่เอาหมึกกรอบ แยกน้ำซุป',
 };
+export function menuRequestSignature(actor: string, payload: unknown): string {
+  const canonical = (value: unknown): unknown => Array.isArray(value) ? value.map(canonical)
+    : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, child]) => [key, canonical(child)])) : value;
+  return JSON.stringify({ actor, payload: canonical(payload) });
+}
 export function menuDefinition(item: MenuItem): MenuDefinition {
   return structuredClone({ code: item.code, name: item.name, category: item.category,
     description: item.description, unit: item.unit, available: item.available,

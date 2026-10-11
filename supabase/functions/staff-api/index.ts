@@ -1,6 +1,11 @@
 import { appOrigin,hash,HttpError,randomToken,requestKey,rpc,serve,service,staff } from '../_shared/http.ts';
 serve('staff-api',async(req,path,body)=>{
   const db=service(); const actor=await staff(db,req);
+  if (path==='/staff/menu/manage' && ['GET','POST'].includes(req.method)) {
+    await staff(db,req,true);
+    return req.method==='GET' ? rpc(db,'owner_menu_catalog',{p_actor:actor})
+      : rpc(db,'owner_manage_menu',{p_actor:actor,p_request_key:requestKey(req),p_payload:body});
+  }
   if (req.method!=='POST') throw new HttpError('ไม่พบหน้า',404);
   if (path==='/staff/orders') return rpc(db,'place_order',{p_payload:body,p_key:requestKey(req),p_hash:await hash(JSON.stringify(body)),p_actor:actor});
   const order=path.match(/^\/staff\/orders\/([0-9a-f-]{36})\/(status|pay|refund)$/i);

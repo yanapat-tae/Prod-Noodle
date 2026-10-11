@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { CartInput, CustomerSession, DeliverySummary, MenuItem, Order, Staff, Status, TakeawayDetails } from './domain.ts';
 import type { NewMenuInput } from './menu-management.ts';
+import type { MenuAdminCatalog, MenuMutation } from './menu-admin.ts';
 import { businessDate, salesReport } from './domain.ts';
 import { demoQr, qrLinks } from './staff/qr.ts';
 import type { QrEntry, StoredQr } from './staff/qr.ts';
@@ -91,6 +92,8 @@ export const api = {
   async close(identity: Staff, table: number) { return call(`/staff/tables/${table}/close`, {}, await staffToken(identity)); },
   async delivery(identity: Staff, summaries: DeliverySummary[]) { return call('/staff/delivery', { summaries }, await staffToken(identity), crypto.randomUUID()); },
   async createMenu(identity: Staff, input: NewMenuInput) { return call<MenuItem>('/staff/menu/create', input, await staffToken(identity)); },
+  async menuAdmin(identity: Staff) { return call<MenuAdminCatalog>('/staff/menu/manage', undefined, await staffToken(identity)); },
+  async manageMenu(identity: Staff, mutation: MenuMutation, key: string) { return call<{ ok: true }>('/staff/menu/manage', mutation, await staffToken(identity), key); },
   async editMenu(identity: Staff, code: string, prices: Record<string, number>, available: boolean, name?: string) { return call('/staff/menu', { code, prices, available, ...(name === undefined ? {} : { name }) }, await staffToken(identity)); },
   async report(identity: Staff, period: string): Promise<ReturnType<typeof salesReport>> {
     if (!supabase) { const state = await this.state(identity); return salesReport(state.orders, state.summaries, period); }

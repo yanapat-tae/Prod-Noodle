@@ -70,10 +70,10 @@
 
 **Interfaces:** `api.menuAdmin(identity): Promise<MenuAdminCatalog>` reads `GET /staff/menu/manage`; `api.manageMenu(identity,mutation,key): Promise<{ok:true}>` posts same path using Idempotency-Key. All adapters expose these identical signatures.
 
-- [ ] Write tests for owner-only read/write, repeated request, conflicting actor/payload and refresh after all items are archived. Observe failure.
-- [ ] Add Edge owner guards before RPC. Node/HTML bind request keys to actor and payload, persist cache only on successful immutable mutation; public menu uses publicCatalog. Legacy edits advance revisions.
-- [ ] Keep requestJson's uncertainty semantics and old create/edit endpoints working.
-- [ ] Run HTTP, menu admin and Edge checks, regenerate HTML after API changes; commit.
+- [x] Write tests for owner-only read/write, repeated request, conflicting actor/payload and refresh after all items are archived. Observe failure.
+- [x] Add Edge owner guards before RPC. Node/HTML bind request keys to actor and payload, persist cache only on successful immutable mutation; public menu uses publicCatalog. Legacy edits advance revisions.
+- [x] Keep requestJson's uncertainty semantics and old create/edit endpoints working.
+- [x] Run HTTP, menu admin and Edge checks, regenerate HTML after API changes; commit.
 
 ### Task 4: Shared customer configuration and preview
 

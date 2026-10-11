@@ -71,14 +71,15 @@ export const starterCatalog: MenuItem[] = [
   dish('soft-drink', 'น้ำอัดลม - โค้ก', 'drinks', 20, null, [], 'ขวด'),
   dish('water', 'น้ำเปล่า', 'drinks', 10, null, [], 'ขวด'),
   dish('ice', 'น้ำแข็งเปล่า', 'drinks', 2, null, [], 'แก้ว'),
-  dish('grass-jelly', 'เฉาก๊วยโบราณ', 'desserts', 25, null, [], 'ถ้วย'),
+  { ...dish('grass-jelly', 'เฉาก๊วยโบราณ', 'desserts', 25, null, [], 'ถ้วย'), prepNotes: ['ไม่ใส่น้ำตาลทรายแดง'] },
   { ...dish('mahachai-ice-cream', 'ไอศกรีมมหาชัย', 'desserts', 30, 40, iceCreamGroups, 'ถ้วย'), copy: { variantLabel: 'ขนาดไอศกรีม' }, variants: [{code:'normal',name:'เล็ก',priceSatang:3000},{code:'special',name:'ใหญ่',priceSatang:4000}] },
 ];
 
 // Upgrade local demos once without dropping orders, custom menus or owner price edits.
-export const catalogVersion = 5;
+export const catalogVersion = 6;
 export function upgradeSavedCatalog(previous: MenuItem[], previousVersion = 0): MenuItem[] {
   if (previousVersion >= catalogVersion) return structuredClone(previous);
+  if (previousVersion === 5) return [...previous].sort((a,b) => (a.categorySortOrder ?? menuCategories.findIndex(c=>c.code===a.category))-(b.categorySortOrder ?? menuCategories.findIndex(c=>c.code===b.category)) || (a.sortOrder ?? previous.indexOf(a))-(b.sortOrder ?? previous.indexOf(b))).map((value,index) => ({...structuredClone(value), sortOrder:index, ...(value.code==='grass-jelly' ? {prepNotes:['ไม่ใส่น้ำตาลทรายแดง']} : {})}));
   if (previousVersion >= 2) return previous.map(value => {
     const item = structuredClone(value);
     if (item.code === 'soft-drink' && item.name === 'น้ำอัดลม') item.name = 'น้ำอัดลม - โค้ก';

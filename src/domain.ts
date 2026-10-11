@@ -22,6 +22,7 @@ export interface Order {
   createdAt: string; paidAt: string | null; paymentMethod: string | null;
   refundedAt: string | null; refundedSatang: number;
   takeaway?: TakeawayDetails | null;
+  billPaymentId?: string | null;
 }
 export interface CustomerSession { token: string; tableNumber: number | null; channel: 'dine_in' | 'takeaway'; visitId: string | null }
 export interface Staff { token: string; id: string; name: string; role: 'owner' | 'admin' }
@@ -105,6 +106,8 @@ export function validateSummary(summary: DeliverySummary) {
   if (summary.discountSatang > summary.grossSatang) throw new DomainError('ส่วนลดมากกว่ายอดขาย');
   if (summary.orderCount !== null && (!Number.isInteger(summary.orderCount) || summary.orderCount < 0 || summary.orderCount > 10000)) throw new DomainError('จำนวนออเดอร์ไม่ถูกต้อง');
 }
+export const topMenuExcludedCodes = new Set(['ice', 'water', 'soft-drink', 'longan-juice', 'butterfly-pea-lime', 'chrysanthemum-tea']);
+export const paymentMethodNames: Record<string, string> = { cash: 'เงินสด', promptpay: 'PromptPay', card: 'บัตร', delivery_platform: 'แพลตฟอร์ม Delivery', thai_chuay_thai: 'สแกนไทยช่วยไทย' };
 export function salesReport(orders: Order[], summaries: DeliverySummary[], date: string) {
   const matches = (value: string) => date.length === 7 ? value.startsWith(date) : value === date;
   const selected = summaries.filter(s => matches(s.date));
@@ -118,9 +121,10 @@ export function salesReport(orders: Order[], summaries: DeliverySummary[], date:
   const hourFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Bangkok', hour: '2-digit', hourCycle: 'h23' });
   for (const order of paid) hourly[Number(hourFormat.format(new Date(order.paidAt!)))].value += order.totalSatang / 100;
   const quantities = new Map<string, { name: string; quantity: number }>();
-  for (const order of paid) for (const line of order.lines) { const current = quantities.get(line.itemCode) ?? { name: line.name, quantity: 0 }; current.quantity += line.quantity; quantities.set(line.itemCode, current); }
+  for (const order of paid) for (const line of order.lines) { if (topMenuExcludedCodes.has(line.itemCode)) continue; const current = quantities.get(line.itemCode) ?? { name: line.name, quantity: 0 }; current.quantity += line.quantity; quantities.set(line.itemCode, current); }
   const top = [...quantities.values()].sort((a, b) => b.quantity - a.quantity).slice(0, 10);
-  return { gross, refund, net: gross - refund, count, average: count ? gross / count : null, channels, hourly, top, detailGross: paid.reduce((s, o) => s + o.totalSatang, 0), hasDailySummary: selected.length > 0 };
+  const payments = Object.entries(paymentMethodNames).map(([method, name]) => ({ method, name, value: paid.filter(o => o.paymentMethod === method).reduce((sum, o) => sum + o.totalSatang, 0) }));
+  return { payments, gross, refund, net: gross - refund, count, average: count ? gross / count : null, channels, hourly, top, detailGross: paid.reduce((s, o) => s + o.totalSatang, 0), hasDailySummary: selected.length > 0 };
 }
 export function csvCell(value: unknown) {
   let text = String(value ?? ''); if (/^[=+\-@\t\r]/.test(text)) text = "'" + text;

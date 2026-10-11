@@ -15,7 +15,7 @@ export default function Accounts({ identity }: { identity: Identity }) {
   }, [identity.id]);
   return (
     <section>
-      <p className="eyebrow">บัญชีร้านทั้งหมด 4 ช่อง</p>
+      <p className="eyebrow">บัญชีร้านทั้งหมด {mode === 'demo' ? 4 : 6} ช่อง</p>
       <h1>บัญชีพนักงาน</h1>
       <p className="info-message">
         {mode === 'demo'

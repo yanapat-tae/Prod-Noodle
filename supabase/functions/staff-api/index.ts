@@ -8,6 +8,8 @@ serve('staff-api',async(req,path,body)=>{
   }
   if (req.method!=='POST') throw new HttpError('ไม่พบหน้า',404);
   if (path==='/staff/orders') return rpc(db,'place_order',{p_payload:body,p_key:requestKey(req),p_hash:await hash(JSON.stringify(body)),p_actor:actor});
+  const bill=path.match(/^\/staff\/orders\/([0-9a-f-]{36})\/pay-bill$/i);
+  if (bill) return rpc(db,'staff_pay_bill',{p_actor:actor,p_order_id:bill[1],p_request_key:requestKey(req),p_payload:body});
   const order=path.match(/^\/staff\/orders\/([0-9a-f-]{36})\/(status|pay|refund)$/i);
   if (order) return rpc(db,'staff_order_action',{p_actor:actor,p_id:order[1],p_action:order[2],p_value:order[2]==='status'?body.status:order[2]==='pay'?body.method:null});
   const close=path.match(/^\/staff\/tables\/([1-8])\/close$/);

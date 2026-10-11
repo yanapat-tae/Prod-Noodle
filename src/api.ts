@@ -1,3 +1,6 @@
+import { menuCategories } from './catalog.ts';
+import type { MenuCategory } from './menu-admin.ts';
+import type { BillPaymentInput, BillReceipt } from './bill-payment.ts';
 import { createClient } from '@supabase/supabase-js';
 import type { CartInput, CustomerSession, DeliverySummary, MenuItem, Order, Staff, Status, TakeawayDetails } from './domain.ts';
 import type { NewMenuInput } from './menu-management.ts';
@@ -15,7 +18,7 @@ const staffStorage = 'prod-demo-staff';
 export interface StaffState { orders: Order[]; visits: Record<string, { id: string }>; summaries: DeliverySummary[] }
 async function call<T>(path: string, body?: unknown, token?: string, idempotencyKey?: string): Promise<T> {
   if (mode === 'supabase' && !supabase) throw new Error('ยังไม่ได้ตั้งค่า Supabase กรุณาตรวจ .env.local');
-  const group = path.startsWith('/staff') ? 'staff-api' : path.startsWith('/customer/session') || path === '/menu' ? 'public-api' : 'customer-api';
+  const group = path.startsWith('/staff') ? 'staff-api' : path.startsWith('/customer/session') || path === '/menu' || path === '/menu/categories' ? 'public-api' : 'customer-api';
   const target = mode === 'demo' ? '/api' + path : url + '/functions/v1/' + group + path;
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (mode === 'supabase') headers.apikey = key;
@@ -30,7 +33,7 @@ async function staffToken(identity: Staff) {
 function mapOrder(o: any): Order {
   const refunds = (o.payment_transactions ?? []).filter((p: any) => p.kind === 'refund' && p.status === 'succeeded');
   return { id: o.id, channel: o.channel, tableNumber: o.restaurant_tables?.table_number ?? null, queueNumber: o.queue_number, visitId: o.table_session_id, status: o.fulfillment_status, takeaway: o.takeaway_details ?? null,
-    totalSatang: Number(o.total_satang), createdAt: o.created_at, paidAt: o.paid_at, paymentMethod: (o.payment_transactions ?? []).find((p: any) => p.kind === 'capture' && p.status === 'succeeded')?.method ?? null,
+    totalSatang: Number(o.total_satang), createdAt: o.created_at, paidAt: o.paid_at, billPaymentId: (o.payment_transactions ?? []).find((p: any) => p.kind === 'capture' && p.status === 'succeeded')?.bill_payment_id ?? null, paymentMethod: (o.payment_transactions ?? []).find((p: any) => p.kind === 'capture' && p.status === 'succeeded')?.method ?? null,
     refundedAt: refunds[refunds.length - 1]?.posted_at ?? null, refundedSatang: refunds.reduce((s: number, p: any) => s + Number(p.amount_satang), 0),
     lines: (o.order_items ?? []).map((l: any) => ({ id: l.id, itemCode: l.menu_items?.code ?? '', variantCode: l.menu_variants?.code ?? '', name: l.menu_name_snapshot, variantName: l.variant_name_snapshot, unit: l.unit_snapshot ?? l.menu_items?.unit ?? 'ชาม', quantity: l.quantity,
       unitSatang: Number(l.base_unit_satang) + Number(l.options_unit_satang), totalSatang: Number(l.line_net_satang), optionNames: (l.order_item_options ?? []).map((v: any) => v.option_name_snapshot), options: [], notes: l.notes ? l.notes.split(' · ') : [], freeNote: l.free_note ?? '' })) };
@@ -42,6 +45,7 @@ async function profile(token: string, userId: string): Promise<Staff> {
   return { token, id: userId, name: data.display_name, role: data.role };
 }
 export const api = {
+  categories: () => mode === 'demo' ? Promise.resolve(menuCategories) : call<MenuCategory[]>('/menu/categories'),
   menu: () => call<MenuItem[]>('/menu'),
   bootstrap: (entry: string, oldToken?: string) => call<CustomerSession>('/customer/session', { entry }, oldToken),
   customerOrders: (session: CustomerSession) => call<Order[]>('/orders', undefined, session.token),
@@ -88,6 +92,7 @@ export const api = {
   async posOrder(identity: Staff, lines: CartInput[], total: number, channel: string, tableNumber: number | null, requestKey: string, takeaway?: TakeawayDetails) { return call<Order>('/staff/orders', { lines, expectedTotalSatang: total, channel, tableNumber, takeaway }, await staffToken(identity), requestKey); },
   async status(identity: Staff, id: string, status: Status) { return call<Order>(`/staff/orders/${id}/status`, { status }, await staffToken(identity)); },
   async pay(identity: Staff, id: string, method: string) { return call<Order>(`/staff/orders/${id}/pay`, { method }, await staffToken(identity)); },
+  async payBill(identity: Staff, id: string, input: BillPaymentInput, key: string) { return call<BillReceipt>(`/staff/orders/${id}/pay-bill`, input, await staffToken(identity), key); },
   async refund(identity: Staff, id: string) { return call<Order>(`/staff/orders/${id}/refund`, {}, await staffToken(identity)); },
   async close(identity: Staff, table: number) { return call(`/staff/tables/${table}/close`, {}, await staffToken(identity)); },
   async delivery(identity: Staff, summaries: DeliverySummary[]) { return call('/staff/delivery', { summaries }, await staffToken(identity), crypto.randomUUID()); },

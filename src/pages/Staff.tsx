@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import QrCards from '../staff/QrCards.tsx';
+import Payment from '../staff/Payment.tsx';
+import { billRounds } from '../bill-payment.ts';
+import type { BillReceipt } from '../bill-payment.ts';
 import Ticket from '../staff/Ticket.tsx';
 import Delivery from '../staff/Delivery.tsx';
 import Accounts from '../staff/Accounts.tsx';
@@ -198,20 +201,9 @@ export default function Staff({
     actionInFlight.current = true;
     setBusy(true);
     setError('');
-    if (kind === 'pay') void sounds.prepare();
     try {
       if (kind === 'status') await refresh(await api.status(identity!, order.id, value as Status));
       else if (kind === 'refund') await refresh(await api.refund(identity!, order.id));
-      else {
-        const paid = await api.pay(identity!, order.id, value!);
-        if (paid.id !== order.id || !paid.paidAt)
-          throw new Error('ยังไม่ได้รับการยืนยันบันทึกเงิน กรุณาโหลดออเดอร์ใหม่');
-        await refresh(paid);
-        if (!order.paidAt && !paid.refundedAt && !paidSounds.current.has(paid.id)) {
-          paidSounds.current.add(paid.id);
-          playSound('payment');
-        }
-      }
       setPayment(null);
       setNotice('บันทึกแล้ว');
       await refresh();
@@ -221,6 +213,12 @@ export default function Staff({
       actionInFlight.current = false;
       setBusy(false);
     }
+  }
+  async function acceptReceipt(receipt: BillReceipt) {
+    // A replay contains the original receipt snapshot; refresh current fulfillment/refunds.
+    if (!paidSounds.current.has(receipt.id)) { paidSounds.current.add(receipt.id); playSound('payment'); }
+    setPayment(null); setNotice('บันทึกรับเงินและปิดบิลแล้ว');
+    await refresh();
   }
   async function closeTable(table: number) {
     if (!confirm(`ปิดรอบโต๊ะ ${table} และเริ่มรอบใหม่สำหรับลูกค้ากลุ่มถัดไป?`)) return;
@@ -323,46 +321,14 @@ export default function Staff({
       />
     );
   if (payment)
-    return (
-      <main className="staff-container payment-screen">
-        <button disabled={busy} onClick={() => setPayment(null)}>
-          ← กลับไปออเดอร์
-        </button>
-        <h1>รับชำระเงิน · {orderLabel(payment)}</h1>
-        <div className="panel">
-          {payment.lines.map((l) => (
-            <div className="receipt-line" key={l.id}>
-              <span>
-                {l.quantity} × {l.name}
-              </span>
-              <strong>{money(l.totalSatang)}</strong>
-            </div>
-          ))}
-          <div className="bill-total">
-            <span>ยอดที่ต้องชำระ</span>
-            <strong>{money(payment.totalSatang)}</strong>
-          </div>
-          <p className="info-message">บันทึกหลังแคชเชียร์รับเงินหรือตรวจรายการโอนแล้ว</p>
-          <div className="payment-methods">
-            <button
-              className="primary-action"
-              disabled={busy}
-              onClick={() => void action(payment, 'pay', 'cash')}
-            >
-              รับเงินสดแล้ว
-            </button>
-            <button disabled={busy} onClick={() => void action(payment, 'pay', 'promptpay')}>
-              ตรวจยอด PromptPay แล้ว
-            </button>
-          </div>
-          {error && (
-            <p role="alert" className="error-message">
-              {error}
-            </p>
-          )}
-        </div>
-      </main>
-    );
+    return <Payment identity={identity} anchor={payment} orders={state.orders} onBack={() => setPayment(null)} onPaid={receipt => { void acceptReceipt(receipt); }} />;
+  const pendingPayments: {anchor?: Order; rounds: Order[]}[] = [];
+  for (let i=0;i<sessionStorage.length;i++) {
+    const key=sessionStorage.key(i)!;
+    if (key.startsWith('prod-bill-payment:' + identity.id + ':')) {
+      try { const value=JSON.parse(sessionStorage.getItem(key)!); if (value?.rounds?.length) pendingPayments.push(value); } catch { /* Invalid local drafts cannot authorize a payment. */ }
+    }
+  }
   const activeOrders = state.orders.filter((o) => !['served', 'cancelled'].includes(o.status));
   const visibleOrders = state.orders.filter((o) =>
     filter === 'all'
@@ -434,6 +400,7 @@ export default function Staff({
             </p>
           )}
         </section>
+        {pendingPayments.map((value,index) => <button key={index} onClick={()=>setPayment(value.anchor ?? value.rounds[0])}>ตรวจรายการรับเงินที่รอยืนยัน</button>)}
         {error && (
           <p className="error-message" role="alert">
             {error}
@@ -516,6 +483,7 @@ export default function Staff({
                   <Ticket
                     key={order.id}
                     order={order}
+                    round={order.visitId ? billRounds(state.orders,order).findIndex(o=>o.id===order.id)+1 : undefined}
                     identity={identity}
                     busy={busy}
                     onAction={(...args) => void action(...args)}
@@ -572,11 +540,11 @@ export default function Staff({
         {tab === 'delivery' && (
           <Delivery identity={identity} summaries={state.summaries} refresh={() => refresh()} />
         )}
-        {tab === 'menu' && (
+        {tab === 'menu' && identity.role === 'owner' && (
           <MenuEditor catalog={catalog} identity={identity} refresh={refreshMenu} />
         )}
-        {tab === 'qr' && <QrCards identity={identity} />}
-        {tab === 'accounts' && <Accounts identity={identity} />}
+        {tab === 'qr' && identity.role === 'owner' && <QrCards identity={identity} />}
+        {tab === 'accounts' && identity.role === 'owner' && <Accounts identity={identity} />}
       </main>
     </div>
   );

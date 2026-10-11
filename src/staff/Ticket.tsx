@@ -1,5 +1,5 @@
 import type { Order, Staff as Identity } from '../domain.ts';
-import { canTransition, money, orderLabel, statusNames, thaiTime } from '../domain.ts';
+import { canTransition, money, orderLabel, statusNames, thaiTime, paymentMethodNames } from '../domain.ts';
 import { DeliveryDetails } from '../pages/TakeawayForm.tsx';
 
 export default function Ticket({
@@ -7,10 +7,12 @@ export default function Ticket({
   identity,
   busy,
   onAction,
+  round,
 }: {
   order: Order;
   identity: Identity;
   busy: boolean;
+  round?: number;
   onAction: (order: Order, action: string, value?: string) => void;
 }) {
   const target = canTransition(order.status, 'served') ? 'served' : undefined;
@@ -18,7 +20,7 @@ export default function Ticket({
     <article className={'ticket status-border-' + order.status}>
       <div className="ticket-top">
         <div>
-          <h2>{orderLabel(order)}</h2>
+          <h2>{orderLabel(order)}{round && ' · รอบที่ ' + round}</h2>
           <span className="muted">
             #{order.id.slice(0, 6).toUpperCase()} · {thaiTime(order.createdAt)}
           </span>
@@ -44,6 +46,7 @@ export default function Ticket({
         <span>{order.refundedAt ? 'คืนเงินแล้ว' : order.paidAt ? '✓ ชำระแล้ว' : 'ยังไม่ชำระ'}</span>
         <strong>{money(order.totalSatang)}</strong>
       </div>
+      {order.paidAt && <p className="muted">{paymentMethodNames[order.paymentMethod ?? ''] ?? order.paymentMethod} · {thaiTime(order.paidAt)}{order.billPaymentId && ' · ใบรับเงิน #' + order.billPaymentId.slice(0,8).toUpperCase()}</p>}
       <div className="ticket-actions">
         {target && (
           <button

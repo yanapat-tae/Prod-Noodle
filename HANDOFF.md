@@ -124,3 +124,20 @@ Seeds do not create passwords, accounts or QR tokens. The final QR migration cre
 Retain the low-cost architecture: static frontend + Supabase online, local JSON demo for development, offline HTML for design review. Elderly-friendly Thai UI and no initial image/voice costs are explicit user preferences. Money is integer satang, dates are Asia/Bangkok, writes are server-validated/idempotent, historical prices stay immutable, and delivery summaries replace a channel/day total rather than adding twice. Online `verify_jwt=false` relies on explicit handler authorization and must not be interpreted as public staff access.
 
 Track source, package/lock/config files, migrations/seeds, documentation, icons, and `preview.html` (under 1 MB; retained for the user's account-free review). Ignore `.env*` except `.env.example`, `.local-data/`, dependency stores, node_modules, build intermediates and `dist/`. Existing ignored local data remains outside Git. No existing work or history should be deleted, rewritten or force-pushed.
+
+## POS improvement continuation · 11 October 2026
+
+Read [POS progress](docs/POS-IMPROVEMENT-PROGRESS.md) and Git status before resuming.
+All seven scopes have implemented changes and automated evidence; coordinated release
+is pending. The safe preparation migration is already applied live as hosted version
+`20261011145139` (`pos_profiles_and_note`), mapped to repository
+`20261011143222_pos_profiles_and_note.sql`. There are now twelve hosted migrations.
+The six exact existing Auth users have verified active POS profiles: เต้, ปลั๊ก,
+พี่ปราง = owner; พ่อ, ฟ้า, แม่ = admin (restricted Staff). Do not recreate Auth users
+or rerun the profile operation without readback. The grass-jelly preparation note
+persists through fresh hosted API reads. Financial rows and all prices remain intact.
+
+`20261011143223_pos_bill_integrity.sql` has NOT been applied. It must be released
+with the new staff/public Edge code and frontend. Current production still uses the
+previous bill/payment/reorder UI. See [rollback](docs/POS-ROLLBACK.md). Do not claim
+physical iPhone, six authenticated logins or hosted payment acceptance were tested.

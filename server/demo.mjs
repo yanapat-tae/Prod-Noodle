@@ -1,3 +1,4 @@
+import { prepareBillPayment } from '../src/bill-payment.ts';
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, mkdirSync, writeFileSync, renameSync } from 'node:fs';
 import { randomUUID, randomBytes, createHash } from 'node:crypto';
@@ -14,7 +15,7 @@ export function createDemoServer({ dataPath = resolve('.local-data/demo.json') }
   const staffTokens = new Map();
   const persist = () => { mkdirSync(dirname(dataPath), { recursive: true }); writeFileSync(dataPath + '.tmp', JSON.stringify(state)); renameSync(dataPath + '.tmp', dataPath); };
   const newToken = () => randomBytes(24).toString('hex');
-  const session = (token) => { const customer = state.customers[sha(token ?? '')]; if (!customer || customer.expires < Date.now() || (customer.visitId && state.visits[customer.tableNumber]?.id !== customer.visitId)) throw new DomainError('รอบโต๊ะหมดอายุ กรุณาสแกน QR ใหม่', 401); return customer; };
+  const session = (token, receiptOnly = false) => { const customer = state.customers[sha(token ?? '')]; if (!customer || customer.expires < Date.now() || (!receiptOnly && customer.visitId && state.visits[customer.tableNumber]?.id !== customer.visitId)) throw new DomainError('รอบโต๊ะหมดอายุ กรุณาสแกน QR ใหม่', 401); return customer; };
   const staff = (token, owner = false) => { const identity = staffTokens.get(token); if (!identity || identity.expires < Date.now()) throw new DomainError('กรุณาเข้าสู่ระบบพนักงาน', 401); if (owner && identity.role !== 'owner') throw new DomainError('เฉพาะเจ้าของร้านเท่านั้น', 403); return identity; };
   const createOrder = (payload, actor, key) => {
     if (!/^[0-9a-f-]{36}$/i.test(key ?? '')) throw new DomainError('คำขอไม่มีรหัสอ้างอิง');
@@ -62,15 +63,30 @@ export function createDemoServer({ dataPath = resolve('.local-data/demo.json') }
       }
       if (req.method === 'GET' && path === '/api/staff/me') return json(200, { ...staff(token), token });
       if (req.method === 'POST' && path === '/api/staff/logout') { staffTokens.delete(token); return json(200, { ok: true }); }
-      if (req.method === 'POST' && path === '/api/orders') { const customer = session(token); return json(201, createOrder(body, customer, req.headers['idempotency-key'])); }
-      if (req.method === 'GET' && path === '/api/orders') { const customer = session(token); return json(200, state.orders.filter(o => o.customerSessionId === customer.sessionId)); }
+      if (req.method === 'POST' && path === '/api/orders') { const customer = session(token, !!state.requests[req.headers['idempotency-key']]); return json(201, createOrder(body, customer, req.headers['idempotency-key'])); }
+      if (req.method === 'GET' && path === '/api/orders') { const customer = session(token, true); return json(200, state.orders.filter(o => o.customerSessionId === customer.sessionId)); }
       if (req.method === 'GET' && path === '/api/staff/state') { staff(token); return json(200, { orders: state.orders, visits: state.visits, summaries: state.summaries }); }
       if (req.method === 'POST' && path === '/api/staff/orders') return json(201, createOrder(body, staff(token), req.headers['idempotency-key']));
+      const billMatch = path.match(/^\/api\/staff\/orders\/([0-9a-f-]+)\/pay-bill$/i);
+      if (req.method === 'POST' && billMatch) {
+        const actor = staff(token), key = req.headers['idempotency-key'];
+        const settlement = prepareBillPayment(state.orders, state.billPayments ?? {}, actor.id, billMatch[1], key, body);
+        if (state.billPayments?.[settlement.receipt.id]) return json(200, settlement.receipt);
+        const previousState = state;
+        state = structuredClone(state);
+        const paid = new Map(settlement.receipt.orders.map(o => [o.id,o]));
+        state.orders = state.orders.map(o => paid.get(o.id) ?? o);
+        state.billPayments ??= {}; state.billPayments[settlement.receipt.id] = settlement;
+        const anchor = state.orders.find(o => o.id === billMatch[1]);
+        if (anchor.visitId && state.visits[anchor.tableNumber]?.id === anchor.visitId) delete state.visits[anchor.tableNumber];
+        try { persist(); } catch (error) { state = previousState; throw error; }
+        return json(200, settlement.receipt);
+      }
       const orderMatch = path.match(/^\/api\/staff\/orders\/([0-9a-f-]+)\/(status|pay|refund)$/i);
       if (req.method === 'POST' && orderMatch) {
         const identity = staff(token, orderMatch[2] === 'refund'); const order = state.orders.find(o => o.id === orderMatch[1]); if (!order) throw new DomainError('ไม่พบออเดอร์', 404);
         if (orderMatch[2] === 'status') { if (order.status !== body.status) { if (!canTransition(order.status, body.status)) throw new DomainError('สถานะออเดอร์เปลี่ยนไปแล้ว กรุณาโหลดใหม่', 409); if (body.status === 'cancelled' && order.paidAt && !order.refundedAt) throw new DomainError('กรุณาคืนเงินก่อนยกเลิก'); order.status = body.status; state.events.push({ orderId: order.id, status: body.status, actor: identity.name, at: new Date().toISOString() }); } }
-        if (orderMatch[2] === 'pay') { if (order.status === 'cancelled') throw new DomainError('ออเดอร์ยกเลิกแล้ว'); if (!['cash', 'promptpay'].includes(body.method)) throw new DomainError('วิธีชำระไม่ถูกต้อง'); if (!order.paidAt) { order.paidAt = new Date().toISOString(); order.paymentMethod = body.method; } }
+        if (orderMatch[2] === 'pay') { if (order.visitId) throw new DomainError('กรุณาโหลดหน้ารับเงินใหม่เพื่อชำระบิลรวมทุกออเดอร์',409); if (order.status === 'cancelled') throw new DomainError('ออเดอร์ยกเลิกแล้ว'); if (!['cash', 'promptpay'].includes(body.method)) throw new DomainError('วิธีชำระไม่ถูกต้อง'); if (!order.paidAt) { order.paidAt = new Date().toISOString(); order.paymentMethod = body.method; } }
         if (orderMatch[2] === 'refund') { if (!order.paidAt) throw new DomainError('ออเดอร์ยังไม่ชำระ'); if (!order.refundedAt) { order.refundedAt = new Date().toISOString(); order.refundedSatang = order.totalSatang; } }
         persist(); return json(200, order);
       }

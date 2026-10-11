@@ -19,12 +19,13 @@ async function setup(page) {
   }, identity);
   await page.route('**/api/**', async route => {
     const path = new URL(route.request().url()).pathname;
-    if (path.endsWith('/pay')) {
+    if (path.endsWith('/pay-bill')) {
       data.payments.push(route.request().postDataJSON());
       if (data.delay) await new Promise(resolve => { data.release = resolve; });
       if (data.fail) return route.fulfill({ status: 409, json: { error: 'บันทึกไม่สำเร็จ' } });
-      data.orders[0] = { ...data.orders[0], paidAt: '2026-10-10T05:01:00Z', paymentMethod: data.payments.at(-1).method };
-      return route.fulfill({ json: data.orders[0] });
+      const input=data.payments.at(-1), key=route.request().headers()['idempotency-key'];
+      data.orders=data.orders.map(o=>input.expectedOrderIds.includes(o.id)?{...o,paidAt:'2026-10-10T05:01:00Z',paymentMethod:input.method,billPaymentId:key}:o);
+      return route.fulfill({json:{id:key,billId:'visit-1',totalSatang:input.expectedTotalSatang,method:input.method,paidAt:'2026-10-10T05:01:00Z',orders:data.orders.filter(o=>input.expectedOrderIds.includes(o.id))}});
     }
     const responses = { '/api/menu': starterCatalog, '/api/staff/me': identity, '/api/staff/state': { orders: data.orders, visits: { 1: { id: 'visit-1' } }, summaries: [] } };
     if (!(path in responses)) throw new Error('Unexpected request: ' + path);
@@ -66,21 +67,22 @@ test('New orders ring once; reloads and reappearing orders stay silent; previews
   expect(await notes(page)).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
-for (const [label, method] of [['รับเงินสดแล้ว', 'cash'], ['ตรวจยอด PromptPay แล้ว', 'promptpay']]) {
+for (const [label, method] of [['รับเงินสดแล้ว', 'cash'], ['ยืนยันรับชำระเงิน', 'promptpay']]) {
   test(`${method} sound follows server success only, once, on the confirming device`, async ({ page }) => {
     const data = await setup(page);
     await page.getByRole('button', { name: 'ลองเสียงรับเงิน', exact: true }).click();
     const paidSound = await notes(page); await clear(page);
     data.delay = true;
     await page.getByRole('button', { name: 'รับชำระเงิน', exact: true }).click();
+    if (method==='promptpay') { await page.getByRole('button',{name:'PromptPay',exact:true}).click(); await page.getByRole('checkbox',{name:'ตรวจยอด PromptPay เข้าจริงแล้ว',exact:true}).check(); }
     await page.getByRole('button', { name: label, exact: true }).click();
     await expect.poll(() => data.payments.length).toBe(1);
     expect(await notes(page)).toEqual([]);
-    await expect(page.getByRole('button', { name: label, exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'กำลังบันทึก…', exact: true })).toBeDisabled();
     data.release();
     await expect(page.locator('.ticket')).toContainText('✓ ชำระแล้ว');
     await expect.poll(() => notes(page)).toEqual(paidSound);
-    expect(data.payments).toEqual([{ method }]);
+    expect(data.payments).toEqual([{ method,confirmed:true,expectedOrderIds:['initial'],expectedTotalSatang:1000 }]);
     await clear(page);
     await page.getByRole('button', { name: /^ห้องครัว/ }).click();
     await page.getByRole('button', { name: '↻ โหลดใหม่' }).click();
@@ -90,11 +92,13 @@ for (const [label, method] of [['รับเงินสดแล้ว', 'cash
 test('Failed payment remains unpaid and silent; retry sounds after success', async ({ page }) => {
   const data = await setup(page); data.fail = true;
   await page.getByRole('button', { name: 'รับชำระเงิน', exact: true }).click();
-  await page.getByRole('button', { name: 'ตรวจยอด PromptPay แล้ว', exact: true }).click();
+  await page.getByRole('button',{name:'PromptPay',exact:true}).click();
+  await page.getByRole('checkbox',{name:'ตรวจยอด PromptPay เข้าจริงแล้ว',exact:true}).check();
+  await page.getByRole('button', { name: 'ยืนยันรับชำระเงิน', exact: true }).click();
   await expect(page.getByRole('alert')).toHaveText('บันทึกไม่สำเร็จ');
   expect(await notes(page)).toEqual([]);
   data.fail = false;
-  await page.getByRole('button', { name: 'ตรวจยอด PromptPay แล้ว', exact: true }).click();
+  await page.getByRole('button', { name: 'ยืนยันรับชำระเงิน', exact: true }).click();
   await expect(page.locator('.ticket')).toContainText('✓ ชำระแล้ว');
   expect((await notes(page)).length).toBeGreaterThan(1);
 });

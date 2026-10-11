@@ -222,17 +222,13 @@ export function validateMenuDefinition(value: unknown, categories: MenuCategory[
   };
 }
 export function publicCatalog(items: MenuItem[]): MenuItem[] {
-  const categoryOrder = new Map<string, number>();
-  for (const item of items)
-    if (!categoryOrder.has(item.category))
-      categoryOrder.set(item.category, item.categorySortOrder ?? categoryOrder.size);
   return items
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => !item.archived)
     .sort(
       (a, b) =>
-        categoryOrder.get(a.item.category)! - categoryOrder.get(b.item.category)! ||
-        (a.item.sortOrder ?? a.index) - (b.item.sortOrder ?? b.index),
+        (a.item.sortOrder ?? a.index) - (b.item.sortOrder ?? b.index) ||
+        a.item.code.localeCompare(b.item.code),
     )
     .map(({ item }) =>
       structuredClone({
@@ -270,7 +266,7 @@ export function applyMenuMutation(
   };
   if (kind === 'reorder') {
     const category = code(data.category);
-    if (!categories.some((c) => c.code === category)) fail('ไม่พบหมวดหมู่เมนู');
+    if (category !== 'all' && !categories.some((c) => c.code === category)) fail('ไม่พบหมวดหมู่เมนู');
     const entries = array(data.entries, 0, 1000).map((value) => {
       const entry = object(value, ['code', 'revision']);
       return {
@@ -279,7 +275,7 @@ export function applyMenuMutation(
       };
     });
     unique(entries.map((e) => e.code));
-    const current = result.filter((item) => item.category === category && !item.archived);
+    const current = result.filter((item) => (category === 'all' || item.category === category) && !item.archived);
     if (
       current.length !== entries.length ||
       current.some(
@@ -287,9 +283,10 @@ export function applyMenuMutation(
       )
     )
       conflict();
+    const positions = publicCatalog(result).map((item, index) => ({ item, index })).filter(({item}) => category === 'all' || item.category === category).map(({item, index}) => item.sortOrder ?? index).sort((a,b) => a-b);
     entries.forEach((entry, index) => {
       const item = current.find((item) => item.code === entry.code)!;
-      item.sortOrder = index;
+      item.sortOrder = positions[index];
       item.revision = (item.revision ?? 1) + 1;
     });
   } else if (kind === 'save') {
@@ -309,7 +306,7 @@ export function applyMenuMutation(
           ? existing.sortOrder
           : Math.max(
               -1,
-              ...result.filter((i) => i.category === menu.category).map((i, n) => i.sortOrder ?? n),
+              ...result.map((i, n) => i.sortOrder ?? n),
             ) + 1,
     };
     if (index < 0) result.push(updated);

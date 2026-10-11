@@ -156,13 +156,13 @@ export default function MenuEditor({
     }
   }
   function reorder(item: MenuItem, delta: number) {
-    const categoryItems = publicCatalog(data!.items).filter((i) => i.category === item.category);
+    const categoryItems = publicCatalog(data!.items).filter((i) => category === 'all' || i.category === category);
     const entries = move(
       categoryItems,
       categoryItems.findIndex((i) => i.code === item.code),
       delta,
     ).map((i) => ({ code: i.code, revision: i.revision ?? 1 }));
-    void run({ kind: 'reorder', category: item.category, entries }, 'บันทึกลำดับเมนูแล้ว');
+    void run({ kind: 'reorder', category, entries }, 'บันทึกลำดับเมนูแล้ว');
   }
   const all = data ? publicCatalog(data.items.map((i) => ({ ...i, archived: false }))) : [];
   // Owner rows retain disabled groups/options when opened for editing.
@@ -386,7 +386,7 @@ export default function MenuEditor({
           {!items.length && <p>ไม่มีเมนูในรายการนี้</p>}
           <div className="inventory-list">
             {items.map((item) => {
-              const siblings = ordered.filter((i) => !i.archived && i.category === item.category),
+              const siblings = ordered.filter((i) => !i.archived && (category === 'all' || i.category === category)),
                 position = siblings.findIndex((i) => i.code === item.code);
               return (
                 <article className="panel inventory-row" key={item.code}>

@@ -81,9 +81,9 @@
 
 **Interfaces:** shared item option component consumes `MenuItem`, renders customer copy and selection limits, and reports a validated `CartInput` to onAdd. Preview mode invokes no order API and uses the same component with a draft catalog item.
 
-- [ ] Add browser tests for custom headings/note placeholder, optional egg select/unselect and price, ice cream 3/4 quota and large→small correction, peanut inclusion/omission snapshot, disabled choices, and 390/430px no overflow. Observe failures.
-- [ ] Extract only selected-item configuration from Ordering; retain existing cart/request recovery code. Display calculated limits; do not silently drop selections. Required single groups use radio; optional single groups use checkbox.
-- [ ] Run menu-options, takeaway and submit-retry browser tests and typecheck; commit.
+- [x] Add browser tests for custom headings/note placeholder, optional egg select/unselect and price, ice cream 3/4 quota and large→small correction, peanut inclusion/omission snapshot, disabled choices, and 390/430px no overflow. Observe failures.
+- [x] Extract only selected-item configuration from Ordering; retain existing cart/request recovery code. Display calculated limits; do not silently drop selections. Required single groups use radio; optional single groups use checkbox.
+- [x] Run menu-options, takeaway and submit-retry browser tests and typecheck; commit.
 
 ### Task 5: Full owner menu editor
 

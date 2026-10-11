@@ -12,11 +12,11 @@
 2. `supabase/migrations/202610050002_application_api.sql`
 3. `supabase/seed.sql`
 4. `supabase/menu-seed.sql`
-5. migrations ที่เหลือทั้งหมดเรียงตามชื่อไฟล์ ตั้งแต่ `20261008041620_order_details_and_menu_creation.sql` จนถึง `20261010090139_persistent_ordering_qr.sql`
+5. migrations ที่เหลือทั้งหมดเรียงตามชื่อไฟล์ ตั้งแต่ `20261008041620_order_details_and_menu_creation.sql` จนถึงสอง migrations ใหม่ `20261011010000_menu_management.sql` และ `20261011010001_requested_menu_options.sql`
 
 ต้องลง seed ก่อน migrations ส่วนหลัง เพราะมีการอ้างอิงเมนูและโต๊ะ 1–8 ที่ seed สร้างไว้ โดยเฉพาะ persistent QR หากรัน migrations ทั้งหมดก่อน seed จะติดตั้งไม่สำเร็จ Project ที่ใช้อยู่ให้ apply เฉพาะ migrations ใหม่ที่ยังไม่ลง
 
-สอง migration แรกของ project ปัจจุบันมี version `20261007000812` และ `20261007000819` บน Supabase ซึ่งต่างจากชื่อไฟล์ใน repo ต้องเทียบ migration history ก่อนใช้ CLI `db push` อย่า apply schema เดิมซ้ำ อีกเจ็ด migrations ใช้ version ตรงกันทั้ง repo/remote ดูรายชื่อครบใน [README](../README.md#database-setup-and-migration-history)
+สอง migration แรกของ project ปัจจุบันมี version `20261007000812` และ `20261007000819` บน Supabase ซึ่งต่างจากชื่อไฟล์ใน repo ต้องเทียบ migration history ก่อนใช้ CLI `db push` อย่า apply schema เดิมซ้ำ อีกเจ็ด migrations ที่ลงแล้วใช้ version ตรงกันทั้ง repo/remote; สอง menu-management migrations ใหม่ยังรอ deploy ดูรายชื่อครบใน [README](../README.md#database-setup-and-migration-history)
 
 Seed ไม่สร้าง QR secrets หรือรหัสผ่าน และไม่ทับราคาที่ Owner แก้ เมนูครบ 38 รายการจากภาพร้าน; ดู [รายการและราคา](menu-review.md) Owner เพิ่มเมนูใหม่ ขนาด ราคา และเลือกกลุ่มตัวเลือกผ่าน UI ได้แล้ว ไม่ต้องแก้ SQL เพื่อเพิ่มอาหาร
 
@@ -35,6 +35,16 @@ insert into public.admins(auth_user_id,account_slot,display_name,role) values
 ช่อง account_slot 1–4 มี UNIQUE/CHECK บังคับไม่ให้มีเกิน 4 profile รหัสผ่านเก็บใน Supabase Auth เท่านั้น ไม่มีช่องรหัสผ่านในตาราง admins
 
 ## 2. Deploy Edge Functions
+
+### Supabase access token for Codex deployment
+
+1. เปิด [Access Tokens](https://supabase.com/dashboard/account/tokens) แล้วเลือก **Generate new token** หาก token เดิมแก้สิทธิ์ไม่ได้ ให้สร้างใหม่
+2. ตั้งชื่อ เช่น `prod-noodle-deploy` และอายุ **30 days** ตามที่เจ้าของเลือก
+3. เลือก Resource access **Project**, องค์กร **Yanapat-tae**, project **prod-noodle-pilot** โดยตรวจว่า project ref คือ `emjktqzcvgjwtsgysljy`
+4. ใน Permissions เปิด **Application services → Edge Functions** ให้มีทั้ง **Read และ Write** และคงสิทธิ์ Database ที่ใช้ deploy migrations เดิมไว้ ไม่ต้องเลือกสิทธิ์เต็มทั้งบัญชี
+5. กด **Review access → Generate** แล้วคัดลอกค่าที่ได้ไปแทน secret **SUPABASE_ACCESS_TOKEN** ใน **Codex Environment settings** ของ environment ที่ใช้กับ repository นี้ ไม่ใส่ในแชตหรือ `VITE_`
+
+Token นี้ใช้จัดการ/deploy เท่านั้น ไม่ใช่ key สำหรับหน้าเว็บ ข้อความ `Missing required permission(s): edge_functions_read` หมายถึง token ยังอ่าน Edge Functions ไม่ได้ ต้องมีทั้งสิทธิ์อ่านและเขียนก่อน deploy รุ่นเมนูใหม่ คง PR เป็น draft จนกว่าจะตรวจสิทธิ์และติดตั้ง backend ได้
 
 ใช้ Supabase CLI ของผู้ใช้ หรือ workflow สำหรับ deploy จากบัญชีของเจ้าของโปรเจกต์:
 
@@ -104,3 +114,7 @@ node scripts/load-pilot.mjs
 RPC รุ่นทดลองใช้ advisory lock เดียวสำหรับ mutation สั้น ๆ ของร้านหนึ่งร้าน เพื่อตรวจราคา/คิว/ปิดโต๊ะแบบ atomic จึงต้องวัด queue latency บน shared CPU จริงก่อนพิจารณาแยก lock หรือเพิ่ม resource ไม่ใช้ผล localhost อ้างความสามารถ Free
 
 Delivery รุ่นนี้เป็น summary ไม่ใช่ partner API และไม่สรุปค่าธรรมเนียมหรือยอดรับเงินจริงจากแพลตฟอร์ม ค่าธรรมเนียมที่ไม่ทราบเก็บ NULL ไม่เติม 0 ให้ดูเหมือนทราบ
+
+## งานจัดการเมนูที่รอ deploy · 11 ต.ค. 2026
+
+โค้ดและสอง migrations ใหม่อยู่ใน branch `feat/full-menu-management` อย่า merge frontend ก่อนอัปเดต backend Token ที่ผูกกับ Codex ขณะตรวจตอบ 403 ว่าขาด `edge_functions_read` ต้องให้ Application services → Edge Functions มี Read/Write โดยคงสิทธิ์ Database สำหรับ migrations ไว้ แล้วบันทึก `SUPABASE_ACCESS_TOKEN` ใน Codex Environment settings ไม่ใส่ใน `VITE_` หรือ Git ตรวจประวัติและ fingerprint ใหม่ก่อน apply เฉพาะสอง migrations ใหม่นี้และ deploy `staff-api`; ห้าม replay seed หรือ rotate QR ดู [แผนที่บันทึกไว้](superpowers/plans/2026-10-10-menu-management.md)

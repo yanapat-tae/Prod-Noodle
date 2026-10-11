@@ -1,5 +1,8 @@
 # โปรด · QR Ordering & POS ทดลอง
 
+งานจัดการเมนูเต็มรูปแบบและการเอาลิงก์ “พนักงาน” ออกจากหน้าลูกค้าใน branch `feat/full-menu-management` ตรวจผ่านในเครื่องแล้ว แต่ยังไม่ขึ้นเว็บจริง: token สำหรับ deploy ยังขาดสิทธิ์ Edge Functions ดู [สถานะและขั้นตอนต่อ](HANDOFF.md) และ [วิธีตั้งค่า token](docs/cloud-setup.md#supabase-access-token-for-codex-deployment) พนักงานเข้า `/admin` โดยตรงได้ตามเดิม
+
+
 Web app ภาษาไทยสำหรับร้าน 8 โต๊ะและสั่งกลับบ้าน ใช้ 🍜 แทนรูปอาหาร ไม่มีค่า Voice/AI ในรุ่นนี้
 
 **Current milestone:** the online pilot includes one-step kitchen completion, “น้ำอัดลม - โค้ก”, distinct order/payment alert tones, ten persistent QR links and safe same-request order retries. The follow-up code review is deployed on 10 October: it hardens staff refresh/audio races and groups staff code into focused files; see [HANDOFF.md](HANDOFF.md) for validation and deployment status and [the review report](docs/reports/2026-10-10-code-review.md) for findings. The owner reported clearing 26 old test bills on 10 October; new orders have since been observed. **Do not repeat cleanup.** Start with HANDOFF.md and [AGENTS.md](AGENTS.md). This is a web/PWA project, not an App Store app.
@@ -41,7 +44,7 @@ pnpm dev
 - แคชเชียร์บันทึกรับเงินเต็มจำนวนด้วยเงินสด หรือยืนยันว่าตรวจรายการ PromptPay แล้ว Owner คืนเงินเต็มจำนวนได้
 - ยอดขายรายวัน/เดือน กราฟรายชั่วโมง สัดส่วนช่องทาง 10 เมนูขายดี และ CSV ที่เปิดใน Excel ได้
 - Delivery กรอกยอดรายวันหรือนำเข้า CSV; ยอดเดิมของวัน/ช่องทางถูกแทนที่เพื่อไม่บวกซ้ำ ยอดที่ไม่มีจำนวนออเดอร์แสดงว่าข้อมูลไม่ครบ
-- Owner แก้ชื่อเมนูเดิมหรือเพิ่มเมนูใหม่พร้อมขนาด/ราคา เลือกหมวดและกลุ่มตัวเลือกที่มีอยู่ เปลี่ยนราคา/สถานะหมด และเปิดดู QR คงเดิม 10 ใบ: โต๊ะ 8 ใบ, กลับบ้านหน้าร้าน 1 ใบ, สั่งล่วงหน้า/ส่งใน LINE 1 ใบ มีปุ่มคัดลอกลิงก์และเปลี่ยนเฉพาะใบโดย Owner
+- Owner เพิ่ม/แก้ไข/จัดลำดับ/ลบและกู้คืนเมนู จัดการขนาด ราคา เพิ่มพิเศษ ค่าเริ่มต้น และข้อความหน้าลูกค้า พร้อมตัวอย่างก่อนบันทึก ดู [วิธีจัดการเมนู](docs/menu-management.md) และเปิดดู QR คงเดิม 10 ใบ: โต๊ะ 8 ใบ, กลับบ้านหน้าร้าน 1 ใบ, สั่งล่วงหน้า/ส่งใน LINE 1 ใบ มีปุ่มคัดลอกลิงก์และเปลี่ยนเฉพาะใบโดย Owner
 - หากส่งออเดอร์แล้วไม่ทราบผล จะเก็บตะกร้าเดิมไว้และให้ลองส่งด้วยรหัสเดิมเพื่อป้องกันบิลซ้ำ รวมถึงหลังโหลดหน้าใหม่
 - PWA manifest/icons และ service worker สำหรับ app shell ใน production build; เมื่อเน็ตหลุดจะไม่แสดงว่าส่งออเดอร์สำเร็จโดยไม่ได้รับคำตอบจากเซิร์ฟเวอร์
 
@@ -142,8 +145,10 @@ Demo needs no database service; SQL tests use in-memory PGlite. On a **new isola
 
 - `20261010090132_coke_menu_name.sql` — applied on 10 October: changes only the soft-drink name to “น้ำอัดลม - โค้ก”.
 - `20261010090139_persistent_ordering_qr.sql` — applied on 10 October: preserves existing printed QR hashes, adds durable display links and a remote takeaway point, with owner-only individual rotation.
+- `20261011010000_menu_management.sql` — per-menu option/copy/order metadata, revision checks, owner-only transactional editing and archive/restore; authoritative variant quotas and unchanged historical snapshots.
+- `20261011010001_requested_menu_options.sql` — ice-cream toppings/peanuts and +10 baht fried egg for the two existing owner basil dishes; retains their prices.
 
-For the existing online pilot, all nine migrations are already applied; do not rerun seeds or initial migrations. The first two hosted migration versions differ from the repository filenames; see HANDOFF.md before using CLI `db push`.
+For the existing online pilot, check the current deployment record in HANDOFF.md before applying the two new menu migrations; the original nine are already applied; do not rerun seeds or initial migrations. The first two hosted migration versions differ from the repository filenames; see HANDOFF.md before using CLI `db push`.
 All migrations and seeds belong in Git. Apply migrations once; add a new migration for future deployed changes instead of editing applied files. Seeds avoid overwriting owner menu prices and create no accounts, passwords or QR secrets. The last QR migration creates ten persistent entries. Disable public signup, create an owner Auth user/profile and up to three staff profiles as needed, and view the QR links through the owner UI. [Cloud setup](docs/cloud-setup.md) has the profile SQL and deployment steps. SQL Editor application does not populate CLI migration history automatically; reconcile it before using `supabase db push` later. Local JSON sales are not automatically migrated online.
 
 ## Development commands and toolchain

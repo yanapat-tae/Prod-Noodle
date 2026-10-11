@@ -1,17 +1,19 @@
 // HTML preview only: all state belongs to this browser, never to the shop's DB.
 import { demoQr } from '../src/staff/qr.ts';
 import type { QrEntry } from '../src/staff/qr.ts';
-import { starterCatalog, catalogVersion, upgradeSavedCatalog } from '../src/catalog.ts';
+import { starterCatalog, catalogVersion, upgradeSavedCatalog, menuCategories } from '../src/catalog.ts';
 import { businessDate, canTransition, DomainError, priceLine, salesReport, validateSummary, validateTakeaway } from '../src/domain.ts';
 import type { CartInput, CustomerSession, DeliverySummary, MenuItem, Order, Staff, Status, TakeawayDetails } from '../src/domain.ts';
 import { validateNewMenu, menuFromInput, validateMenuName } from '../src/menu-management.ts';
 import type { NewMenuInput } from '../src/menu-management.ts';
+import { applyMenuMutation, publicCatalog, menuRequestSignature } from '../src/menu-admin.ts';
+import type { MenuMutation } from '../src/menu-admin.ts';
 export const mode = 'demo';
 export const supabase = null;
 export interface StaffState { orders: Order[]; visits: Record<string, { id: string }>; summaries: DeliverySummary[] }
 interface StoredSession extends CustomerSession { sessionId: string; entry: string }
 interface PreviewOrder extends Order { customerSessionId: string | null }
-interface State extends StaffState { catalogVersion?: number; menuRequests?: Record<string, string>; catalog: MenuItem[]; orders: PreviewOrder[]; sessions: Record<string, StoredSession>; requests: Record<string, { signature: string; orderId: string }>; counters: Record<string, number> }
+interface State extends StaffState { catalogVersion?: number; menuRequests?: Record<string, string>; ownerMenuRequests?: Record<string, string>; catalog: MenuItem[]; orders: PreviewOrder[]; sessions: Record<string, StoredSession>; requests: Record<string, { signature: string; orderId: string }>; counters: Record<string, number> }
 const STORAGE = 'prod-standalone-html-v1';
 const STAFF_STORAGE = 'prod-standalone-html-staff';
 const ENTRY_STORAGE = 'prod-standalone-html-entry';
@@ -83,7 +85,7 @@ export function resetPreview() { data = sampleState(); local.removeItem(STAFF_ST
 window.addEventListener('storage', event => { if (event.key === STORAGE) { data = restore(); window.dispatchEvent(new Event('prod-html-data')); } });
 export const api = {
   activeEntry,
-  async menu() { return copy(data.catalog); },
+  async menu() { return publicCatalog(data.catalog); },
   async bootstrap(value: string, oldToken?: string): Promise<CustomerSession> {
     if (!/^(?:[1-8]|takeaway)$/.test(value)) throw new DomainError('เลขโต๊ะไม่ถูกต้อง');
     if (oldToken && data.sessions[oldToken]?.entry === value) { try { return copy(checkSession(data.sessions[oldToken])); } catch { /* New visit. */ } }
@@ -105,13 +107,22 @@ export const api = {
   async refund(identity: Staff, id: string) { checkStaff(identity, true); const order = findOrder(id); if (!order.paidAt) throw new DomainError('ยังไม่ได้ชำระ'); if (!order.refundedAt) { order.refundedAt = new Date().toISOString(); order.refundedSatang = order.totalSatang; save(); } return copy(order); },
   async close(identity: Staff, table: number) { checkStaff(identity); const visit = data.visits[table]; if (visit && data.orders.some(o => o.visitId === visit.id && (!['served','cancelled'].includes(o.status) || (o.status !== 'cancelled' && !o.paidAt)))) throw new DomainError('กรุณาส่งมอบและเคลียร์การชำระเงินก่อนปิดโต๊ะ'); delete data.visits[table]; save(); return { ok: true }; },
   async delivery(identity: Staff, summaries: DeliverySummary[]) { checkStaff(identity, true); summaries.forEach(validateSummary); for (const summary of summaries) { const index = data.summaries.findIndex(s => s.date === summary.date && s.channel === summary.channel); if (index < 0) data.summaries.push(copy(summary)); else data.summaries[index] = copy(summary); } save(); return { ok: true }; },
+  async menuAdmin(identity: Staff) { checkStaff(identity, true); return copy({ items: data.catalog, categories: menuCategories }); },
+  async manageMenu(identity: Staff, mutation: MenuMutation, key: string): Promise<{ ok: true }> {
+    checkStaff(identity, true);
+    if (!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(key)) throw new DomainError('คำขอไม่มีรหัสอ้างอิง');
+    const signature = menuRequestSignature(identity.id, mutation), previous = data.ownerMenuRequests?.[key];
+    if (previous) { if (previous !== signature) throw new DomainError('รหัสอ้างอิงนี้ใช้กับคำขออื่นแล้ว', 409); return { ok: true }; }
+    const catalog = applyMenuMutation(data.catalog, menuCategories, mutation);
+    data = { ...data, catalog, ownerMenuRequests: { ...data.ownerMenuRequests, [key]: signature } }; save(); return { ok: true };
+  },
   async createMenu(identity: Staff, value: NewMenuInput) {
     checkStaff(identity, true); const input = validateNewMenu(value, data.catalog); const signature = JSON.stringify(input);
     const existing = data.catalog.find(m => m.code === input.code);
     if (existing) { if (data.menuRequests?.[input.code] !== signature) throw new DomainError('รหัสเมนูนี้ถูกใช้แล้ว', 409); return copy(existing); }
     const item = menuFromInput(input, data.catalog); data.catalog.push(item); data.menuRequests ??= {}; data.menuRequests[input.code] = signature; save(); return copy(item);
   },
-  async editMenu(identity: Staff, code: string, prices: Record<string, number>, available: boolean, name?: string) { checkStaff(identity, true); const item = data.catalog.find(m => m.code === code); if (!item) throw new DomainError('ไม่พบเมนู'); if (item.variants.some(v => !Number.isSafeInteger(prices[v.code]) || prices[v.code] < 1 || prices[v.code] > 100000)) throw new DomainError('ราคาไม่ถูกต้อง'); const newName = name === undefined ? item.name : validateMenuName(name); item.name = newName; item.available = available; for (const variant of item.variants) variant.priceSatang = prices[variant.code]; save(); return copy(item); },
+  async editMenu(identity: Staff, code: string, prices: Record<string, number>, available: boolean, name?: string) { checkStaff(identity, true); const item = data.catalog.find(m => m.code === code); if (!item) throw new DomainError('ไม่พบเมนู'); if (item.variants.some(v => !Number.isSafeInteger(prices[v.code]) || prices[v.code] < 1 || prices[v.code] > 100000)) throw new DomainError('ราคาไม่ถูกต้อง'); const newName = name === undefined ? item.name : validateMenuName(name); item.revision = (item.revision ?? 1) + 1; item.name = newName; item.available = available; for (const variant of item.variants) variant.priceSatang = prices[variant.code]; save(); return copy(item); },
   async report(identity: Staff, period: string) { checkStaff(identity); return salesReport(data.orders, data.summaries, period); },
   async qr(identity: Staff) { checkStaff(identity, true); return demoQr(identity, location.href.split(/[?#]/)[0]); },
   async rotateQr(identity: Staff, entry: QrEntry, _requestKey: string) { checkStaff(identity, true); return demoQr(identity, location.href.split(/[?#]/)[0], entry).find(value => value.key === entry.key)!; },

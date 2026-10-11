@@ -25,6 +25,7 @@ test('Real menu migration replaces the trial catalog while preserving retired di
     const file = readdirSync(new URL('migrations/', root)).find(name => name.endsWith('_owner_menu_catalog.sql'));
     const path = file ? new URL('migrations/' + file, root) : process.env.DRAFT_MENU_PATH;
     assert.ok(path, 'The real-menu migration must exist');
+    await db.exec(readFileSync(new URL('migrations/20261008041620_order_details_and_menu_creation.sql', root), 'utf8'));
     await db.exec(readFileSync(path, 'utf8'));
     for (const later of readdirSync(new URL('migrations/', root)).filter(name => file && name > file && name.endsWith('.sql')).sort()) await db.exec(readFileSync(new URL('migrations/' + later, root), 'utf8'));
     if (process.env.DRAFT_CORRECTIONS_PATH) await db.exec(readFileSync(process.env.DRAFT_CORRECTIONS_PATH, 'utf8'));
@@ -60,7 +61,8 @@ test('Real menu migration replaces the trial catalog while preserving retired di
     await db.exec(sql);
     const afterItem = (await db.query("select * from public.menu_items where code='soft-drink'")).rows[0];
     assert.equal(afterItem.name, 'น้ำอัดลม - โค้ก');
-    assert.deepEqual({ ...afterItem, name: beforeItem.name }, beforeItem);
+    assert.equal(afterItem.revision, beforeItem.revision + 1);
+    assert.deepEqual({ ...afterItem, name: beforeItem.name, revision: beforeItem.revision }, beforeItem);
     assert.deepEqual((await db.query('select * from public.menu_variants order by id')).rows, beforeVariants);
     assert.deepEqual((await db.query('select public.order_json($1) as value', [drinkOrder.id])).rows[0].value, drinkOrder);
     await db.exec(sql);

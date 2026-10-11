@@ -16,3 +16,14 @@
   .menu-editor-group { padding: 14px; }
   .menu-editor .form-actions > button { flex: 1 1 180px; }
 }
+.menu-editor { overflow-wrap: anywhere; }
+.menu-editor .menu-row-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; }
+.menu-editor .inventory-row .menu-row-actions { grid-column: 1 / -1; }
+.menu-editor .menu-row-actions button { min-width: 56px; }
+.menu-editor .inline-check { min-height: 56px; }
+.menu-group-editor { border-top: 2px solid var(--line); padding-top: 12px; margin-top: 20px; }
+.menu-editor summary { min-height: 56px; padding: 12px 0; cursor: pointer; font-weight: 700; }
+.menu-option-editor { border: 1px solid var(--line); border-radius: 12px; min-inline-size: 0; padding: 14px; margin: 16px 0; }
+.menu-preview { border: 2px solid var(--line); border-radius: 14px; margin-top: 20px; }
+.menu-preview .primary-action { width: 100%; }
+@media (min-width: 601px) { .menu-editor .menu-variant-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }.menu-variant-row .menu-row-actions { grid-column: 1 / -1; } }

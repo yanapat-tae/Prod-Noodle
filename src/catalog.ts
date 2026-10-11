@@ -1,4 +1,5 @@
 import type { Group, MenuItem } from './domain.ts';
+import { iceCreamGroups, withRequestedOptions } from './menu-presets.ts';
 
 // Menu photo supplied by the owner; corrected label: หมูแผ่น. Prices are baht below.
 export const menuCategories = [
@@ -71,12 +72,13 @@ export const starterCatalog: MenuItem[] = [
   dish('water', 'น้ำเปล่า', 'drinks', 10, null, [], 'ขวด'),
   dish('ice', 'น้ำแข็งเปล่า', 'drinks', 2, null, [], 'แก้ว'),
   dish('grass-jelly', 'เฉาก๊วยโบราณ', 'desserts', 25, null, [], 'ถ้วย'),
-  { ...dish('mahachai-ice-cream', 'ไอศกรีมมหาชัย', 'desserts', 30, 40, [], 'ถ้วย'), variants: [{code:'normal',name:'เล็ก',priceSatang:3000},{code:'special',name:'ใหญ่',priceSatang:4000}] },
+  { ...dish('mahachai-ice-cream', 'ไอศกรีมมหาชัย', 'desserts', 30, 40, iceCreamGroups, 'ถ้วย'), copy: { variantLabel: 'ขนาดไอศกรีม' }, variants: [{code:'normal',name:'เล็ก',priceSatang:3000},{code:'special',name:'ใหญ่',priceSatang:4000}] },
 ];
 
 // Upgrade local demos once without dropping orders, custom menus or owner price edits.
-export const catalogVersion = 4;
+export const catalogVersion = 5;
 export function upgradeSavedCatalog(previous: MenuItem[], previousVersion = 0): MenuItem[] {
+  if (previousVersion >= catalogVersion) return structuredClone(previous);
   if (previousVersion >= 2) return previous.map(value => {
     const item = structuredClone(value);
     if (item.code === 'soft-drink' && item.name === 'น้ำอัดลม') item.name = 'น้ำอัดลม - โค้ก';
@@ -84,7 +86,7 @@ export function upgradeSavedCatalog(previous: MenuItem[], previousVersion = 0): 
     if (item.code === 'mahachai-ice-cream' && item.name === 'ไอศกรีมมหาชัยพร้อมเครื่อง') item.name = 'ไอศกรีมมหาชัย';
     if (item.code === 'crispy-pork-rice') item.groups = item.groups.map(group => group.code === 'topping'
       ? { ...group, max: Math.min(group.max, 2), options: group.options.filter(option => !['pork-slices', 'minced-pork'].includes(option.code)) } : group);
-    return item;
+    return withRequestedOptions(item);
   });
   const currentCodes = new Set(starterCatalog.map(item => item.code));
   const current = starterCatalog.map(source => {
@@ -96,5 +98,5 @@ export function upgradeSavedCatalog(previous: MenuItem[], previousVersion = 0): 
     }
     return item;
   });
-  return [...current, ...previous.filter(item => !currentCodes.has(item.code) && item.code !== 'braised-pork-noodles').map(item => structuredClone(item))];
+  return [...current, ...previous.filter(item => !currentCodes.has(item.code) && item.code !== 'braised-pork-noodles').map(item => structuredClone(item))].map(withRequestedOptions);
 }

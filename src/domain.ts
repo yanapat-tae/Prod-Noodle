@@ -1,12 +1,16 @@
 export type Channel = 'dine_in' | 'takeaway' | 'grabfood' | 'lineman';
 export type Status = 'new' | 'preparing' | 'ready' | 'served' | 'cancelled';
 export interface Variant { code: string; name: string; priceSatang: number }
-export interface Option { code: string; name: string; priceSatang: number; defaultQuantity?: number }
-export interface Group { code: string; name: string; min: number; max: number; options: Option[] }
+export interface Option { code: string; name: string; priceSatang: number; defaultQuantity?: number; enabled?: boolean }
+export interface SelectionLimits { min: number; max: number }
+export interface Group { code: string; name: string; min: number; max: number; options: Option[]; enabled?: boolean; limitsByVariant?: Record<string, SelectionLimits> }
+export interface CustomerCopy { variantLabel: string; instructions: string; notesLabel: string; notesPlaceholder: string }
 export interface MenuItem {
   code: string; name: string; category: string; categoryName: string; description: string;
   unit: string; available: boolean; variants: Variant[]; groups: Group[]; prepNotes: string[];
+  copy?: Partial<CustomerCopy>; revision?: number; archived?: boolean; sortOrder?: number; categorySortOrder?: number;
 }
+export function selectionLimits(group: Group, variantCode: string): SelectionLimits { return group.limitsByVariant?.[variantCode] ?? { min: group.min, max: group.max }; }
 export interface SelectedOption { groupCode: string; optionCode: string; quantity: number }
 export interface CartInput { itemCode: string; variantCode: string; quantity: number; options: SelectedOption[]; notes: string[]; freeNote?: string }
 export interface TakeawayDetails { customerName: string; villageDelivery: boolean; deliveryAddress: string; deliveryPhone: string }
@@ -57,7 +61,7 @@ export function validateTakeaway(value: unknown): TakeawayDetails {
 export function priceLine(catalog: MenuItem[], input: CartInput): Line {
   if (!input || !Number.isInteger(input.quantity) || input.quantity < 1 || input.quantity > 20) throw new DomainError('กรุณาเลือกจำนวนระหว่าง 1–20');
   const item = catalog.find(m => m.code === input.itemCode);
-  if (!item?.available) throw new DomainError('เมนูนี้ยังไม่พร้อมขาย กรุณาเลือกเมนูอื่น');
+  if (!item?.available || item.archived) throw new DomainError('เมนูนี้ยังไม่พร้อมขาย กรุณาเลือกเมนูอื่น');
   const variant = item.variants.find(v => v.code === input.variantCode);
   if (!variant) throw new DomainError('กรุณาเลือกขนาดอาหาร');
   if (!Array.isArray(input.options) || !Array.isArray(input.notes) || input.options.length > 20 || input.notes.length > 5) throw new DomainError('ตัวเลือกอาหารไม่ถูกต้อง');
@@ -66,14 +70,16 @@ export function priceLine(catalog: MenuItem[], input: CartInput): Line {
     const key = selected.groupCode + ':' + selected.optionCode;
     if (seen.has(key) || selected.quantity !== 1) throw new DomainError('ตัวเลือกซ้ำหรือจำนวนตัวเลือกไม่ถูกต้อง');
     seen.add(key);
-    const group = item.groups.find(g => g.code === selected.groupCode);
-    const option = group?.options.find(o => o.code === selected.optionCode);
+    const group = item.groups.find(g => g.code === selected.groupCode && g.enabled !== false);
+    const option = group?.options.find(o => o.code === selected.optionCode && o.enabled !== false);
     if (!option) throw new DomainError('เมนูนี้ไม่รองรับตัวเลือกที่เลือก');
     extra += option.priceSatang; names.push(option.name);
   }
   for (const group of item.groups) {
+    if (group.enabled === false) continue;
+    const limits = selectionLimits(group, variant.code);
     const count = input.options.filter(o => o.groupCode === group.code).length;
-    if (count < group.min || count > group.max) throw new DomainError(`กรุณาเลือก${group.name}${group.max === 1 ? ' 1 อย่าง' : 'ตามจำนวนที่กำหนด'}`);
+    if (count < limits.min || count > limits.max) throw new DomainError(`กรุณาเลือก${group.name}${limits.max === 1 ? ' 1 อย่าง' : ` ${limits.min}–${limits.max} อย่าง`}`);
   }
   if (new Set(input.notes).size !== input.notes.length || input.notes.some(n => !item.prepNotes.includes(n))) throw new DomainError('หมายเหตุนี้ยังไม่รองรับ กรุณาแจ้งพนักงาน');
   if (input.freeNote !== undefined && typeof input.freeNote !== 'string') throw new DomainError('หมายเหตุอาหารไม่ถูกต้อง');

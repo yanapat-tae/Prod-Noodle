@@ -1,5 +1,7 @@
 -- Non-destructive extension: visits are dine-in bills; order snapshots/ledgers stay intact.
 begin;
+-- Serialize schema/data preparation with the existing restaurant mutations.
+select pg_advisory_xact_lock(814208);
 alter table public.payment_transactions drop constraint payment_transactions_method_check;
 alter table public.payment_transactions add constraint payment_transactions_method_check
  check(method in ('cash','promptpay','card','delivery_platform','thai_chuay_thai'));

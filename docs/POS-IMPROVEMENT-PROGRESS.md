@@ -121,3 +121,17 @@ backend is still the old production version, so this preview is not bill accepta
 Production canonical deployment remains b6ef471a / main d8b8e4a.
 A production-configured local frontend build using existing public variables passed.
 Final documentation commit records this handoff; check current branch head before release.
+
+## Approved release continuation
+
+User approved merge/deploy of PR #7. Fresh Git status was clean and PR head 7d28db9
+matched the approved branch, main d8b8e4a. Hosted history still had twelve migrations;
+profile/note preparation will not be rerun. Fresh source/DB snapshots match prior
+function/profile state. Re-ran pnpm check on the release tree: 73/73 tests, both
+typechecks, lint, build and preview passed. Added the existing mutation advisory lock
+at the start of the pending migration to serialize its initialization with shop
+writes. UI source is unchanged from the 43/43 browser-tested version.
+
+Rollout order: backward-compatible new public/staff Edge handlers, pending bill SQL,
+then approved main merge/Cloudflare production publication and preservation/API checks.
+Live transactional acceptance, physical iPhone and password logins remain untested.

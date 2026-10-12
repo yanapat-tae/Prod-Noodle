@@ -1,0 +1,34 @@
+[WebServer] (node:5936) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:5950) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 15 tests using 2 workers
+
+(node:5986) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5985) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/browser/dashboard.spec.mjs:64:1 › changing day hides previous figures and prevents export until the new report arrives (3.9s)
+  ✓   2 tests/browser/dashboard.spec.mjs:80:1 › month selection does not export the previous daily report (3.9s)
+  ✓   3 tests/browser/dashboard.spec.mjs:92:1 › failed period loads hide old totals, stop loading and allow retry (4.1s)
+  ✓   4 tests/browser/dashboard.spec.mjs:108:1 › a late manual refresh cannot overwrite the newly selected period (4.3s)
+  ✓   5 tests/browser/dashboard.spec.mjs:120:1 › clearing the date asks for a date and prevents requests and exports (3.6s)
+  ✓   6 tests/browser/dashboard.spec.mjs:129:1 › returning to a previous period still waits for its new request (4.0s)
+  ✓   7 tests/browser/dashboard.spec.mjs:142:1 › a late refresh error cannot replace the new period with an old error (3.3s)
+  ✓   8 tests/browser/dashboard.spec.mjs:153:1 › payment labels and amounts do not overlap at iPhone widths or enlarged text (7.7s)
+  ✓   9 tests/browser/dashboard.spec.mjs:177:1 › owner reviews selection/reason, can cancel, and deletion refreshes report only after server confirms (5.4s)
+  ✓  10 tests/browser/dashboard.spec.mjs:199:1 › a failed deletion keeps the reviewed payload and request key for a safe retry (4.5s)
+  ✓  11 tests/browser/dashboard.spec.mjs:213:1 › staff dashboard provides no history deletion controls (5.6s)
+  ✓  12 tests/browser/pos-improvement.spec.mjs:26:1 › Bill shows all rounds at 390px; selecting Thai scan requires verification and writes nothing (3.4s)
+  ✓  13 tests/browser/pos-improvement.spec.mjs:41:1 › Lost bill response freezes request through reload and retries same key without another receipt (5.0s)
+  ✓  14 tests/browser/pos-improvement.spec.mjs:53:1 › Category buttons are visible immediately, filter with one tap and leave cart intact (3.9s)
+[WebServer] 3:06:50 PM [vite] http proxy error: /api/menu
+[WebServer] Error: connect ECONNREFUSED 127.0.0.1:4174
+[WebServer]     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1864:16)
+[WebServer] 3:06:50 PM [vite] http proxy error: /api/menu
+[WebServer] Error: connect ECONNREFUSED 127.0.0.1:4174
+[WebServer]     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1864:16)
+  ✓  15 tests/browser/pos-improvement.spec.mjs:71:1 › Preview receipt replay preserves refund/fulfillment and closed sessions can read then renew (1.4s)
+
+  15 passed (37.6s)

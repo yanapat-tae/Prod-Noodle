@@ -49,7 +49,7 @@ export function serve(group: string,handler: (req:Request,path:string,body:any)=
       const path=pathname.slice(at+marker.length);
       let body={};
       if (req.method==='POST') {
-        const raw=await req.text(); if (new TextEncoder().encode(raw).length>(path==='/staff/menu/manage'?200000:50000)) throw new HttpError('คำขอใหญ่เกินไป',413);
+        const raw=await req.text(); if (new TextEncoder().encode(raw).length>(['/staff/menu/manage','/staff/sales/delete'].includes(path)?200000:50000)) throw new HttpError('คำขอใหญ่เกินไป',413);
         try { body=raw?JSON.parse(raw):{}; } catch { throw new HttpError('JSON ไม่ถูกต้อง'); }
         if (!body||typeof body!=='object'||Array.isArray(body)) throw new HttpError('ข้อมูลไม่ถูกต้อง');
       }

@@ -23,10 +23,11 @@ export interface Order {
   refundedAt: string | null; refundedSatang: number;
   takeaway?: TakeawayDetails | null;
   billPaymentId?: string | null;
+  salesDeletedAt?: string | null;
 }
 export interface CustomerSession { token: string; tableNumber: number | null; channel: 'dine_in' | 'takeaway'; visitId: string | null }
 export interface Staff { token: string; id: string; name: string; role: 'owner' | 'admin' }
-export interface DeliverySummary { date: string; channel: 'grabfood' | 'lineman'; grossSatang: number; discountSatang: number; refundSatang: number; orderCount: number | null }
+export interface DeliverySummary { date: string; channel: 'grabfood' | 'lineman'; grossSatang: number; discountSatang: number; refundSatang: number; orderCount: number | null; salesDeletedAt?: string | null; salesRevision?: string }
 export const channelNames: Record<Channel, string> = { dine_in: 'ทานที่ร้าน', takeaway: 'กลับบ้าน', grabfood: 'GrabFood', lineman: 'LINE MAN' };
 export const statusNames: Record<Status, string> = { new: 'ออเดอร์ใหม่', preparing: 'กำลังทำ', ready: 'พร้อมเสิร์ฟ / รับ', served: 'ส่งมอบแล้ว', cancelled: 'ยกเลิก' };
 export function money(satang: number) { return (satang / 100).toLocaleString('th-TH', { maximumFractionDigits: 2 }) + ' บาท'; }
@@ -109,6 +110,8 @@ export function validateSummary(summary: DeliverySummary) {
 export const topMenuExcludedCodes = new Set(['ice', 'water', 'soft-drink', 'longan-juice', 'butterfly-pea-lime', 'chrysanthemum-tea']);
 export const paymentMethodNames: Record<string, string> = { cash: 'เงินสด', promptpay: 'PromptPay', card: 'บัตร', delivery_platform: 'แพลตฟอร์ม Delivery', thai_chuay_thai: 'สแกนไทยช่วยไทย' };
 export function salesReport(orders: Order[], summaries: DeliverySummary[], date: string) {
+  orders = orders.filter(o => !o.salesDeletedAt);
+  summaries = summaries.filter(s => !s.salesDeletedAt);
   const matches = (value: string) => date.length === 7 ? value.startsWith(date) : value === date;
   const selected = summaries.filter(s => matches(s.date));
   const paid = orders.filter(o => o.paidAt && matches(businessDate(o.paidAt)) && !selected.some(s => s.channel === o.channel && s.date === businessDate(o.paidAt!)));

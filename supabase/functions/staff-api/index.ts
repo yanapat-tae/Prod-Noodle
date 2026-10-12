@@ -1,6 +1,14 @@
 import { appOrigin,hash,HttpError,randomToken,requestKey,rpc,serve,service,staff } from '../_shared/http.ts';
 serve('staff-api',async(req,path,body)=>{
   const db=service(); const actor=await staff(db,req);
+  if (path==='/staff/sales/history' && req.method==='GET') {
+    await staff(db,req,true);
+    return rpc(db,'owner_sales_history',{p_actor:actor});
+  }
+  if (path==='/staff/sales/delete' && req.method==='POST') {
+    await staff(db,req,true);
+    return rpc(db,'owner_delete_sales',{p_actor:actor,p_request_key:requestKey(req),p_payload:body});
+  }
   if (path==='/staff/menu/manage' && ['GET','POST'].includes(req.method)) {
     await staff(db,req,true);
     return req.method==='GET' ? rpc(db,'owner_menu_catalog',{p_actor:actor})

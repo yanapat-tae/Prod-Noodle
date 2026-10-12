@@ -1,3 +1,4 @@
+import { applySalesDeletion, salesHistory } from '../src/sales-history.ts';
 import { prepareBillPayment } from '../src/bill-payment.ts';
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, mkdirSync, writeFileSync, renameSync } from 'node:fs';
@@ -21,7 +22,7 @@ export function createDemoServer({ dataPath = resolve('.local-data/demo.json') }
     if (!/^[0-9a-f-]{36}$/i.test(key ?? '')) throw new DomainError('คำขอไม่มีรหัสอ้างอิง');
     const hash = sha(JSON.stringify(payload)); const scope = actor.id ?? actor.sessionId;
     const previous = state.requests[key];
-    if (previous) { if (previous.hash !== hash || previous.scope !== scope) throw new DomainError('รหัสอ้างอิงนี้ใช้กับคำขออื่นแล้ว', 409); return state.orders.find(o => o.id === previous.orderId); }
+    if (previous) { if (previous.hash !== hash || previous.scope !== scope) throw new DomainError('รหัสอ้างอิงนี้ใช้กับคำขออื่นแล้ว', 409); const old = state.orders.find(o => o.id === previous.orderId); if (old?.salesDeletedAt) throw new DomainError('รายการทดลองนี้ถูกลบแล้ว กรุณาเริ่มออเดอร์ใหม่', 409); return old; }
     if (!Array.isArray(payload.lines) || !payload.lines.length || payload.lines.length > 30) throw new DomainError('กรุณาเพิ่มอาหารลงตะกร้า');
     const lines = payload.lines.map(input => priceLine(state.catalog, input));
     const total = lines.reduce((s, l) => s + l.totalSatang, 0);
@@ -46,7 +47,7 @@ export function createDemoServer({ dataPath = resolve('.local-data/demo.json') }
     try {
       const url = new URL(req.url, 'http://localhost'); const path = url.pathname;
       const token = (req.headers.authorization ?? '').replace(/^Bearer /, '');
-      let body = {}; if (req.method !== 'GET') { let raw = ''; for await (const chunk of req) { raw += chunk; if (Buffer.byteLength(raw) > (path === '/api/staff/menu/manage' ? 200000 : 50000)) throw new DomainError('คำขอมีขนาดใหญ่เกินไป', 413); } if (raw) { try { body = JSON.parse(raw); } catch { throw new DomainError('คำขอไม่ถูกต้อง'); } } }
+      let body = {}; if (req.method !== 'GET') { let raw = ''; for await (const chunk of req) { raw += chunk; if (Buffer.byteLength(raw) > (['/api/staff/menu/manage','/api/staff/sales/delete'].includes(path) ? 200000 : 50000)) throw new DomainError('คำขอมีขนาดใหญ่เกินไป', 413); } if (raw) { try { body = JSON.parse(raw); } catch { throw new DomainError('คำขอไม่ถูกต้อง'); } } }
       if (req.method === 'GET' && path === '/api/menu') return json(200, publicCatalog(state.catalog));
       if (req.method === 'POST' && path === '/api/customer/session') {
         if (token) { try { const current = session(token); return json(200, { ...current, token }); } catch { /* Start a new visit/session after expiry. */ } }
@@ -64,8 +65,16 @@ export function createDemoServer({ dataPath = resolve('.local-data/demo.json') }
       if (req.method === 'GET' && path === '/api/staff/me') return json(200, { ...staff(token), token });
       if (req.method === 'POST' && path === '/api/staff/logout') { staffTokens.delete(token); return json(200, { ok: true }); }
       if (req.method === 'POST' && path === '/api/orders') { const customer = session(token, !!state.requests[req.headers['idempotency-key']]); return json(201, createOrder(body, customer, req.headers['idempotency-key'])); }
-      if (req.method === 'GET' && path === '/api/orders') { const customer = session(token, true); return json(200, state.orders.filter(o => o.customerSessionId === customer.sessionId)); }
-      if (req.method === 'GET' && path === '/api/staff/state') { staff(token); return json(200, { orders: state.orders, visits: state.visits, summaries: state.summaries }); }
+      if (req.method === 'GET' && path === '/api/orders') { const customer = session(token, true); return json(200, state.orders.filter(o => o.customerSessionId === customer.sessionId && !o.salesDeletedAt)); }
+      if (req.method === 'GET' && path === '/api/staff/state') { staff(token); return json(200, { orders: state.orders.filter(o => !o.salesDeletedAt), visits: state.visits, summaries: state.summaries.filter(s => !s.salesDeletedAt) }); }
+      if (path === '/api/staff/sales/history' && req.method === 'GET') { staff(token, true); return json(200, salesHistory(state.orders, state.summaries)); }
+      if (path === '/api/staff/sales/delete' && req.method === 'POST') {
+        const actor = staff(token, true), previousState = state;
+        const deletion = applySalesDeletion(state, actor.id, req.headers['idempotency-key'], body);
+        state = deletion.state;
+        try { persist(); } catch (error) { state = previousState; throw error; }
+        return json(200, deletion.result);
+      }
       if (req.method === 'POST' && path === '/api/staff/orders') return json(201, createOrder(body, staff(token), req.headers['idempotency-key']));
       const billMatch = path.match(/^\/api\/staff\/orders\/([0-9a-f-]+)\/pay-bill$/i);
       if (req.method === 'POST' && billMatch) {
@@ -84,15 +93,15 @@ export function createDemoServer({ dataPath = resolve('.local-data/demo.json') }
       }
       const orderMatch = path.match(/^\/api\/staff\/orders\/([0-9a-f-]+)\/(status|pay|refund)$/i);
       if (req.method === 'POST' && orderMatch) {
-        const identity = staff(token, orderMatch[2] === 'refund'); const order = state.orders.find(o => o.id === orderMatch[1]); if (!order) throw new DomainError('ไม่พบออเดอร์', 404);
+        const identity = staff(token, orderMatch[2] === 'refund'); const order = state.orders.find(o => o.id === orderMatch[1]); if (!order) throw new DomainError('ไม่พบออเดอร์', 404); if (order.salesDeletedAt) throw new DomainError('รายการนี้ถูกลบจากยอดขายแล้ว', 409);
         if (orderMatch[2] === 'status') { if (order.status !== body.status) { if (!canTransition(order.status, body.status)) throw new DomainError('สถานะออเดอร์เปลี่ยนไปแล้ว กรุณาโหลดใหม่', 409); if (body.status === 'cancelled' && order.paidAt && !order.refundedAt) throw new DomainError('กรุณาคืนเงินก่อนยกเลิก'); order.status = body.status; state.events.push({ orderId: order.id, status: body.status, actor: identity.name, at: new Date().toISOString() }); } }
         if (orderMatch[2] === 'pay') { if (order.visitId) throw new DomainError('กรุณาโหลดหน้ารับเงินใหม่เพื่อชำระบิลรวมทุกออเดอร์',409); if (order.status === 'cancelled') throw new DomainError('ออเดอร์ยกเลิกแล้ว'); if (!['cash', 'promptpay'].includes(body.method)) throw new DomainError('วิธีชำระไม่ถูกต้อง'); if (!order.paidAt) { order.paidAt = new Date().toISOString(); order.paymentMethod = body.method; } }
         if (orderMatch[2] === 'refund') { if (!order.paidAt) throw new DomainError('ออเดอร์ยังไม่ชำระ'); if (!order.refundedAt) { order.refundedAt = new Date().toISOString(); order.refundedSatang = order.totalSatang; } }
         persist(); return json(200, order);
       }
       const close = path.match(/^\/api\/staff\/tables\/(\d+)\/close$/);
-      if (req.method === 'POST' && close) { staff(token); const table = Number(close[1]); const visit = state.visits[table]; if (!visit) throw new DomainError('โต๊ะปิดแล้ว'); const orders = state.orders.filter(o => o.visitId === visit.id); if (orders.some(o => !['served', 'cancelled'].includes(o.status) || (o.status !== 'cancelled' && !o.paidAt))) throw new DomainError('กรุณาส่งมอบและเคลียร์การชำระเงินก่อนปิดโต๊ะ'); delete state.visits[table]; persist(); return json(200, { ok: true }); }
-      if (req.method === 'POST' && path === '/api/staff/delivery') { staff(token, true); const summaries = body.summaries; if (!Array.isArray(summaries) || !summaries.length || summaries.length > 100) throw new DomainError('รายการนำเข้าไม่ถูกต้อง'); summaries.forEach(validateSummary); for (const s of summaries) { const index = state.summaries.findIndex(v => v.date === s.date && v.channel === s.channel); if (index >= 0) state.summaries[index] = s; else state.summaries.push(s); } persist(); return json(200, { ok: true, count: summaries.length }); }
+      if (req.method === 'POST' && close) { staff(token); const table = Number(close[1]); const visit = state.visits[table]; if (!visit) throw new DomainError('โต๊ะปิดแล้ว'); const orders = state.orders.filter(o => o.visitId === visit.id && !o.salesDeletedAt); if (orders.some(o => !['served', 'cancelled'].includes(o.status) || (o.status !== 'cancelled' && !o.paidAt))) throw new DomainError('กรุณาส่งมอบและเคลียร์การชำระเงินก่อนปิดโต๊ะ'); delete state.visits[table]; persist(); return json(200, { ok: true }); }
+      if (req.method === 'POST' && path === '/api/staff/delivery') { staff(token, true); const summaries = body.summaries; if (!Array.isArray(summaries) || !summaries.length || summaries.length > 100) throw new DomainError('รายการนำเข้าไม่ถูกต้อง'); summaries.forEach(validateSummary); for (const input of summaries) { const s = { ...input, salesDeletedAt: null, salesRevision: randomUUID() }; const index = state.summaries.findIndex(v => v.date === s.date && v.channel === s.channel); if (index >= 0) state.summaries[index] = s; else state.summaries.push(s); } persist(); return json(200, { ok: true, count: summaries.length }); }
       if (path === '/api/staff/menu/manage' && ['GET', 'POST'].includes(req.method)) {
         const actor = staff(token, true);
         if (req.method === 'GET') return json(200, { items: state.catalog, categories: menuCategories });

@@ -1,0 +1,66 @@
+[WebServer] (node:3393) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:3416) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 47 tests using 2 workers
+
+(node:3455) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3456) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   2 tests/browser/dashboard.spec.mjs:80:1 › month selection does not export the previous daily report (2.6s)
+  ✓   1 tests/browser/dashboard.spec.mjs:64:1 › changing day hides previous figures and prevents export until the new report arrives (3.8s)
+  ✓   3 tests/browser/dashboard.spec.mjs:92:1 › failed period loads hide old totals, stop loading and allow retry (2.7s)
+  ✓   4 tests/browser/dashboard.spec.mjs:108:1 › a late manual refresh cannot overwrite the newly selected period (2.5s)
+  ✓   5 tests/browser/dashboard.spec.mjs:120:1 › clearing the date asks for a date and prevents requests and exports (2.5s)
+  ✓   6 tests/browser/dashboard.spec.mjs:129:1 › returning to a previous period still waits for its new request (2.9s)
+  ✓   7 tests/browser/dashboard.spec.mjs:142:1 › a late refresh error cannot replace the new period with an old error (2.5s)
+  ✓   9 tests/browser/dashboard.spec.mjs:174:1 › owner reviews selection/reason, can cancel, and deletion refreshes report only after server confirms (2.3s)
+  ✓   8 tests/browser/dashboard.spec.mjs:153:1 › payment labels and amounts do not overlap at iPhone widths or enlarged text (5.7s)
+  ✓  10 tests/browser/dashboard.spec.mjs:195:1 › a failed deletion keeps the reviewed payload and request key for a safe retry (5.0s)
+  ✓  11 tests/browser/dashboard.spec.mjs:209:1 › staff dashboard provides no history deletion controls (4.9s)
+  ✓  12 tests/browser/kitchen.spec.mjs:31:3 › Kitchen completes new with one button and retains unpaid order in POS (3.1s)
+  ✓  13 tests/browser/kitchen.spec.mjs:31:3 › Kitchen completes preparing with one button and retains unpaid order in POS (2.5s)
+  ✓  14 tests/browser/kitchen.spec.mjs:31:3 › Kitchen completes ready with one button and retains unpaid order in POS (2.1s)
+  ✓  15 tests/browser/kitchen.spec.mjs:46:1 › Failed kitchen completion keeps the ticket visible and shows the server error (1.9s)
+  ✓  16 tests/browser/menu-editor.spec.mjs:57:1 › Full editor creates variants, modifiers and customer copy; preview uses the same choices without sending orders (3.2s)
+  ✓  17 tests/browser/menu-editor.spec.mjs:108:1 › Save retains draft and key after lost responses, blocks double submit and retries only once on the server (3.0s)
+  ✓  18 tests/browser/menu-editor.spec.mjs:148:1 › Existing full edits retain draft on stale revision; owner can load current data explicitly (2.5s)
+  ✓  19 tests/browser/menu-editor.spec.mjs:171:1 › Owner reorders within a category, archives/restores and can create after all dishes are archived (3.0s)
+  ✓  20 tests/browser/menu-editor.spec.mjs:188:1 › All-archived categories remain selectable and malformed prices or names do not send requests (2.6s)
+  ✓  21 tests/browser/menu-editor.spec.mjs:207:1 › Existing menu saves name, price, availability and independent group choices (2.7s)
+  ✓  22 tests/browser/menu-editor.spec.mjs:225:3 › A confirmed reorder with failed /api/menu refresh retries only reads and moves once (2.8s)
+  ✓  23 tests/browser/menu-editor.spec.mjs:225:3 › A confirmed reorder with failed /api/staff/menu/manage refresh retries only reads and moves once (2.6s)
+  ✓  25 tests/browser/menu-options.spec.mjs:20:1 › Ice cream keeps four toppings on size change until corrected and peanuts never consume the quota (1.8s)
+  ✓  24 tests/browser/menu-editor.spec.mjs:253:1 › All-menu neighbors cross category boundaries; repeated moves and reload retain order (3.8s)
+  ✓  26 tests/browser/menu-options.spec.mjs:57:1 › Optional fried egg is removable and disabled choices stay hidden at 430px (1.4s)
+  ✓  27 tests/browser/pos-improvement.spec.mjs:26:1 › Bill shows all rounds at 390px; selecting Thai scan requires verification and writes nothing (2.3s)
+  ✓  29 tests/browser/pos-improvement.spec.mjs:53:1 › Category buttons are visible immediately, filter with one tap and leave cart intact (2.7s)
+  ✓  28 tests/browser/pos-improvement.spec.mjs:41:1 › Lost bill response freezes request through reload and retries same key without another receipt (4.5s)
+[WebServer] 3:03:25 PM [vite] http proxy error: /api/menu
+[WebServer] Error: connect ECONNREFUSED 127.0.0.1:4174
+[WebServer]     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1864:16)
+[WebServer] 3:03:25 PM [vite] http proxy error: /api/menu
+[WebServer] Error: connect ECONNREFUSED 127.0.0.1:4174
+[WebServer]     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1864:16)
+  ✓  30 tests/browser/pos-improvement.spec.mjs:71:1 › Preview receipt replay preserves refund/fulfillment and closed sessions can read then renew (1.8s)
+  ✓  31 tests/browser/qr.spec.mjs:5:1 › QR view has ten stable links, copies LINE link and rotates only the confirmed card (5.4s)
+  ✓  33 tests/browser/staff-sounds.spec.mjs:71:3 › cash sound follows server success only, once, on the confirming device (1.8s)
+  ✓  32 tests/browser/staff-sounds.spec.mjs:42:1 › New orders ring once; reloads and reappearing orders stay silent; previews are distinct (6.0s)
+  ✓  34 tests/browser/staff-sounds.spec.mjs:71:3 › promptpay sound follows server success only, once, on the confirming device (2.2s)
+  ✓  35 tests/browser/staff-sounds.spec.mjs:92:1 › Failed payment remains unpaid and silent; retry sounds after success (2.5s)
+  ✓  37 tests/browser/staff-sounds.spec.mjs:120:1 › Audio failure cannot turn a successfully recorded payment into a failed payment (1.5s)
+  ✓  36 tests/browser/staff-sounds.spec.mjs:106:1 › Payments from another device and muted confirmations do not play a receipt sound (3.6s)
+  ✓  38 tests/browser/staff-sounds.spec.mjs:131:1 › Both cues render audible distinct waveforms with headroom instead of clipping (1.8s)
+  ✓  39 tests/browser/staff-state.spec.mjs:72:1 › A full refresh cannot overwrite a newer realtime payment/status update (2.1s)
+  ✓  40 tests/browser/staff-state.spec.mjs:93:1 › A previous login’s delayed refresh cannot populate the next staff session (2.5s)
+  ✓  41 tests/browser/staff-state.spec.mjs:111:1 › A late audio enable cannot switch sound back on after logout and another login (2.2s)
+  ✓  42 tests/browser/submit-retry.spec.mjs:21:1 › a lost submit response retries the same order key and shows the saved receipt (1.8s)
+  ✓  44 tests/browser/submit-retry.spec.mjs:41:1 › a definite price rejection allows editing and creates a new key for a changed order (1.7s)
+  ✓  43 tests/browser/submit-retry.spec.mjs:27:1 › an uncertain submit locks the saved draft and survives reload before a same-key retry (2.6s)
+  ✓  46 tests/browser/takeaway.spec.mjs:25:1 › Takeaway requires a customer name and retains the kitchen note in the receipt (2.0s)
+  ✓  45 tests/browser/submit-retry.spec.mjs:53:1 › closed bill rollover persists new customer token before an uncertain response and reload retry (3.1s)
+  ✓  47 tests/browser/takeaway.spec.mjs:37:1 › Village delivery requires address and phone and survives a draft reload (1.9s)
+
+  47 passed (1.2m)

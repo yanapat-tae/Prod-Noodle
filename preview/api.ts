@@ -1,3 +1,5 @@
+import { applySalesDeletion, salesHistory } from '../src/sales-history.ts';
+import type { SalesDeletion } from '../src/sales-history.ts';
 // HTML preview only: all state belongs to this browser, never to the shop's DB.
 import { prepareBillPayment } from '../src/bill-payment.ts';
 import { RequestFailure } from '../src/http.ts';
@@ -68,7 +70,7 @@ function checkStaff(staff: Staff, owner = false) { if (!profiles.some(p => p.id 
 function checkSession(session: CustomerSession, receiptOnly = false) { const current = data.sessions[session.token]; if (!current || (!receiptOnly && current.visitId && data.visits[current.tableNumber!]?.id !== current.visitId)) throw new RequestFailure('รอบโต๊ะปิดแล้ว กรุณาเลือกโต๊ะอีกครั้ง',401); return current; }
 function create(payload: { lines: CartInput[]; expectedTotalSatang: number; channel: string; tableNumber: number | null; takeaway?: TakeawayDetails }, key: string, scope: string, customerId: string | null): Order {
   const signature = JSON.stringify({ payload, scope }); const previous = data.requests[key];
-  if (previous) { if (previous.signature !== signature) throw new DomainError('รหัสอ้างอิงนี้ใช้กับคำขออื่นแล้ว'); return copy(data.orders.find(o => o.id === previous.orderId)!); }
+  if (previous) { if (previous.signature !== signature) throw new DomainError('รหัสอ้างอิงนี้ใช้กับคำขออื่นแล้ว'); const old = data.orders.find(o => o.id === previous.orderId)!; if (old.salesDeletedAt) throw new DomainError('รายการทดลองนี้ถูกลบแล้ว กรุณาเริ่มออเดอร์ใหม่',409); return copy(old); }
   if (!Array.isArray(payload.lines) || !payload.lines.length || payload.lines.length > 30) throw new DomainError('กรุณาเพิ่มอาหารลงตะกร้า');
   if (!['dine_in', 'takeaway'].includes(payload.channel)) throw new DomainError('ช่องทางไม่ถูกต้อง');
   const lines = payload.lines.map(input => priceLine(data.catalog, input)); const total = lines.reduce((s, l) => s + l.totalSatang, 0);
@@ -98,16 +100,16 @@ export const api = {
     const session: StoredSession = { token: crypto.randomUUID(), sessionId: crypto.randomUUID(), entry: value, channel: table ? 'dine_in' : 'takeaway', tableNumber: table, visitId: table ? data.visits[table].id : null };
     data.sessions[session.token] = session; save(); return copy(session);
   },
-  async customerOrders(session: CustomerSession) { const current = checkSession(session,true); return copy(data.orders.filter(o => o.customerSessionId === current.sessionId)); },
+  async customerOrders(session: CustomerSession) { const current = checkSession(session,true); return copy(data.orders.filter(o => o.customerSessionId === current.sessionId && !o.salesDeletedAt)); },
   async createOrder(session: CustomerSession, lines: CartInput[], total: number, key: string, takeaway?: TakeawayDetails) { const current = checkSession(session,!!data.requests[key]); return create({ lines, expectedTotalSatang: total, channel: current.channel, tableNumber: current.tableNumber, takeaway }, key, current.sessionId, current.sessionId); },
   async login(account: string, password: string) { if (password !== '1234') throw new DomainError('รหัสทดลองคือ 1234'); const profile = profiles.find((p, i) => account === 'demo-' + (i + 1)); if (!profile) throw new DomainError('บัญชีไม่ถูกต้อง'); local.setItem(STAFF_STORAGE, JSON.stringify(profile)); return copy(profile); },
   async restoreStaff(): Promise<Staff> { try { const raw = local.getItem(STAFF_STORAGE); if (raw) return JSON.parse(raw); } catch { /* Use preview owner. */ } return copy(profiles[0]); },
   async logout(_identity: Staff) { local.removeItem(STAFF_STORAGE); },
-  async state(identity: Staff): Promise<StaffState> { checkStaff(identity); return copy({ orders: data.orders, visits: data.visits, summaries: data.summaries }); },
+  async state(identity: Staff): Promise<StaffState> { checkStaff(identity); return copy({ orders: data.orders.filter(o => !o.salesDeletedAt), visits: data.visits, summaries: data.summaries.filter(s => !s.salesDeletedAt) }); },
   watch(_identity: Staff, refresh: (order?: Order) => void) { const update = () => refresh(); window.addEventListener('prod-html-data', update); return () => window.removeEventListener('prod-html-data', update); },
   async posOrder(identity: Staff, lines: CartInput[], total: number, channel: string, tableNumber: number | null, key: string, takeaway?: TakeawayDetails) { checkStaff(identity); return create({ lines, expectedTotalSatang: total, channel, tableNumber, takeaway }, key, identity.id, null); },
-  async status(identity: Staff, id: string, status: Status) { checkStaff(identity); const order = findOrder(id); if (order.status !== status) { if (!canTransition(order.status, status)) throw new DomainError('สถานะเปลี่ยนไปแล้ว'); if (status === 'cancelled' && order.paidAt && !order.refundedAt) throw new DomainError('กรุณาคืนเงินก่อนยกเลิก'); order.status = status; save(); } return copy(order); },
-  async pay(identity: Staff, id: string, method: string) { checkStaff(identity); const order = findOrder(id); if (order.status === 'cancelled' || !['cash','promptpay'].includes(method)) throw new DomainError('รับชำระรายการนี้ไม่ได้'); if (!order.paidAt) { order.paidAt = new Date().toISOString(); order.paymentMethod = method; save(); } return copy(order); },
+  async status(identity: Staff, id: string, status: Status) { checkStaff(identity); const order = findOrder(id); if (order.salesDeletedAt) throw new DomainError('รายการนี้ถูกลบจากยอดขายแล้ว', 409); if (order.status !== status) { if (!canTransition(order.status, status)) throw new DomainError('สถานะเปลี่ยนไปแล้ว'); if (status === 'cancelled' && order.paidAt && !order.refundedAt) throw new DomainError('กรุณาคืนเงินก่อนยกเลิก'); order.status = status; save(); } return copy(order); },
+  async pay(identity: Staff, id: string, method: string) { checkStaff(identity); const order = findOrder(id); if (order.salesDeletedAt) throw new DomainError('รายการนี้ถูกลบจากยอดขายแล้ว', 409); if (order.status === 'cancelled' || !['cash','promptpay'].includes(method)) throw new DomainError('รับชำระรายการนี้ไม่ได้'); if (!order.paidAt) { order.paidAt = new Date().toISOString(); order.paymentMethod = method; save(); } return copy(order); },
   async payBill(identity: Staff, id: string, input: BillPaymentInput, key: string) {
     checkStaff(identity);
     const settlement = prepareBillPayment(data.orders, data.billPayments ?? {}, identity.id, id, key, input);
@@ -119,9 +121,9 @@ export const api = {
     if (anchor.visitId && data.visits[anchor.tableNumber!]?.id === anchor.visitId) delete data.visits[anchor.tableNumber!];
     save(); return copy(settlement.receipt);
   },
-  async refund(identity: Staff, id: string) { checkStaff(identity, true); const order = findOrder(id); if (!order.paidAt) throw new DomainError('ยังไม่ได้ชำระ'); if (!order.refundedAt) { order.refundedAt = new Date().toISOString(); order.refundedSatang = order.totalSatang; save(); } return copy(order); },
-  async close(identity: Staff, table: number) { checkStaff(identity); const visit = data.visits[table]; if (visit && data.orders.some(o => o.visitId === visit.id && (!['served','cancelled'].includes(o.status) || (o.status !== 'cancelled' && !o.paidAt)))) throw new DomainError('กรุณาส่งมอบและเคลียร์การชำระเงินก่อนปิดโต๊ะ'); delete data.visits[table]; save(); return { ok: true }; },
-  async delivery(identity: Staff, summaries: DeliverySummary[]) { checkStaff(identity, true); summaries.forEach(validateSummary); for (const summary of summaries) { const index = data.summaries.findIndex(s => s.date === summary.date && s.channel === summary.channel); if (index < 0) data.summaries.push(copy(summary)); else data.summaries[index] = copy(summary); } save(); return { ok: true }; },
+  async refund(identity: Staff, id: string) { checkStaff(identity, true); const order = findOrder(id); if (order.salesDeletedAt) throw new DomainError('รายการนี้ถูกลบจากยอดขายแล้ว', 409); if (!order.paidAt) throw new DomainError('ยังไม่ได้ชำระ'); if (!order.refundedAt) { order.refundedAt = new Date().toISOString(); order.refundedSatang = order.totalSatang; save(); } return copy(order); },
+  async close(identity: Staff, table: number) { checkStaff(identity); const visit = data.visits[table]; if (visit && data.orders.some(o => o.visitId === visit.id && !o.salesDeletedAt && (!['served','cancelled'].includes(o.status) || (o.status !== 'cancelled' && !o.paidAt)))) throw new DomainError('กรุณาส่งมอบและเคลียร์การชำระเงินก่อนปิดโต๊ะ'); delete data.visits[table]; save(); return { ok: true }; },
+  async delivery(identity: Staff, summaries: DeliverySummary[]) { checkStaff(identity, true); summaries.forEach(validateSummary); for (const input of summaries) { const summary = { ...input, salesDeletedAt: null, salesRevision: crypto.randomUUID() }; const index = data.summaries.findIndex(s => s.date === summary.date && s.channel === summary.channel); if (index < 0) data.summaries.push(copy(summary)); else data.summaries[index] = copy(summary); } save(); return { ok: true }; },
   async menuAdmin(identity: Staff) { checkStaff(identity, true); return copy({ items: data.catalog, categories: menuCategories }); },
   async manageMenu(identity: Staff, mutation: MenuMutation, key: string): Promise<{ ok: true }> {
     checkStaff(identity, true);
@@ -138,6 +140,8 @@ export const api = {
     const item = menuFromInput(input, data.catalog); data.catalog.push(item); data.menuRequests ??= {}; data.menuRequests[input.code] = signature; save(); return copy(item);
   },
   async editMenu(identity: Staff, code: string, prices: Record<string, number>, available: boolean, name?: string) { checkStaff(identity, true); const item = data.catalog.find(m => m.code === code); if (!item) throw new DomainError('ไม่พบเมนู'); if (item.variants.some(v => !Number.isSafeInteger(prices[v.code]) || prices[v.code] < 1 || prices[v.code] > 100000)) throw new DomainError('ราคาไม่ถูกต้อง'); const newName = name === undefined ? item.name : validateMenuName(name); item.revision = (item.revision ?? 1) + 1; item.name = newName; item.available = available; for (const variant of item.variants) variant.priceSatang = prices[variant.code]; save(); return copy(item); },
+  async salesHistory(identity: Staff) { checkStaff(identity, true); return copy(salesHistory(data.orders, data.summaries)); },
+  async deleteSales(identity: Staff, payload: SalesDeletion, key: string) { checkStaff(identity, true); const deletion = applySalesDeletion(data, identity.id, key, payload); data = deletion.state; save(); return copy(deletion.result); },
   async report(identity: Staff, period: string) { checkStaff(identity); return salesReport(data.orders, data.summaries, period); },
   async qr(identity: Staff) { checkStaff(identity, true); return demoQr(identity, location.href.split(/[?#]/)[0]); },
   async rotateQr(identity: Staff, entry: QrEntry, _requestKey: string) { checkStaff(identity, true); return demoQr(identity, location.href.split(/[?#]/)[0], entry).find(value => value.key === entry.key)!; },

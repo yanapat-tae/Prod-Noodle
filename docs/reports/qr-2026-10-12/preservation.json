@@ -1,0 +1,61 @@
+{
+  "checked_at": "2026-10-12T15:49:44.381Z",
+  "unchanged": true,
+  "tables": [
+    {
+      "resource": "qr_entrypoints",
+      "rows": 10,
+      "fingerprint": "9b98942ad6161956d81c6bf60271385d"
+    },
+    {
+      "resource": "admins",
+      "rows": 6,
+      "fingerprint": "3ac29bf24d73969526c37e17edd5713f"
+    },
+    {
+      "resource": "orders",
+      "rows": 28,
+      "fingerprint": "bc62b7981f76842dfa9d67257a92be1c"
+    },
+    {
+      "resource": "payment_transactions",
+      "rows": 30,
+      "fingerprint": "7bcc0b9c81bf868a97c0cdce75d57187"
+    },
+    {
+      "resource": "bill_payments",
+      "rows": 1,
+      "fingerprint": "643edb426bbe9fbafe8d05eb9cbcc613"
+    },
+    {
+      "resource": "order_items",
+      "rows": 60,
+      "fingerprint": "d32df3bf220771457dc800e28a6c85b8"
+    },
+    {
+      "resource": "order_item_options",
+      "rows": 102,
+      "fingerprint": "692a33d6ce6e7aaf16b6491a87555cff"
+    },
+    {
+      "resource": "menu_items",
+      "rows": 42,
+      "fingerprint": "f91afe5a9ae17e4c81f6a5075d4a6535"
+    },
+    {
+      "resource": "menu_variants",
+      "rows": 63,
+      "fingerprint": "ff31cf5b370501adfb0666037a58d80a"
+    },
+    {
+      "resource": "table_sessions",
+      "rows": 39,
+      "fingerprint": "3e32682a91229fc685cad3df25300fc7"
+    },
+    {
+      "resource": "customer_sessions",
+      "rows": 19,
+      "fingerprint": "85d0c9db02a713a443f4b5a82b65dcbf"
+    }
+  ]
+}

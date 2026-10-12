@@ -1,0 +1,119 @@
+$ pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm preview:html
+$ tsc --noEmit && tsc -p tsconfig.edge.json
+$ eslint . --max-warnings 0
+$ node --test tests/*.test.ts tests/*.test.mjs
+✔ Payment planning preserves data until persistence; retries and concurrent receipts cannot double capture (10.077657ms)
+✔ Real menu migration replaces the trial catalog while preserving retired dishes and historical bills (7133.473163ms)
+✔ saved demo catalog gains real menus while preserving owner prices and custom dishes (39.573328ms)
+✔ menu corrections preserve owner names and prices while restricting crispy-pork rice toppings (3.954295ms)
+✔ Coke rename preserves saved prices, availability, custom names and historical lines (0.401046ms)
+✔ SQL kitchen completion preserves snapshots, payment state and retry identity from every active status (7941.323556ms)
+✔ free notes and takeaway details survive retries, reads and price changes (77.077769ms)
+✔ invalid free notes and takeaway inputs roll back the whole order (35.09355ms)
+✔ owner menu creation copies deterministic active templates and preserves price overrides (96.082211ms)
+✔ menu creation rejects malformed payloads, duplicate groups and non-owner actors atomically (81.992668ms)
+✔ menu creation and order mutation RPCs remain service-only security invoker functions (34.594646ms)
+✔ staff menu creation endpoint checks the owner before calling the database (36.015012ms)
+✔ owner cannot create a menu with an empty option template (10.751374ms)
+✔ owner menu rename preserves snapshots, trims Unicode and retains legacy price edits (16.367568ms)
+✔ invalid renames and non-owner edits roll back menu, availability and prices (30.50721ms)
+✔ both menu edit signatures are service-only security invoker functions (40.624036ms)
+✔ staff rename checks owner and rejects non-string JSON names before the RPC (1.464874ms)
+✔ PostgreSQL transactions, pricing, permissions, table lifecycle and reporting (7167.548244ms)
+Local demo burst: 40 requests completed in 510 ms; not a Supabase capacity benchmark.
+✔ Demo HTTP: shared state, retries, authorization, burst queues, price snapshots and payment lifecycle (978.731342ms)
+✔ Kitchen completion skips intermediate states while terminal orders cannot reopen (0.771746ms)
+✔ Server pricing validates required choices, prices each bowl and rejects unavailable/foreign options (4.200577ms)
+✔ Exact money parsing, Bangkok business date, and safe CSV cells (14.351993ms)
+✔ Reporting counts paid orders once; refund uses its own date; summaries replace detail only on that channel/day (2.908864ms)
+✔ network retries require an idempotency key for writes and retain the exact request (299.932189ms)
+✔ Demo kitchen completion is repeatable, preserves unpaid bills and enforces staff authorization (769.490049ms)
+✔ Owner menu HTTP reads/writes preserve categories, retry identity and old orders (336.358307ms)
+✔ Edge menu management guards both methods before the owner RPC and passes the request key (23.383979ms)
+✔ Menu RPCs require service role and an active owner, including read access (7781.519143ms)
+✔ Server prices requested ice-cream limits, explicit peanut omission and fried egg (59.574679ms)
+✔ Per-menu override isolates shared choices, snapshots survive removal and exact retries survive archival (354.469521ms)
+✔ Owner keys bind actor/payload, retries precede revisions, legacy edits also conflict (108.839059ms)
+✔ Reordering checks exact membership and revisions; archive all retains category for create and restore (197.571781ms)
+✔ Invalid nested data rolls back and disabled choices reject stale orders (143.232338ms)
+✔ Ice cream enforces 3/4 toppings by size; peanuts use a separate choice and omission reaches the kitchen (16.779793ms)
+✔ Archived menus and disabled options/groups cannot be ordered from a stale cart (0.434626ms)
+✔ Full menu edits are immutable, local to one item and guarded by revision (7.335693ms)
+✔ Archive/restore and category reorder preserve data and reject incomplete or stale order lists (1.007022ms)
+✔ Menu validation rejects unreachable variant limits, invalid defaults, disabled required choices and unknown fields (1.119953ms)
+✔ Creation still works with all menus archived and public catalog hides disabled choices (0.591533ms)
+✔ Requested presets upgrade only once, retain custom prices and never duplicate owner dishes (0.520326ms)
+✔ new menu validation trims display text and returns an independent normalized value (4.013584ms)
+✔ new menu validation rejects malformed objects, missing fields and unexpected fields (0.593937ms)
+✔ new menu codes use bounded slugs and categories must already exist (0.505824ms)
+✔ new menu text limits count Unicode codepoints and reject non-text or blank required fields (0.512314ms)
+✔ new menu variants require one to eight unique valid codes and positive integer satang prices (0.851557ms)
+✔ new menu option groups must be distinct existing catalog groups with at most eight choices (1.202176ms)
+✔ new menu preparation notes are distinct trimmed text with bounded count and length (0.599056ms)
+✔ new menu validation rejects sparse arrays instead of returning incomplete entries (0.269448ms)
+✔ menu mapping uses catalog category and option templates without sharing mutable data (1.040222ms)
+✔ new menu option templates follow stable code order instead of catalog display order (0.619306ms)
+✔ menu rename validates Unicode names and rejects blank, oversized, non-text and NUL values (0.378602ms)
+✔ HTTP orders retain takeaway contact and kitchen notes; owner menu creation retries safely (183.883941ms)
+✔ HTTP owner renames atomically while old order snapshots and legacy edits remain intact (145.893429ms)
+✔ Two rounds settle once, close bill, retain kitchen state and new order creates new bill (8046.963196ms)
+✔ Stale same-total membership, missing confirmation, unknown method and disabled actor cannot pay (81.960297ms)
+✔ Parallel devices receive one receipt and order/payment race rejects unseen rounds (68.821411ms)
+✔ Report keeps drink revenue and payment method while ranking only food; refunds remain single (92.919849ms)
+✔ Global reorder validates membership/revisions and persists across fresh reads; note alters only prep text (98.451369ms)
+✔ Top menus exclude the six drink/ice codes but revenue still includes them (40.910411ms)
+✔ All-menu ordering moves across categories and category ordering preserves unrelated slots (8.633904ms)
+✔ Demo staff can display the owner QR links but cannot rotate them (7.007497ms)
+✔ Ten persistent QR entries preserve printed links and only the owner can explicitly rotate one entry (7144.425953ms)
+✔ HTTP deletion is owner-only, requires a reviewed selection, persists audit and excludes sales without refunds (503.350801ms)
+✔ a replacement delivery import invalidates a previously reviewed identical summary (104.848261ms)
+✔ only active owners can inspect/delete history; direct browser execution and writes are denied (7361.0127ms)
+✔ deleting paid/refunded orders clears all reporting measures without modifying captures or creating refunds; retry is safe (222.519174ms)
+✔ stale preview fails atomically; new orders outside selected snapshot remain untouched; empty reason rejected (74.817539ms)
+✔ delivery summaries are excluded and a new import can replace a deleted summary without replaying its old batch (18.900566ms)
+✔ deleting an unpaid round invalidates stale bill membership and closes only fully deleted visits (38.819301ms)
+✔ paid bill receipt replay cannot report success after a non-anchor round was deleted (58.885938ms)
+✔ Requested profiles use existing exact Auth users, preserve other users and repeat safely; mismatch rolls back (5627.307682ms)
+✔ A burst of order notifications cannot queue minutes of bells ahead of a payment (1.625877ms)
+✔ An old playback failure after mute/re-enable cannot disable the new audio session (0.398913ms)
+✔ Disabling sound while enable is pending prevents a late resume from enabling it (0.188585ms)
+✔ A failed older enable cannot silence a newer successful enable (0.255346ms)
+✔ Concurrent refresh requests coalesce without keeping an action busy through continuous polling (1.708532ms)
+✔ Disposing a staff session ignores pending failures and cancels queued refreshes (0.236788ms)
+✔ Out-of-order Realtime reads cannot regress status, but different orders update independently (0.321445ms)
+✔ Delete, stale failures, and stopped subscriptions cannot reinsert an old order (0.276838ms)
+✔ Free-text kitchen notes are trimmed, preserved and bounded independently of preset notes (7.270575ms)
+✔ Takeaway details require a name and village deliveries require contact and address (0.960491ms)
+✔ Takeaway tickets display names and retain queue identifiers, including legacy orders (0.292702ms)
+ℹ tests 82
+ℹ suites 0
+ℹ pass 82
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 70506.531372
+$ tsc --noEmit && vite build
+vite v8.3.2 building client environment for production...
+transforming...
+✓ 698 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.85 kB │ gzip:   0.49 kB
+dist/assets/Staff-OvVhElWy.css    1.96 kB │ gzip:   0.67 kB
+dist/assets/index-Bai-mxew.css   20.99 kB │ gzip:   5.09 kB
+dist/assets/index-DZ5LvLD-.js   271.01 kB │ gzip:  83.56 kB
+dist/assets/Staff-Ctwn7Rqs.js   463.75 kB │ gzip: 133.11 kB
+
+✓ built in 1.33s
+$ node scripts/build-html-preview.mjs
+vite v8.3.2 building client environment for production...
+transforming...
+✓ 654 modules transformed.
+rendering chunks...
+computing gzip size...
+.html-preview-build/style.css    23.91 kB │ gzip:   5.57 kB
+.html-preview-build/preview.js  753.57 kB │ gzip: 220.32 kB
+
+✓ built in 1.09s
+Saved preview.html: 760 KB; no server, CDN, API, or signup required.

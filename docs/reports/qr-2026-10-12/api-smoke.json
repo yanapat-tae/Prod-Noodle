@@ -1,0 +1,31 @@
+{
+  "checked_at": "2026-10-12T15:49:32.329Z",
+  "checks": [
+    {
+      "name": "menu",
+      "status": 200,
+      "count": 41
+    },
+    {
+      "name": "categories",
+      "status": 200,
+      "count": 6
+    },
+    {
+      "name": "staff_no_login",
+      "status": 401
+    },
+    {
+      "name": "anonymous_qr_read",
+      "status": 401
+    },
+    {
+      "name": "cors_preflight",
+      "status": 204
+    },
+    {
+      "name": "untrusted_origin",
+      "status": 403
+    }
+  ]
+}

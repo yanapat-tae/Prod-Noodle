@@ -2,15 +2,15 @@
 
 Snapshot date: **11 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. Current instructions are here; dated release evidence is preserved in [the history archive](docs/history/2026-10-handoff.md). This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
 
-## Pending QR access change · 12 October 2026
+## QR access released · 12 October 2026
 
 All active staff can open the existing QR tab and display/download/copy the same ten QR entries. Only Owner sees the rotation button; demo/HTML rotation and the unchanged `owner_rotate_qr` RPC still reject non-owners. New migration `20261012150324_staff_qr_read_access.sql` changes only the read RPC authorization, retaining `owner_qr_entries` for compatibility. It does not change QR rows, accounts, bills or direct table grants.
 
-Local verification: `pnpm check` passed all 74 Node/PGlite tests, typechecks, lint, build and regenerated `preview.html`. All four targeted QR Chromium scenarios passed at 390×844 using system Chromium: three demo staff accounts and the existing Owner rotation scenario. SQL tests confirm inactive/unregistered/unauthenticated callers cannot read QR entries, non-owners cannot rotate/update/delete them, and migrations preserve every QR row/token/revision. Physical iPhone/Safari and hosted acceptance remain untested.
+After incorporating current main's sales-history release, `pnpm check` passed all 82 Node/PGlite tests, typechecks, lint, build and regenerated `preview.html`; the full 50-scenario Chromium suite passed using system Chromium. QR scenarios cover three demo staff accounts at 390×844 and the existing Owner rotation behavior. SQL tests confirm inactive/unregistered/unauthenticated callers cannot read QR entries, non-owners cannot rotate/update/delete them, and migrations preserve every QR row/token/revision.
 
 The regenerated standalone HTML was also served locally and checked with a staff profile at 390px: ten QR cards, no rotation controls and no horizontal overflow. Direct `file:` navigation is blocked by the managed browser policy and remains unverified.
 
-This change is **not deployed**. A release must apply only this new migration before the frontend; do not replay migration history/seeds or rotate existing QR codes. No production data or credentials were changed.
+The user approved release with “ทำต่อเลย”. Only the new migration was applied, hosted version `20261012154404` (`staff_qr_read_access`), before frontend merge. [PR #9](https://github.com/yanapat-tae/Prod-Noodle/pull/9) merged as `5ad81c796258576348ef572f596f8e49f83cbff7`; Cloudflare production `17a17427-c379-45bd-89e9-fd29d5c9f54a` succeeded. Served HTML/JS/CSS matches the production-configured build. Hosted read-only role checks confirm all six active profiles read the same ten entries and all three Staff profiles are denied rotation. Anonymous QR reads and direct table access remain denied; rotation/actor function definitions and eleven table fingerprints are unchanged. No QR rotation, sales cleanup, account change, test order or payment was performed. Physical iPhone/Safari and real-password login remain untested. See [release evidence](docs/reports/2026-10-12-qr-access.md). Do not replay migrations or rotate QR for deployment.
 
 ## Current project status
 

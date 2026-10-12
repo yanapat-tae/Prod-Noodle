@@ -1,0 +1,38 @@
+{
+  "checked_at": "2026-10-12T15:49:24.852Z",
+  "deployment": "17a17427-c379-45bd-89e9-fd29d5c9f54a",
+  "commit": "5ad81c796258576348ef572f596f8e49f83cbff7",
+  "admin_status": 200,
+  "assets": [
+    {
+      "path": "index.html",
+      "status": 200,
+      "sha256": "9b859fa8d499de49a6aac17d40c7fd11db4863c7fe316a03e3ab795d3402fb81",
+      "matches": true
+    },
+    {
+      "path": "assets/Staff-OvVhElWy.css",
+      "status": 200,
+      "sha256": "5817f0793650cdf81663e30cc75f2922bc965b3922baaf798bf6789207de41c0",
+      "matches": true
+    },
+    {
+      "path": "assets/Staff-sYrbvz4p.js",
+      "status": 200,
+      "sha256": "b8170f891aab25344f7cc0d69e01c2d77f8c385018c77fc703f822064021fa10",
+      "matches": true
+    },
+    {
+      "path": "assets/index-Bai-mxew.css",
+      "status": 200,
+      "sha256": "20250b8a6df22b73ee31557219d9f7a9fac7829ecf17320388196dcaefa9b471",
+      "matches": true
+    },
+    {
+      "path": "assets/index-BpMav2aR.js",
+      "status": 200,
+      "sha256": "54228c30103517451985a0ba5b70e3dd131b3ac759d0a43855171d8e7e737ac7",
+      "matches": true
+    }
+  ]
+}

@@ -139,7 +139,7 @@ export const api = {
   },
   async editMenu(identity: Staff, code: string, prices: Record<string, number>, available: boolean, name?: string) { checkStaff(identity, true); const item = data.catalog.find(m => m.code === code); if (!item) throw new DomainError('ไม่พบเมนู'); if (item.variants.some(v => !Number.isSafeInteger(prices[v.code]) || prices[v.code] < 1 || prices[v.code] > 100000)) throw new DomainError('ราคาไม่ถูกต้อง'); const newName = name === undefined ? item.name : validateMenuName(name); item.revision = (item.revision ?? 1) + 1; item.name = newName; item.available = available; for (const variant of item.variants) variant.priceSatang = prices[variant.code]; save(); return copy(item); },
   async report(identity: Staff, period: string) { checkStaff(identity); return salesReport(data.orders, data.summaries, period); },
-  async qr(identity: Staff) { checkStaff(identity, true); return demoQr(identity, location.href.split(/[?#]/)[0]); },
+  async qr(identity: Staff) { checkStaff(identity); return demoQr(identity, location.href.split(/[?#]/)[0]); },
   async rotateQr(identity: Staff, entry: QrEntry, _requestKey: string) { checkStaff(identity, true); return demoQr(identity, location.href.split(/[?#]/)[0], entry).find(value => value.key === entry.key)!; },
   async accounts(identity: Staff) { checkStaff(identity, true); return profiles.map((p, i) => ({ ...p, active: true, slot: i + 1 })); },
 };

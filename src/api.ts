@@ -1,3 +1,4 @@
+import type { SalesHistory, SalesDeletion, SalesDeletionResult } from './sales-history.ts';
 import { menuCategories } from './catalog.ts';
 import type { MenuCategory } from './menu-admin.ts';
 import type { BillPaymentInput, BillReceipt } from './bill-payment.ts';
@@ -67,8 +68,8 @@ export const api = {
     const ids = (visits.data ?? []).map(v => v.id);
     const activeFilter = 'fulfillment_status.in.(new,preparing,ready),and(payment_status.in.(unpaid,partially_paid),fulfillment_status.neq.cancelled),business_date.eq.' + businessDate() + (ids.length ? ',table_session_id.in.(' + ids.join(',') + ')' : '');
     const [orders, summaries] = await Promise.all([
-      supabase.from('orders').select(orderSelect).or(activeFilter).order('created_at', { ascending: false }),
-      supabase.from('delivery_daily_sales').select('*').order('sales_date', { ascending: false }).limit(365),
+      supabase.from('orders').select(orderSelect).is('sales_deleted_at', null).or(activeFilter).order('created_at', { ascending: false }),
+      supabase.from('delivery_daily_sales').select('*').is('sales_deleted_at', null).order('sales_date', { ascending: false }).limit(365),
     ]);
     if (orders.error || visits.error || summaries.error) throw new Error('โหลดข้อมูลร้านไม่สำเร็จ กรุณาลองใหม่');
     if ((orders.data?.length ?? 0) >= 1000) throw new Error('รายการหน้าร้านเกินขอบเขตรุ่นทดลอง กรุณาตรวจข้อมูลก่อนใช้งานต่อ');
@@ -83,8 +84,8 @@ export const api = {
       return mapOrder(data);
     }, refresh);
     const channel = supabase.channel('staff-orders').on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
-      const deleted = payload.eventType === 'DELETE';
-      void updates.receive(deleted ? payload.old.id : payload.new.id, deleted);
+      const deleted = payload.eventType === 'DELETE' || Boolean(payload.new.sales_deleted_at);
+      void updates.receive(payload.eventType === 'DELETE' ? payload.old.id : payload.new.id, deleted);
     }).on('postgres_changes', { event: '*', schema: 'public', table: 'table_sessions' }, () => { if (active) refresh(); }).subscribe(status => { connected = status === 'SUBSCRIBED'; if (active && connected) refresh(); });
     const timer = setInterval(() => { if (!connected && !document.hidden) refresh(); }, 30000);
     return () => { active = false; updates.dispose(); clearInterval(timer); void supabase!.removeChannel(channel); };
@@ -93,6 +94,8 @@ export const api = {
   async status(identity: Staff, id: string, status: Status) { return call<Order>(`/staff/orders/${id}/status`, { status }, await staffToken(identity)); },
   async pay(identity: Staff, id: string, method: string) { return call<Order>(`/staff/orders/${id}/pay`, { method }, await staffToken(identity)); },
   async payBill(identity: Staff, id: string, input: BillPaymentInput, key: string) { return call<BillReceipt>(`/staff/orders/${id}/pay-bill`, input, await staffToken(identity), key); },
+  async salesHistory(identity: Staff) { return call<SalesHistory>('/staff/sales/history', undefined, await staffToken(identity)); },
+  async deleteSales(identity: Staff, payload: SalesDeletion, key: string) { return call<SalesDeletionResult>('/staff/sales/delete', payload, await staffToken(identity), key); },
   async refund(identity: Staff, id: string) { return call<Order>(`/staff/orders/${id}/refund`, {}, await staffToken(identity)); },
   async close(identity: Staff, table: number) { return call(`/staff/tables/${table}/close`, {}, await staffToken(identity)); },
   async delivery(identity: Staff, summaries: DeliverySummary[]) { return call('/staff/delivery', { summaries }, await staffToken(identity), crypto.randomUUID()); },

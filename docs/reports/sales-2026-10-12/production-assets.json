@@ -1,0 +1,22 @@
+{
+  "rootStatus": 200,
+  "adminStatus": 200,
+  "assets": [
+    {
+      "path": "/assets/index-Bw0sCO9y.js",
+      "status": 200,
+      "matchesBuild": true
+    },
+    {
+      "path": "/assets/Staff-BtFEAWCg.js",
+      "status": 200,
+      "matchesBuild": true
+    },
+    {
+      "path": "/assets/index-Bai-mxew.css",
+      "status": 200,
+      "matchesBuild": true
+    }
+  ],
+  "allMatch": true
+}

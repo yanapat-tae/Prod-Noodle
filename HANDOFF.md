@@ -166,3 +166,24 @@ password logins and successful hosted transaction/reorder interaction remain NOT
 Have staff refresh existing tabs: legacy single-order dine-in payment returns409.
 See [rollback](docs/POS-ROLLBACK.md) and [evidence](docs/reports/2026-10-11-pos-improvement.md).
 Docs-only follow-ups may trigger another automatic Pages build; application assets are unchanged.
+
+## Sales history fix · 12 October 2026
+
+The owner explicitly requested a fresh cleanup of **all current test sales** before
+first shop use on 13 October, overriding the earlier no-cleanup instruction for
+this newly inspected fixed snapshot only. Current preflight: 28 paid orders,
+328,200 satang; no open visits or delivery summaries. Do not broaden cleanup to
+future records or rerun the fixed operation.
+
+Payment-breakdown mobile layout and owner-only selected/bulk test-sale removal are
+implemented. See [release evidence](docs/reports/2026-10-12-sales-history.md) and
+[owner guide](docs/sales-history.md). Fresh checks81/81, full Chromium47/47 and
+final Dashboard/POS15/15 passed. Hosted rollback test passed with ledger preserved.
+New migration mapping: `20261012145337_sales_history_cleanup.sql` → hosted
+`20261012150840`; staff-api v7 ACTIVE. PR #8 merged as `a279ae09bcad3319a4e6b4b92a5d7b10f85dde14`; Cloudflare
+production `71faa211-cba7-46f2-b427-33088febbfb8` SUCCESS. Servedassets match
+production-configured build. Fixed cleanup completed at22:19:03 Bangkok:28 test
+orders excluded, activeorders0, monthlynet/count0, audit1. Ledger/billreceipts,
+item/optionsnapshots, QR, profiles, menu and visits match preflight hashes.
+**Do not repeat the cleanup operation.** Actual new orders will count normally.
+Physical iPhone/Safari and real-password staff login remain untested.

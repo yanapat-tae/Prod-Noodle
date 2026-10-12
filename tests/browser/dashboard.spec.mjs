@@ -149,3 +149,70 @@ test('a late refresh error cannot replace the new period with an old error', asy
   await expect(page.getByRole('alert')).toHaveCount(0);
   await expect(page.locator('.kpi-grid article').first()).toContainText('200 บาท');
 });
+
+test('payment labels and amounts do not overlap at iPhone widths or enlarged text', async ({ page }) => {
+ const payments = salesReport([], [], period).payments.map(p => ({ ...p, value: 12345678 }));
+ await page.getByRole('button', { name: '↻ อัปเดตยอด', exact: true }).click();
+ await waitForRequest(page, 0, period); await settle(page, 0, { ...report(12345678), payments });
+ for (const width of [320, 390, 430]) {
+  await page.setViewportSize({ width, height: 844 });
+  for (const size of ['100%', '200%']) {
+   await page.evaluate(s => { document.documentElement.style.fontSize = s; }, size);
+   const rows = page.locator('article.panel').filter({ has: page.getByRole('heading', { name: 'ช่องทางชำระเงิน', exact: true }) }).locator('.channel-legend > div');
+   await expect(rows).toHaveCount(5);
+   for (const row of await rows.all()) {
+    const label = await row.locator('span').boundingBox(), amount = await row.locator('strong').boundingBox();
+    expect(label.x + label.width <= amount.x + 1 || label.y + label.height <= amount.y + 1).toBe(true);
+    const dimensions = await row.locator('span').evaluate(el => ({ client: el.clientWidth, scroll: el.scrollWidth }));
+    expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client + 1);
+   }
+  }
+ }
+ await page.setViewportSize({width:390,height:844});
+ await page.evaluate(() => { document.documentElement.style.fontSize = '100%'; });
+ await page.locator('article.panel').filter({has:page.getByRole('heading',{name:'ช่องทางชำระเงิน',exact:true})}).screenshot({path:'.local-data/payment-mobile.png'});
+});
+
+const historyRecords = [1,2].map(n => ({ kind: 'order', id: `00000000-0000-4000-8000-00000000000${n}`, version: String(n).repeat(32), label: 'โต๊ะ '+n, date: '2026-10-05T05:00:00Z', totalSatang: n*10000, paid:true, detail:'ก๋วยเตี๋ยว × 1' }));
+test('owner reviews selection/reason, can cancel, and deletion refreshes report only after server confirms', async ({ page }) => {
+ let deletions=0;
+ await page.route('**/api/staff/sales/history',route=>route.fulfill({json:{records:deletions?[]:historyRecords}}));
+ await page.route('**/api/staff/sales/delete',async route=>{
+  const body=route.request().postDataJSON(); expect(body.reason).toBe('ทดลองก่อนเปิดร้าน'); expect(body.records).toHaveLength(2);
+  expect(body.records[0]).toEqual({kind:'order',id:historyRecords[0].id,version:historyRecords[0].version});
+  deletions++; await route.fulfill({json:{ok:true,count:2}});
+ });
+ await page.getByRole('button',{name:'จัดการประวัติยอดขาย',exact:true}).click();
+ await page.getByLabel('เลือกทั้งหมด 2 รายการที่แสดง').check();
+ await expect(page.getByRole('button',{name:'ลบรายการที่เลือก',exact:true})).toBeDisabled();
+ await page.getByLabel('เหตุผลการลบ').fill('ทดลองก่อนเปิดร้าน');
+ await page.getByRole('button',{name:'ลบรายการที่เลือก',exact:true}).click();
+ await expect(page.getByRole('alertdialog')).toContainText('ยืนยันลบ 2 รายการ'); expect(deletions).toBe(0);
+ await page.setViewportSize({width:390,height:844}); await page.locator('.sales-history').screenshot({path:'.local-data/sales-confirmation-mobile.png'});
+ await page.getByRole('button',{name:'กลับไปตรวจรายการ'}).click(); expect(deletions).toBe(0);
+ await page.getByRole('button',{name:'ลบรายการที่เลือก',exact:true}).click();
+ await page.getByRole('button',{name:'ยืนยันลบประวัติ',exact:true}).click();
+ await waitForRequest(page,0,period); await settle(page,0,emptyReport);
+ await expect(page.locator('.sales-history')).toContainText('ไม่มีประวัติยอดขายให้ลบ');
+ await expect(page.locator('.kpi-grid article').first()).toContainText('0 บาท'); expect(deletions).toBe(1);
+});
+test('a failed deletion keeps the reviewed payload and request key for a safe retry',async({page})=>{
+ const requests=[];
+ await page.route('**/api/staff/sales/history',route=>route.fulfill({json:{records:historyRecords}}));
+ await page.route('**/api/staff/sales/delete',route=>{
+  requests.push({body:route.request().postDataJSON(),key:route.request().headers()['idempotency-key']});
+  return route.fulfill({status:requests.length<=2?503:200,json:requests.length<=2?{error:'ลองใหม่'}:{ok:true,count:1}});
+ });
+ await page.getByRole('button',{name:'จัดการประวัติยอดขาย',exact:true}).click();
+ await page.locator('.sales-record input').first().check(); await page.getByLabel('เหตุผลการลบ').fill('ทดสอบ');
+ await page.getByRole('button',{name:'ลบรายการที่เลือก',exact:true}).click(); await page.getByRole('button',{name:'ยืนยันลบประวัติ',exact:true}).click();
+ await expect(page.getByRole('alert')).toHaveText('ยังยืนยันผลการลบไม่ได้ กรุณาตรวจเน็ต แล้วกดยืนยันอีกครั้ง ระบบจะไม่ลบซ้ำ'); await expect(page.getByRole('alertdialog')).toBeVisible();
+ await page.getByRole('button',{name:'ยืนยันลบประวัติ',exact:true}).click();
+ await expect.poll(()=>requests.length).toBe(3); expect(requests[1]).toEqual(requests[0]); expect(requests[2]).toEqual(requests[0]);
+});
+test('staff dashboard provides no history deletion controls',async({page})=>{
+ await page.route('**/api/staff/me',route=>route.fulfill({json:{...identity,role:'admin'}}));
+ await page.reload(); await page.getByRole('button',{name:'ยอดขาย',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'ภาพรวมยอดขาย'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'จัดการประวัติยอดขาย',exact:true})).toHaveCount(0);
+});

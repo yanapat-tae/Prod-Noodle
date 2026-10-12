@@ -1,0 +1,45 @@
+{
+  "checks": {
+    "qr": {
+      "before": "35749a3becb4ac735417eafe37d73591",
+      "after": "35749a3becb4ac735417eafe37d73591",
+      "matches": true
+    },
+    "menu": {
+      "before": "595fd3c455b70d0fadc0a88004d748cb",
+      "after": "595fd3c455b70d0fadc0a88004d748cb",
+      "matches": true
+    },
+    "staff": {
+      "before": "91fe30ace255b3ded9a01becaa3cb0ec",
+      "after": "91fe30ace255b3ded9a01becaa3cb0ec",
+      "matches": true
+    },
+    "ledger": {
+      "before": "d964b516b8b7dc9fe09c0ecdb5ee1916",
+      "after": "d964b516b8b7dc9fe09c0ecdb5ee1916",
+      "matches": true
+    },
+    "visits": {
+      "before": "5deb30fe193294a480224ae4c034f186",
+      "after": "5deb30fe193294a480224ae4c034f186",
+      "matches": true
+    },
+    "orderItems": {
+      "before": "ecae8cc59a8633c69c50231bb1844c8c",
+      "after": "ecae8cc59a8633c69c50231bb1844c8c",
+      "matches": true
+    },
+    "billReceipts": {
+      "before": "a1d2075040c593ba5bc7d5c73a31e59f",
+      "after": "a1d2075040c593ba5bc7d5c73a31e59f",
+      "matches": true
+    },
+    "orderOptions": {
+      "before": "87502a4951e15415393c868f9f54ce58",
+      "after": "87502a4951e15415393c868f9f54ce58",
+      "matches": true
+    }
+  },
+  "allMatch": true
+}

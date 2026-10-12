@@ -175,3 +175,18 @@ th { color: #645b4e; font-size: 1.0rem; }
 .qr-grid > article { min-width: 0; }
 .qr-grid input { width: 100%; min-width: 0; font-size: 0.875rem; }
 .qr-grid button { width: 100%; margin-top: 12px; }
+
+.payment-legend > div { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; }
+.payment-legend > div > span { flex: 1 1 140px; min-width: 0; overflow-wrap: anywhere; }
+.payment-legend > div > strong { margin-left: auto; text-align: right; max-width: 100%; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+
+.sales-history { margin-top: 24px; }
+.sales-select-all { display: flex; align-items: center; gap: 12px; min-height: 56px; margin-top: 16px; }
+.sales-records { display: grid; gap: 12px; max-height: 600px; overflow-y: auto; margin: 16px 0; }
+.sales-record { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.sales-record > span { display: grid; gap: 6px; overflow-wrap: anywhere; }
+.sales-record small { color: #645b4e; }
+.sales-record > strong { text-align: right; font-variant-numeric: tabular-nums; }
+.sales-confirmation { margin-top: 20px; padding: 20px; border: 2px solid var(--brick); border-radius: 12px; }
+.sales-confirmation .form-actions { flex-wrap: wrap; }
+@media (max-width: 600px) { .sales-record { grid-template-columns: 24px minmax(0, 1fr); } .sales-record > strong { grid-column: 2; justify-self: end; overflow-wrap: anywhere; max-width: 100%; } }

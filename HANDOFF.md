@@ -2,6 +2,16 @@
 
 Snapshot date: **11 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. Current instructions are here; dated release evidence is preserved in [the history archive](docs/history/2026-10-handoff.md). This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
 
+## Pending QR access change · 12 October 2026
+
+All active staff can open the existing QR tab and display/download/copy the same ten QR entries. Only Owner sees the rotation button; demo/HTML rotation and the unchanged `owner_rotate_qr` RPC still reject non-owners. New migration `20261012150324_staff_qr_read_access.sql` changes only the read RPC authorization, retaining `owner_qr_entries` for compatibility. It does not change QR rows, accounts, bills or direct table grants.
+
+Local verification: `pnpm check` passed all 74 Node/PGlite tests, typechecks, lint, build and regenerated `preview.html`. All four targeted QR Chromium scenarios passed at 390×844 using system Chromium: three demo staff accounts and the existing Owner rotation scenario. SQL tests confirm inactive/unregistered/unauthenticated callers cannot read QR entries, non-owners cannot rotate/update/delete them, and migrations preserve every QR row/token/revision. Physical iPhone/Safari and hosted acceptance remain untested.
+
+The regenerated standalone HTML was also served locally and checked with a staff profile at 390px: ten QR cards, no rotation controls and no horizontal overflow. Direct `file:` navigation is blocked by the managed browser policy and remains unverified.
+
+This change is **not deployed**. A release must apply only this new migration before the frontend; do not replay migration history/seeds or rotate existing QR codes. No production data or credentials were changed.
+
 ## Current project status
 
 The full menu-management release and customer-header change are **deployed**. [PR #6](https://github.com/yanapat-tae/Prod-Noodle/pull/6), head `e1b1586`, merged as `33977bab857d29f6c8d8e245636e50c4b6acb6e7` on 11 October. It includes per-menu sizes/options/defaults/limits, ordering, archive/restore, customer copy and preview, fried egg +10 baht on the two existing basil dishes, and ice-cream 3/4 toppings with removable default peanuts. Table, storefront and LINE ordering pages omit staff navigation; staff enter `/admin` directly.

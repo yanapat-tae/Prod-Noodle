@@ -26,7 +26,7 @@ export function qrLinks(entries: StoredQr[], base: string): QrEntry[] {
 }
 // Browser-only examples; production tokens/revocations live in PostgreSQL.
 export function demoQr(identity: Staff, base: string, rotate?: QrEntry): QrEntry[] {
-  if (identity.role !== 'owner') throw new Error('เฉพาะเจ้าของร้านเท่านั้น');
+  if (rotate && identity.role !== 'owner') throw new Error('เฉพาะเจ้าของร้านเท่านั้น');
   let saved: Record<string, { revision: number; nonce: string }> = {};
   try {
     saved = JSON.parse(localStorage.getItem(demoStorage) ?? '{}');

@@ -364,7 +364,7 @@ export default function Staff({
       </header>
       <nav className="staff-nav" aria-label="หน้าจอร้าน">
         {tabs
-          .filter(([key]) => identity.role === 'owner' || !['menu', 'qr', 'accounts'].includes(key))
+          .filter(([key]) => identity.role === 'owner' || !['menu', 'accounts'].includes(key))
           .map(([key, label]) => (
             <button
               className={tab === key ? 'active' : ''}
@@ -543,7 +543,7 @@ export default function Staff({
         {tab === 'menu' && identity.role === 'owner' && (
           <MenuEditor catalog={catalog} identity={identity} refresh={refreshMenu} />
         )}
-        {tab === 'qr' && identity.role === 'owner' && <QrCards identity={identity} />}
+        {tab === 'qr' && <QrCards identity={identity} />}
         {tab === 'accounts' && identity.role === 'owner' && <Accounts identity={identity} />}
       </main>
     </div>

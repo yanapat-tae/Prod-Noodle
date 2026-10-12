@@ -16,6 +16,7 @@ const cards = (entries: QrEntry[]) =>
     })),
   );
 export default function QrCards({ identity }: { identity: Staff }) {
+  const canRotate = identity.role === 'owner';
   const [codes, setCodes] = useState<Card[]>([]),
     [error, setError] = useState(''),
     [notice, setNotice] = useState(''),
@@ -41,6 +42,7 @@ export default function QrCards({ identity }: { identity: Staff }) {
   }, [load]);
   async function rotate(code: Card) {
     if (
+      !canRotate ||
       inFlight.current ||
       !confirm(
         `เปลี่ยน QR สำหรับ ${code.label} เท่านั้น? QR เดิมของจุดนี้จะสแกนเริ่มสั่งไม่ได้ ออเดอร์ที่บันทึกแล้วจะยังอยู่`,
@@ -80,8 +82,10 @@ export default function QrCards({ identity }: { identity: Staff }) {
       <p className="eyebrow">QR เดิมใช้ซ้ำได้ ทั้งหน้าร้านและส่งใน LINE</p>
       <h1>QR สั่งอาหาร 10 จุด</h1>
       <p className="muted">
-        เปิดดู ดาวน์โหลด และคัดลอกได้โดย QR ไม่เปลี่ยน หากต้องการเปลี่ยน ให้กด “เปลี่ยน QR ใบนี้”
-        เฉพาะจุดที่ต้องการ
+        เปิดดู ดาวน์โหลด และคัดลอกได้โดย QR ไม่เปลี่ยน
+        {canRotate
+          ? ' หากต้องการเปลี่ยน ให้กด “เปลี่ยน QR ใบนี้” เฉพาะจุดที่ต้องการ'
+          : ' บัญชีพนักงานแสดง QR ให้ลูกค้าสแกนได้ แต่เปลี่ยน QR ไม่ได้'}
       </p>
       {mode === 'demo' && (
         <p className="info-message">
@@ -118,9 +122,11 @@ export default function QrCards({ identity }: { identity: Staff }) {
               />
             </label>
             <button onClick={() => void copy(code)}>คัดลอกลิงก์</button>
-            <button className="danger-text" disabled={busy} onClick={() => void rotate(code)}>
-              เปลี่ยน QR ใบนี้
-            </button>
+            {canRotate && (
+              <button className="danger-text" disabled={busy} onClick={() => void rotate(code)}>
+                เปลี่ยน QR ใบนี้
+              </button>
+            )}
           </article>
         ))}
       </div>

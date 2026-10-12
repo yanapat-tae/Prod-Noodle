@@ -143,7 +143,7 @@ export const api = {
   async salesHistory(identity: Staff) { checkStaff(identity, true); return copy(salesHistory(data.orders, data.summaries)); },
   async deleteSales(identity: Staff, payload: SalesDeletion, key: string) { checkStaff(identity, true); const deletion = applySalesDeletion(data, identity.id, key, payload); data = deletion.state; save(); return copy(deletion.result); },
   async report(identity: Staff, period: string) { checkStaff(identity); return salesReport(data.orders, data.summaries, period); },
-  async qr(identity: Staff) { checkStaff(identity, true); return demoQr(identity, location.href.split(/[?#]/)[0]); },
+  async qr(identity: Staff) { checkStaff(identity); return demoQr(identity, location.href.split(/[?#]/)[0]); },
   async rotateQr(identity: Staff, entry: QrEntry, _requestKey: string) { checkStaff(identity, true); return demoQr(identity, location.href.split(/[?#]/)[0], entry).find(value => value.key === entry.key)!; },
   async accounts(identity: Staff) { checkStaff(identity, true); return profiles.map((p, i) => ({ ...p, active: true, slot: i + 1 })); },
 };

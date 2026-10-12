@@ -22,7 +22,7 @@ test('Ten persistent QR entries preserve printed links and only the owner can ex
     assert.ok(migration, 'A migration must replace destructive QR viewing with ten persistent entries');
     for (const file of files.slice(0, 2)) await db.exec(readFileSync(new URL('migrations/' + file, root), 'utf8'));
     for (const file of ['seed.sql', 'menu-seed.sql']) await db.exec(readFileSync(new URL(file, root), 'utf8'));
-    for (const file of files.slice(2).filter(name => name !== migration)) await db.exec(readFileSync(new URL('migrations/' + file, root), 'utf8'));
+    for (const file of files.slice(2).filter(name => name < migration)) await db.exec(readFileSync(new URL('migrations/' + file, root), 'utf8'));
     const owner = randomUUID(), admin = randomUUID();
     await db.query('insert into auth.users values($1),($2)', [owner, admin]);
     await db.query("insert into public.admins(auth_user_id,account_slot,display_name,role) values($1,1,'Owner','owner'),($2,2,'Admin','admin')", [owner, admin]);
@@ -31,6 +31,9 @@ test('Ten persistent QR entries preserve printed links and only the owner can ex
     const legacy = await rows('select id,kind,table_id,token_hash,is_active from public.qr_entrypoints order by id');
     await db.exec(readFileSync(new URL('migrations/' + migration, root), 'utf8'));
     assert.deepEqual(await rows('select id,kind,table_id,token_hash,is_active from public.qr_entrypoints where id=any($1::uuid[]) order by id', [legacy.map(row => row.id)]), legacy);
+    const persistent = await rows('select * from public.qr_entrypoints order by id');
+    for (const file of files.filter(name => name > migration)) await db.exec(readFileSync(new URL('migrations/' + file, root), 'utf8'));
+    assert.deepEqual(await rows('select * from public.qr_entrypoints order by id'), persistent, 'later migrations must preserve all printed QR tokens and revisions');
     await db.query("select set_config('request.jwt.claim.sub',$1,false)", [owner]);
     await db.exec('set role authenticated');
     const first = await rpc('owner_qr_entries');
@@ -73,8 +76,22 @@ test('Ten persistent QR entries preserve printed links and only the owner can ex
     assert.equal((await rpc('customer_bootstrap', [sha(rotated.token), sha(token()), null])).channel, 'takeaway');
     await db.query("select set_config('request.jwt.claim.sub',$1,false)", [admin]);
     await db.exec('set role authenticated');
+    assert.deepEqual(await rpc('owner_qr_entries'), after, 'active staff must see the same ten QR entries as the owner');
+    assert.deepEqual(await rpc('owner_qr_entries'), after, 'staff refresh must not change any QR');
+    await assert.rejects(() => rpc('owner_rotate_qr', ['table-1', 1, randomUUID()]), error => error.code === 'PT403');
+    await assert.rejects(() => rows('select display_token from public.qr_entrypoints'), /permission denied/);
+    await assert.rejects(() => rows("update public.qr_entrypoints set display_token='changed' where entry_key='table-1'"), /permission denied/);
+    await assert.rejects(() => rows("delete from public.qr_entrypoints where entry_key='table-1'"), /permission denied/);
+    assert.deepEqual(await rpc('owner_qr_entries'), after, 'forbidden mutations must preserve all QR entries');
+    await db.exec('reset role');
+    await db.query('update public.admins set is_active=false where auth_user_id=$1', [admin]);
+    await db.exec('set role authenticated');
     await assert.rejects(() => rpc('owner_qr_entries'), error => error.code === 'PT403');
     await assert.rejects(() => rpc('owner_rotate_qr', ['table-1', 1, randomUUID()]), error => error.code === 'PT403');
+    for (const subject of [randomUUID(), '']) {
+      await db.query("select set_config('request.jwt.claim.sub',$1,false)", [subject]);
+      await assert.rejects(() => rpc('owner_qr_entries'), error => error.code === 'PT403');
+    }
     await db.exec('reset role; set role anon');
     await assert.rejects(() => rpc('owner_qr_entries'), /permission denied/);
     await assert.rejects(() => rpc('owner_rotate_qr', ['table-1', 1, randomUUID()]), /permission denied/);

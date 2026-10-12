@@ -170,5 +170,10 @@ implemented. See [release evidence](docs/reports/2026-10-12-sales-history.md) an
 [owner guide](docs/sales-history.md). Fresh checks81/81, full Chromium47/47 and
 final Dashboard/POS15/15 passed. Hosted rollback test passed with ledger preserved.
 New migration mapping: `20261012145337_sales_history_cleanup.sql` → hosted
-`20261012150840`; staff-api v7 ACTIVE. Frontend and fixed cleanup await release
-verification. Accounts, menu, QR and historical payment rows are preserved.
+`20261012150840`; staff-api v7 ACTIVE. PR #8 merged as `a279ae09bcad3319a4e6b4b92a5d7b10f85dde14`; Cloudflare
+production `71faa211-cba7-46f2-b427-33088febbfb8` SUCCESS. Servedassets match
+production-configured build. Fixed cleanup completed at22:19:03 Bangkok:28 test
+orders excluded, activeorders0, monthlynet/count0, audit1. Ledger/billreceipts,
+item/optionsnapshots, QR, profiles, menu and visits match preflight hashes.
+**Do not repeat the cleanup operation.** Actual new orders will count normally.
+Physical iPhone/Safari and real-password staff login remain untested.

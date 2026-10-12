@@ -1,0 +1,8 @@
+{
+  "catalogStatus": 200,
+  "catalogCount": 41,
+  "historyWithoutLogin": 401,
+  "deleteWithoutLogin": 401,
+  "allowedCors": 204,
+  "untrustedOrigin": 403
+}

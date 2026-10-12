@@ -1,0 +1,14 @@
+{
+  "removedTestOrders": 28,
+  "activeOrders": 0,
+  "remainingSalesEvents": 0,
+  "auditRows": 1,
+  "at": "2026-10-12T15:19:03.991399+00:00",
+  "monthlyNetSatang": 0,
+  "monthlyOrderCount": 0,
+  "allPaymentMethodsZero": true,
+  "deploymentId": "71faa211-cba7-46f2-b427-33088febbfb8",
+  "mergeSha": "a279ae09bcad3319a4e6b4b92a5d7b10f85dde14",
+  "migrationVersion": "20261012150840",
+  "staffApiVersion": 7
+}

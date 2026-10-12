@@ -49,11 +49,23 @@ Physical iPhone/Safari และ loginด้วยรหัสจริงยั
 
 ## การเผยแพร่และ cleanup
 
-Backendเผยแพร่แล้ว Frontendรอ merge branch `fix/mobile-sales-history-20261012`
-และผล Cloudflare production ก่อนทำ fixed-snapshot cleanup
+เผยแพร่แล้วผ่าน [PR #8](https://github.com/yanapat-tae/Prod-Noodle/pull/8),
+merge `a279ae09bcad3319a4e6b4b92a5d7b10f85dde14`. Cloudflare production
+`71faa211-cba7-46f2-b427-33088febbfb8` SUCCESS เวลา22:16:22 Bangkok
+หน้า `/` และ `/admin`200, servedJS/CSSตรงproduction-configured buildทุกไฟล์
+(`index-Bw0sCO9y.js`, `Staff-BtFEAWCg.js`, `index-Bai-mxew.css`).
+Public catalog41; history/delete401เมื่อไม่ล็อกอิน, allowedCORS204, untrustedOrigin403
+
+ทำ fixed-snapshot cleanupครบ28รายการเวลา22:19:03 Bangkokแล้ว โดยใช้
 `supabase/operations/20261012_requested_test_sales_cleanup.sql` แยกจาก migration:
 ยืนยัน hash/28รายการก่อนทำ จำกัด created_atถึง `2026-10-11T07:54:57.113539Z`
-จึงไม่แตะออเดอร์ใหม่ และจะหยุดหาก snapshotเปลี่ยน ผลเผยแพร่สุดท้ายจะบันทึกหลังตรวจ
+จึงไม่แตะออเดอร์ใหม่ และจะหยุดหาก snapshotเปลี่ยน ห้ามรันoperationซ้ำ
+
+หลังcleanup: activeorders0, sales_events0, audit1; รายงานเดือนตุลาคม gross/net/refund/count
+และทุกpaymentmethodเป็น0, topว่าง ตรวจhashledger, billreceipts, item/optionsnapshots,
+QR, staff, menu, visitsตรงก่อนcleanupทุกชุด ไม่มีรับเงินหรือคืนเงินใหม่
+ดู [ผลลัพธ์](sales-2026-10-12/outcome.json), [preservation](sales-2026-10-12/preservation.json)
+และ [productionassets](sales-2026-10-12/production-assets.json)
 
 ## ย้อนกลับ
 

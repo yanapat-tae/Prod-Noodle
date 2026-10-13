@@ -1,6 +1,10 @@
 import { appOrigin,hash,HttpError,randomToken,requestKey,rpc,serve,service,staff } from '../_shared/http.ts';
 serve('staff-api',async(req,path,body)=>{
   const db=service(); const actor=await staff(db,req);
+  if (path==='/staff/usage' && req.method==='GET') {
+    await staff(db,req,true);
+    return rpc(db,'owner_service_usage',{p_actor:actor});
+  }
   if (path==='/staff/sales/history' && req.method==='GET') {
     await staff(db,req,true);
     return rpc(db,'owner_sales_history',{p_actor:actor});

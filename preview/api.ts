@@ -1,4 +1,5 @@
 import { applySalesDeletion, salesHistory } from '../src/sales-history.ts';
+import { demoServiceUsage } from '../src/service-usage.ts';
 import type { SalesDeletion } from '../src/sales-history.ts';
 // HTML preview only: all state belongs to this browser, never to the shop's DB.
 import { prepareBillPayment } from '../src/bill-payment.ts';
@@ -89,6 +90,7 @@ function findOrder(id: string) { const order = data.orders.find(o => o.id === id
 export function resetPreview() { data = sampleState(); local.removeItem(STAFF_STORAGE); save(); window.dispatchEvent(new Event('prod-html-reset')); }
 window.addEventListener('storage', event => { if (event.key === STORAGE) { data = restore(); window.dispatchEvent(new Event('prod-html-data')); } });
 export const api = {
+  async serviceUsage(identity: Staff) { checkStaff(identity, true); return demoServiceUsage(); },
   activeEntry,
   async categories() { return copy(menuCategories); },
   async menu() { return publicCatalog(data.catalog); },

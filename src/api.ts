@@ -7,6 +7,7 @@ import type { CartInput, CustomerSession, DeliverySummary, MenuItem, Order, Staf
 import type { NewMenuInput } from './menu-management.ts';
 import type { MenuAdminCatalog, MenuMutation } from './menu-admin.ts';
 import { businessDate, salesReport } from './domain.ts';
+import type { RawServiceUsage } from './service-usage.ts';
 import { demoQr, qrLinks } from './staff/qr.ts';
 import type { QrEntry, StoredQr } from './staff/qr.ts';
 import { requestJson } from './http.ts';
@@ -46,6 +47,7 @@ async function profile(token: string, userId: string): Promise<Staff> {
   return { token, id: userId, name: data.display_name, role: data.role };
 }
 export const api = {
+  async serviceUsage(identity: Staff) { return call<RawServiceUsage>('/staff/usage', undefined, await staffToken(identity)); },
   categories: () => mode === 'demo' ? Promise.resolve(menuCategories) : call<MenuCategory[]>('/menu/categories'),
   menu: () => call<MenuItem[]>('/menu'),
   bootstrap: (entry: string, oldToken?: string) => call<CustomerSession>('/customer/session', { entry }, oldToken),

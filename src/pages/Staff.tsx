@@ -6,6 +6,7 @@ import type { BillReceipt } from '../bill-payment.ts';
 import Ticket from '../staff/Ticket.tsx';
 import Delivery from '../staff/Delivery.tsx';
 import Accounts from '../staff/Accounts.tsx';
+import ServiceUsage from '../staff/ServiceUsage.tsx';
 import { StaffStateSync, emptyStaffState } from '../staff/state-sync.ts';
 import { StaffSoundPlayer } from '../staff/sounds.ts';
 import type { StaffSound } from '../staff/sounds.ts';
@@ -16,7 +17,7 @@ import { money, orderLabel, statusNames } from '../domain.ts';
 import Ordering from './Ordering.tsx';
 import Dashboard from './Dashboard.tsx';
 import MenuEditor from './MenuEditor.tsx';
-type Tab = 'pos' | 'kitchen' | 'dashboard' | 'delivery' | 'menu' | 'qr' | 'accounts';
+type Tab = 'pos' | 'kitchen' | 'dashboard' | 'delivery' | 'menu' | 'qr' | 'accounts' | 'usage';
 const tabs: [Tab, string][] = [
   ['pos', 'โต๊ะ / POS'],
   ['kitchen', 'ห้องครัว'],
@@ -25,6 +26,7 @@ const tabs: [Tab, string][] = [
   ['menu', 'จัดการเมนู'],
   ['qr', 'QR โต๊ะ'],
   ['accounts', 'บัญชีร้าน'],
+  ['usage', 'การใช้โควตา'],
 ];
 const emptyState = emptyStaffState();
 export default function Staff({
@@ -364,7 +366,7 @@ export default function Staff({
       </header>
       <nav className="staff-nav" aria-label="หน้าจอร้าน">
         {tabs
-          .filter(([key]) => identity.role === 'owner' || !['menu', 'accounts'].includes(key))
+          .filter(([key]) => identity.role === 'owner' || !['menu', 'accounts', 'usage'].includes(key))
           .map(([key, label]) => (
             <button
               className={tab === key ? 'active' : ''}
@@ -545,6 +547,7 @@ export default function Staff({
         )}
         {tab === 'qr' && <QrCards identity={identity} />}
         {tab === 'accounts' && identity.role === 'owner' && <Accounts identity={identity} />}
+        {tab === 'usage' && identity.role === 'owner' && <ServiceUsage key={identity.id} identity={identity} />}
       </main>
     </div>
   );

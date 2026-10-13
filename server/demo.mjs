@@ -1,5 +1,6 @@
 import { applySalesDeletion, salesHistory } from '../src/sales-history.ts';
 import { prepareBillPayment } from '../src/bill-payment.ts';
+import { demoServiceUsage } from '../src/service-usage.ts';
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, mkdirSync, writeFileSync, renameSync } from 'node:fs';
 import { randomUUID, randomBytes, createHash } from 'node:crypto';
@@ -67,6 +68,7 @@ export function createDemoServer({ dataPath = resolve('.local-data/demo.json') }
       if (req.method === 'POST' && path === '/api/orders') { const customer = session(token, !!state.requests[req.headers['idempotency-key']]); return json(201, createOrder(body, customer, req.headers['idempotency-key'])); }
       if (req.method === 'GET' && path === '/api/orders') { const customer = session(token, true); return json(200, state.orders.filter(o => o.customerSessionId === customer.sessionId && !o.salesDeletedAt)); }
       if (req.method === 'GET' && path === '/api/staff/state') { staff(token); return json(200, { orders: state.orders.filter(o => !o.salesDeletedAt), visits: state.visits, summaries: state.summaries.filter(s => !s.salesDeletedAt) }); }
+      if (path === '/api/staff/usage' && req.method === 'GET') { staff(token, true); return json(200, demoServiceUsage()); }
       if (path === '/api/staff/sales/history' && req.method === 'GET') { staff(token, true); return json(200, salesHistory(state.orders, state.summaries)); }
       if (path === '/api/staff/sales/delete' && req.method === 'POST') {
         const actor = staff(token, true), previousState = state;

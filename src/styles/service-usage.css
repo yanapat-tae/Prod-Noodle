@@ -1,0 +1,25 @@
+.service-usage { max-width: 1100px; margin: auto; }
+.usage-toolbar, .usage-provider-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
+.usage-toolbar p { margin-bottom: 0; }
+.usage-provider { margin-top: 30px; }
+.usage-provider-heading h2 { margin-bottom: 0; font-size: 1.6rem; }
+.usage-provider-heading .link-button { display: inline-flex; align-items: center; text-decoration: none; }
+.usage-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.usage-card { padding: 20px; background: #fffdf7; border: 1px solid #c1b49f; border-radius: 16px; min-width: 0; overflow-wrap: anywhere; }
+.usage-card-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.usage-card h3 { font-size: 1.15rem; margin-bottom: 8px; }
+.usage-percent { font-size: 1.75rem; color: #234739; }
+.usage-amount { font-weight: 600; }
+.usage-track { height: 18px; border: 1px solid #a1b5a9; border-radius: 999px; background: #e5eee8; overflow: hidden; margin-bottom: 10px; }
+.usage-track span { display: block; height: 100%; background: #2f6653; border-radius: inherit; }
+.usage-warning .usage-track span { background: #986300; }
+.usage-danger .usage-track span { background: #a12e24; }
+.usage-warning .usage-state, .usage-warning .usage-percent, .usage-stale { color: #794900; }
+.usage-danger .usage-state, .usage-danger .usage-percent { color: #a12e24; }
+.usage-state, .usage-stale { font-weight: 700; }
+.usage-source, .usage-note, .usage-footnote { color: #544c43; font-size: 1rem; }
+.usage-source { border-top: 1px solid #ddd3c1; margin: 14px 0 0; padding-top: 12px; }
+.usage-demo { padding: 14px; background: #fff2d5; border: 1px solid #a57626; border-radius: 12px; font-weight: 700; }
+.usage-explanation, .usage-last-loaded, .usage-footnote { overflow-wrap: anywhere; }
+.usage-footnote { margin-top: 24px; }
+@media (max-width: 720px) { .usage-grid { grid-template-columns: minmax(0, 1fr); } .usage-card { padding: 16px; } .usage-toolbar > button, .usage-provider-heading .link-button { width: 100%; justify-content: center; } }

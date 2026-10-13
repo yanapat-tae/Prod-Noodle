@@ -1,6 +1,14 @@
 # Handoff: prod-noodle-pos
 
-Snapshot date: **11 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. Current instructions are here; dated release evidence is preserved in [the history archive](docs/history/2026-10-handoff.md). This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
+Snapshot date: **13 October 2026, Asia/Bangkok**. Read together with README.md and AGENTS.md. Current instructions are here; dated release evidence is preserved in [the history archive](docs/history/2026-10-handoff.md). This file describes the actual implementation; architecture-baseline.md also contains deferred proposals.
+
+## Supabase / Cloudflare Usage · 13 October 2026
+
+Owner-only **การใช้โควตา** is deployed through PR #10. Production merge `5587f58`, Cloudflare deployment `4f433e1f-5c4c-4220-a33b-b25c892f7ab1` completed at 12:14:33 Bangkok. `staff-api` v8 ACTIVE matches committed source. One new migration only: repository `20261013044500_service_usage.sql`, hosted `20261013050947` (`service_usage`); sixteen hosted migrations total. Do not replay SQL/seeds or cleanup.
+
+Current DB/Storage sizes are measured by an owner-guarded, service-only invoker RPC. Cloudflare account builds/projects are timestamped monitoring snapshots collected with `NODE_USE_ENV_PROXY=1 node scripts/sync-service-usage.mjs`; this is not a scheduler or live billing feed. Supabase monthly API/Egress/Realtime cards intentionally remain unavailable with official report links. Missing data is never zero. See [source definitions](docs/service-usage.md) and [validation/deployment report](docs/reports/2026-10-13-service-usage.md).
+
+Validated: pnpm check 96/96; complete Chromium suite 53/53; 390/430px and 200% text; hosted service_role RPC; staff RPC denial PT403; anon/staff snapshot and RPC grants denied; CORS/anonymous HTTPS checks; thirteen public assets/admin paths exactly match the production-configured build. No actual Owner browser login or physical Safari acceptance was performed. No management credentials were moved to hosted secrets or frontend. Optional whole-row production fingerprinting was rejected by approval review and was not executed; do not claim full-row preservation evidence.
 
 ## QR access released · 12 October 2026
 

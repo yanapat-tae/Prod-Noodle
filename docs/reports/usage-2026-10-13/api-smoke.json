@@ -1,0 +1,20 @@
+[
+  {
+    "method": "GET",
+    "origin": "https://prod-noodle.pages.dev",
+    "status": 401,
+    "allow_origin": "https://prod-noodle.pages.dev"
+  },
+  {
+    "method": "GET",
+    "origin": "https://untrusted.example",
+    "status": 403,
+    "allow_origin": null
+  },
+  {
+    "method": "OPTIONS",
+    "origin": "https://prod-noodle.pages.dev",
+    "status": 204,
+    "allow_origin": "https://prod-noodle.pages.dev"
+  }
+]

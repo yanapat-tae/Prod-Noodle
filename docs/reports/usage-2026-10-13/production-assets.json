@@ -1,0 +1,67 @@
+[
+  {
+    "path": "delivery-template.csv",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "index.html",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "manifest.webmanifest",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "sw.js",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "assets/index-Bai-mxew.css",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "assets/Staff-1PxhS8bS.js",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "assets/index-DhEaSyYk.js",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "assets/Staff-DpBBJH26.css",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "icons/icon.svg",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "icons/icon-180.png",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "icons/icon-192.png",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "icons/icon-512.png",
+    "status": 200,
+    "matches": true
+  },
+  {
+    "path": "/admin",
+    "status": 200,
+    "matches": true
+  }
+]

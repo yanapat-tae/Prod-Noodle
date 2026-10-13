@@ -1,6 +1,6 @@
 # โปรด · QR Ordering & POS ทดลอง
 
-หน้า **การใช้โควตา** เฉพาะเจ้าของร้านแสดง Supabase และ Cloudflare พร้อมแถบเปอร์เซ็นต์และเวลาที่วัด DB/Storage วัดใหม่เมื่อโหลดหน้า ส่วน Cloudflare ใช้ snapshot ที่เก็บจาก Pages API; รายงาน Supabase รายเดือนที่ยังดึงไม่ได้แสดงว่าไม่มีข้อมูล ดู [แหล่งข้อมูลและวิธีอัปเดต](docs/service-usage.md).
+หน้า **การใช้โควตา** เฉพาะเจ้าของร้านเผยแพร่แล้วผ่าน [PR #10](https://github.com/yanapat-tae/Prod-Noodle/pull/10) เมื่อ 13 ต.ค. 2026 แสดง Supabase และ Cloudflare พร้อมแถบเปอร์เซ็นต์และเวลาที่วัด DB/Storage วัดใหม่เมื่อโหลดหน้า ส่วน Cloudflare ใช้ snapshot ที่เก็บจาก Pages API; รายงาน Supabase รายเดือนที่ยังดึงไม่ได้แสดงว่าไม่มีข้อมูล ดู [แหล่งข้อมูลและวิธีอัปเดต](docs/service-usage.md) และ [หลักฐาน deployment](docs/reports/2026-10-13-service-usage.md).
 
 ทุกบัญชีพนักงานเปิดหน้า QR ให้ลูกค้าสแกนสั่งเองได้แล้วผ่าน [PR #9](https://github.com/yanapat-tae/Prod-Noodle/pull/9) เมื่อ 12 ต.ค. 2026 พนักงานดูได้อย่างเดียว การเปลี่ยน QR ยังเฉพาะ Owner โดย QR เดิมทั้ง 10 ใบคงเดิม ดู [ผลเผยแพร่](docs/reports/2026-10-12-qr-access.md) แล้วรีเฟรชหน้า `/admin` เพื่อใช้เมนู QR
 

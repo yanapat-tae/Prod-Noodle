@@ -29,3 +29,15 @@ Hosted preflight confirmed existing staff-api v7, verify_jwt=false with explicit
 ## Deployment
 
 The completed browser suite permits the authorized sequence: apply `20261013044500_service_usage.sql` once; deploy the guarded staff API; publish frontend; collect Cloudflare snapshot; verify hosted assets, anonymous denial, RPC permissions and real values. Deployment outcome is recorded below after verification. No old migration, seed, cleanup, Auth account or QR rotation is part of this release.
+
+### Verified outcome
+
+- [PR #10](https://github.com/yanapat-tae/Prod-Noodle/pull/10), reviewed head `90841a9`, merged as `5587f58d846c41817600e3b1d2f7786007d54207`.
+- Repository migration `20261013044500_service_usage.sql` applied once as hosted version `20261013050947`, name `service_usage`; sixteen migrations total, all previous mappings retained.
+- `staff-api` v8 ACTIVE, `verify_jwt=false` preserved with explicit guards. SHA256 `df0a48df38a674ddf7094297633c396b653146ecbe3c2176df72fc28975eef6a`; retrieved entrypoint, shared helper and Deno config exactly match source.
+- Cloudflare production `4f433e1f-5c4c-4220-a33b-b25c892f7ab1` succeeded **12:14:33 Bangkok**, 13 October. All **13 public artifact/admin checks** returned 200 and exact expected hashes using verified TLS; reserved `_headers`/`_redirects` are not treated as public assets.
+- Actual service_role RPC reads current sizes and saved Cloudflare payload. At 12:18:58 Bangkok: DB **29,765,493 bytes** (29.77 MB, 5.95% of the page's decimal 500 MB quota), Storage **0 bytes**, complete metadata. Cloudflare snapshot collected at 12:16:55 Bangkok contains **42 builds / 500 (8.4%)**, **1 project / 100 (1%)**, `usesFunctions=false`, current UTC month. These are dated verification observations, not timeless live counters.
+- Anonymous HTTPS GET returns 401; untrusted-origin GET 403; allowed-origin OPTIONS 204. Actual non-owner RPC returns PT403. Snapshot RLS enabled; anon/authenticated table reads and RPC execution denied; invoker confirmed (`prosecdef=false`).
+- Advisors introduce only INFO for the intentionally service-only, policy-free monitoring table; existing QR/security-definer and leaked-password warnings are unchanged. [RLS guidance](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy), [existing definer guidance](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable), [existing password guidance](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
+
+Evidence is in [the reviewed check](usage-2026-10-13/check.txt), [browser suite](usage-2026-10-13/browser.txt), [API smoke](usage-2026-10-13/api-smoke.json), [production asset checks](usage-2026-10-13/production-assets.json) and [collected snapshot](usage-2026-10-13/cloudflare-snapshot.json). Actual Owner browser login and physical Safari acceptance remain for the owner; local role/device tests and hosted RPC/source/HTTPS checks are stated separately.

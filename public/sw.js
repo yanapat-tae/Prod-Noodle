@@ -1,5 +1,5 @@
-const CACHE = 'prod-shell-v2';
-self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(['/', '/icons/icon-192.png', '/icons/icon-512.png', '/manifest.webmanifest']))); });
+const CACHE = 'prod-shell-v3-brand-red-20261029';
+self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(['/', '/icons/icon-32.png?v=brand-red-20261029', '/icons/icon-180.png?v=brand-red-20261029', '/icons/icon-192.png?v=brand-red-20261029', '/icons/icon-512.png?v=brand-red-20261029', '/manifest.webmanifest?v=brand-red-20261029']))); });
 self.addEventListener('activate', event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))); });
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);

@@ -1,0 +1,93 @@
+{
+  "status": "PASS",
+  "verifiedAt": "2026-10-29T11:33:25.506Z",
+  "base": "https://prod-noodle.pages.dev",
+  "productionConfiguredBuild": true,
+  "matchingArtifacts": 12,
+  "results": [
+    {
+      "path": "/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 946,
+      "sha256": "0eac65ed8ca44f673cc3cd301d7c697c144e21b8e2c625cfa2dce61449bcdc06"
+    },
+    {
+      "path": "/admin",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 946,
+      "sha256": "0eac65ed8ca44f673cc3cd301d7c697c144e21b8e2c625cfa2dce61449bcdc06"
+    },
+    {
+      "path": "/sw.js",
+      "status": 200,
+      "contentType": "application/javascript",
+      "bytes": 1428,
+      "sha256": "a3b0d6a0dac8c3d55c5238914557cdea882f414bc40ea65aed8883f5be743048"
+    },
+    {
+      "path": "/manifest.webmanifest?v=brand-red-20261029",
+      "status": 200,
+      "contentType": "application/manifest+json",
+      "bytes": 429,
+      "sha256": "d283b0d62ed7fcdbee21075a9acc30ccee6f7e1ee92e93caf6f9d40a590c6302"
+    },
+    {
+      "path": "/icons/icon-32.png?v=brand-red-20261029",
+      "status": 200,
+      "contentType": "image/png",
+      "bytes": 2153,
+      "sha256": "4a7a3df7166abac468390742eb198aa6fac2371ffc06effd40331b0e36f7a19a"
+    },
+    {
+      "path": "/icons/icon-180.png?v=brand-red-20261029",
+      "status": 200,
+      "contentType": "image/png",
+      "bytes": 39723,
+      "sha256": "290adc105c9a86cbf7950c5d45a53cf02e3fb418e3925344ae3919d28f4e2b17"
+    },
+    {
+      "path": "/icons/icon-192.png?v=brand-red-20261029",
+      "status": 200,
+      "contentType": "image/png",
+      "bytes": 44543,
+      "sha256": "7c198c7311bb439aa495c050b713cc7f226c29e06044a9bd134b66a50d30a889"
+    },
+    {
+      "path": "/icons/icon-512.png?v=brand-red-20261029",
+      "status": 200,
+      "contentType": "image/png",
+      "bytes": 260142,
+      "sha256": "b1982c158d10a0bd9b42fcdbb06b9c7a0d1438e759f110a26b7bc49d1a7ab63d"
+    },
+    {
+      "path": "/assets/Staff-1PxhS8bS.js",
+      "status": 200,
+      "contentType": "application/javascript",
+      "bytes": 473778,
+      "sha256": "2e60cbfccdaca3cce87ac718ae53240ec10e557cc4a066631c7b31cd02fb11e7"
+    },
+    {
+      "path": "/assets/Staff-DpBBJH26.css",
+      "status": 200,
+      "contentType": "text/css; charset=utf-8",
+      "bytes": 3878,
+      "sha256": "4e7686d9ec0170a737b1d1a2f8c8910bcea8c87354698f94201d9cbfd23f65a5"
+    },
+    {
+      "path": "/assets/index-Bai-mxew.css",
+      "status": 200,
+      "contentType": "text/css; charset=utf-8",
+      "bytes": 20991,
+      "sha256": "20250b8a6df22b73ee31557219d9f7a9fac7829ecf17320388196dcaefa9b471"
+    },
+    {
+      "path": "/assets/index-DhEaSyYk.js",
+      "status": 200,
+      "contentType": "application/javascript",
+      "bytes": 490962,
+      "sha256": "4322eed7bfd31f9be4fd4e5a596e33e9d822fe9291bf9f606b72bd834abd528b"
+    }
+  ]
+}

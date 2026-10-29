@@ -3,7 +3,8 @@
 - Updated: 2026-10-29 UTC.
 - Objective: deploy the user-approved red-background noodle icon with Thai โปรด.
 - Authorization: user reviewed the design and explicitly requested “Deploy”.
-- Workspace: `/workspace/Prod-Noodle`; branch `chore/red-brand-icon-20261029`.
+- Workspace: `/workspace/Prod-Noodle`; release branch `chore/red-brand-icon-20261029`;
+  final evidence branch `docs/red-icon-release-20261029`.
 - Base HEAD / fetched main: `734d44bb6a9b00fa130be8d7a5db8ef35c423d5f`; clean at start.
 - Existing app: React/Vite, Cloudflare Pages `prod-noodle.pages.dev`.
 - Production before release: `b651293f-8546-42dc-90d4-e9d9f161226e`, successful, base HEAD.
@@ -15,8 +16,12 @@
   correct decoded sizes, legacy cache removal and offline icons after controlled navigation.
 - Independent code review: no material findings; latest mobile screenshots visually passed.
 - Evidence/details: `docs/reports/2026-10-29-red-icon.md`; logs/screenshots in `/tmp/prod-icon-*`.
-- Current step: commit/push and merge static release, then verify production deployment/bytes.
-- Remaining: GitHub release; successful matching Cloudflare deployment; HTTPS asset verification.
+- Released: PR #11, source `0252d3c`, merged `9b2959ef769d894ee00b8bac085aba62b309e07e`.
+- Production: `644f075e-75b3-40dc-9c4b-2442a79717ba` SUCCESS, 2026-10-29 11:32:51 UTC.
+- HTTPS verification: 12/12 artifacts exact SHA-256 match at 11:33:25 UTC, including all icons.
+- Evidence: `docs/reports/2026-10-29-red-icon-verification.json` (committed public asset hashes).
+- Current step: persist final release evidence; application deployment completed.
+- Remaining: physical-iPhone acceptance only; existing shortcuts may need re-adding for new icon.
 - Actual iPhone/Safari installation: NOT TESTED (no physical-device session).
 - Rollback: previous successful Cloudflare deployment above; static-only change, no migrations.
-- Next action: commit only scoped icon/source/documentation files and push the release branch.
+- Next action: none for implementation; user can reopen the site in Safari and check Home Screen icon.

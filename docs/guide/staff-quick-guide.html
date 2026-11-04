@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>คู่มือพนักงานร้านโปรด</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700;800&display=swap">
+<style>
+  /* One A4 page, printed and taped at the counter. Same brick red / green / cream as the app. */
+  :root { --ink:#242018; --brick:#6e2917; --green:#2f6653; --cream:#fffdf7; --line:#d9cdb9; --warn:#fdeee9; }
+  @page { size: A4; margin: 10mm; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:"Sarabun","Noto Sans Thai",Tahoma,sans-serif; color:var(--ink); background:#fff; font-size:14.8pt; line-height:1.25; }
+  .page { width:190mm; height:277mm; margin:0 auto; display:flex; flex-direction:column; gap:2.2mm; }
+  header { display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid var(--brick); padding-bottom:2mm; }
+  h1 { margin:0; font-size:26pt; color:var(--brick); font-weight:800; }
+  .site { font-size:15pt; text-align:right; }
+  .site b { font-size:17pt; color:var(--green); }
+  section { border:2px solid var(--line); border-radius:4mm; padding:1.6mm 4mm 1.8mm; background:var(--cream); }
+  h2 { margin:0 0 0.8mm; font-size:19pt; font-weight:800; display:flex; align-items:center; gap:3mm; }
+  .n { flex:none; width:10mm; height:10mm; border-radius:50%; background:var(--brick); color:#fff; display:grid; place-items:center; font-size:17pt; }
+  ol { margin:0; padding-left:9mm; }
+  li { margin:0.5mm 0; }
+  .btn { display:inline-block; border:2px solid var(--brick); border-radius:2mm; padding:0 2mm; font-weight:700; color:var(--brick); background:#fff; white-space:nowrap; }
+  .sound { font-weight:700; color:var(--green); }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:2.6mm; }
+  .warn { background:var(--warn); border-color:var(--brick); }
+  .warn h2 { color:var(--brick); }
+  .help { font-size:14.5pt; }
+  .help li { margin:0.3mm 0; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>🍜 คู่มือร้านโปรด</h1>
+    <div class="site">เปิดใน <b>Safari</b><br><b>prod-noodle.pages.dev/admin</b></div>
+  </header>
+
+  <section>
+    <h2><span class="n">1</span>ก่อนเปิดร้าน</h2>
+    <ol>
+      <li>ต่อ <b>Wi-Fi ร้าน</b> และเปิดเสียงโทรศัพท์ให้ดัง</li>
+      <li>เปิดเว็บด้านบน แล้วกด <span class="btn">เข้าสู่ระบบ</span></li>
+      <li>กด <span class="btn">เปิดเสียงแจ้งเตือน</span> แล้ว<b>เปิดหน้านี้ค้างไว้</b>ทั้งวัน</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span>ลูกค้าสแกน QR สั่งเอง</h2>
+    <ol>
+      <li>ได้ยิน <span class="sound">🔔 กระดิ่ง 2 ครั้ง</span> = มีออเดอร์ใหม่</li>
+      <li>กดแท็บ <span class="btn">ห้องครัว</span> ดูรายการ แล้วทำอาหาร</li>
+      <li>ยกไปเสิร์ฟแล้ว กด <span class="btn">เสร็จ/เสิร์ฟแล้ว</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span>ลูกค้าสั่งด้วยปาก</h2>
+    <ol>
+      <li>กดแท็บ <span class="btn">โต๊ะ / POS</span> แล้วแตะ<b>เลขโต๊ะ</b></li>
+      <li>กลับบ้าน กด <span class="btn">+ เปิดออเดอร์กลับบ้าน</span> แล้วใส่ชื่อลูกค้า</li>
+      <li>เลือกอาหาร แล้วกดส่ง ออเดอร์จะไปที่ห้องครัวเอง</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span>คิดเงิน</h2>
+    <ol>
+      <li><span class="btn">โต๊ะ / POS</span> → แตะเลขโต๊ะ → <span class="btn">รับชำระเงิน</span></li>
+      <li><b>เงินสด:</b> เลือก <span class="btn">เงินสด</span> → กด <span class="btn">รับเงินสดแล้ว</span></li>
+      <li><b>โอน:</b> เลือก <span class="btn">PromptPay</span> หรือ <span class="btn">สแกนไทยช่วยไทย</span> → ติ๊ก <b>"ตรวจยอดเข้าจริงแล้ว"</b> → <span class="btn">ยืนยันรับชำระเงิน</span></li>
+      <li>ได้ยิน <span class="sound">🎵 เสียงไล่โน้ต</span> = บันทึกรับเงินแล้ว</li>
+    </ol>
+  </section>
+
+  <div class="two">
+    <section class="warn">
+      <h2>⚠️ ห้ามลืม</h2>
+      <ol class="help">
+        <li>ลูกค้าโอนเงิน: <b>ดูในแอปธนาคารว่าเงินเข้าแล้ว</b> ค่อยกดรับเงิน</li>
+        <li>กดรับเงินแล้ว ไม่ต้องกดซ้ำ</li>
+      </ol>
+    </section>
+    <section>
+      <h2><span class="n">5</span>ปิดร้าน</h2>
+      <ol class="help">
+        <li>กดแท็บ <span class="btn">ยอดขาย</span></li>
+        <li>ดูยอดรวมวันนี้ หน้าร้าน กลับบ้าน เงินสด และเงินโอน</li>
+      </ol>
+    </section>
+  </div>
+
+  <section>
+    <h2>❓ ถ้ามีปัญหา</h2>
+    <ol class="help">
+      <li><b>ขึ้นว่า "ยังโหลดเมนูไม่ได้"</b> → ต่อ Wi-Fi แล้วกด <span class="btn">ลองอีกครั้ง</span></li>
+      <li><b>ไม่มีเสียงกระดิ่ง</b> → เพิ่มเสียงโทรศัพท์ แล้วกด <span class="btn">เปิดเสียงแจ้งเตือน</span> อีกครั้ง</li>
+      <li><b>ใช้ไม่ได้เลย</b> → <b>จดกระดาษไปก่อน</b> ร้านเปิดขายต่อได้ แล้วโทรหาผู้ดูแลระบบ</li>
+    </ol>
+  </section>
+</div>
+</body>
+</html>

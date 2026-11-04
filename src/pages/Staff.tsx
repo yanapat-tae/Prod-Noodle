@@ -12,7 +12,7 @@ import type { StaffSound } from '../staff/sounds.ts';
 import { api, mode } from '../api.ts';
 import type { StaffState } from '../api.ts';
 import type { MenuItem, Order, Staff as Identity, Status } from '../domain.ts';
-import { money, orderLabel, statusNames } from '../domain.ts';
+import { money, orderLabel } from '../domain.ts';
 import Ordering from './Ordering.tsx';
 import MenuEditor from './MenuEditor.tsx';
 // Charts (recharts) and QR drawing (qrcode) download only when their tab opens.
@@ -514,30 +514,24 @@ export default function Staff({
               </div>
               <button onClick={() => void refresh()}>↻ โหลดใหม่</button>
             </div>
-            <div className="kitchen-columns">
-              {(['new', 'preparing', 'ready'] as Status[]).map((status) => (
-                <section key={status}>
-                  <h2>
-                    {statusNames[status]}{' '}
-                    <span>{activeOrders.filter((o) => o.status === status).length}</span>
-                  </h2>
-                  {activeOrders
-                    .filter((o) => o.status === status)
-                    .map((order) => (
-                      <Ticket
-                        key={order.id}
-                        order={order}
-                        identity={identity}
-                        busy={busy}
-                        onAction={(...args) => void action(...args)}
-                      />
-                    ))}
-                  {!activeOrders.some((o) => o.status === status) && (
-                    <p className="column-empty">ไม่มีรายการ</p>
-                  )}
-                </section>
-              ))}
-            </div>
+            {/* One list: every unfinished order, oldest first. Kitchen finishes with one tap (new → served). */}
+            <section className="kitchen-list">
+              <h2>
+                ออเดอร์ใหม่ <span>{activeOrders.length}</span>
+              </h2>
+              {[...activeOrders]
+                .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+                .map((order) => (
+                  <Ticket
+                    key={order.id}
+                    order={order}
+                    identity={identity}
+                    busy={busy}
+                    onAction={(...args) => void action(...args)}
+                  />
+                ))}
+              {activeOrders.length === 0 && <p className="column-empty">ไม่มีรายการ</p>}
+            </section>
           </>
         )}
         {tab === 'dashboard' && <Suspense fallback={tabLoading}><Dashboard identity={identity} /></Suspense>}

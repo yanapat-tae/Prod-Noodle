@@ -50,3 +50,24 @@ test('Failed kitchen completion keeps the ticket visible and shows the server er
   await expect(page.locator('.ticket')).toHaveCount(1);
   await expect(page.getByRole('button', { name: 'เสร็จ/เสิร์ฟแล้ว', exact: true })).toBeEnabled();
 });
+test('Kitchen shows one oldest-first list without separate preparing/ready sections', async ({ page }) => {
+  const line = priceLine(starterCatalog, { itemCode: 'water', variantCode: 'normal', quantity: 1, options: [], notes: [] });
+  const base = { channel: 'dine_in', queueNumber: null, lines: [line], totalSatang: 1000, paidAt: null, paymentMethod: null, refundedAt: null, refundedSatang: 0 };
+  const orders = [
+    { ...base, id: 'newer-order', tableNumber: 2, visitId: 'visit-2', status: 'new', createdAt: '2026-10-10T05:10:00Z' },
+    { ...base, id: 'older-order', tableNumber: 1, visitId: 'visit-1', status: 'preparing', createdAt: '2026-10-10T05:00:00Z' },
+  ];
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(staff => localStorage.setItem('prod-demo-staff', JSON.stringify(staff)), identity);
+  await page.route('**/api/**', async route => {
+    const responses = { '/api/menu': starterCatalog, '/api/staff/me': identity,
+      '/api/staff/state': { orders, visits: { 1: { id: 'visit-1' }, 2: { id: 'visit-2' } }, summaries: [] } };
+    await route.fulfill({ json: responses[new URL(route.request().url()).pathname] });
+  });
+  await page.goto('/admin');
+  await page.getByRole('button', { name: /^ห้องครัว/ }).click();
+  await expect(page.getByRole('heading', { level: 2, name: /^ออเดอร์ใหม่ 2$/ })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: /^(กำลังทำ|พร้อมเสิร์ฟ \/ รับ)/ })).toHaveCount(0);
+  await expect(page.locator('.kitchen-list .ticket h2')).toHaveText(['โต๊ะ 1', 'โต๊ะ 2']);
+  await expect(page.getByRole('button', { name: 'เสร็จ/เสิร์ฟแล้ว', exact: true })).toHaveCount(2);
+});

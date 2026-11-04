@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import QrCards from '../staff/QrCards.tsx';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Payment from '../staff/Payment.tsx';
 import { billRounds } from '../bill-payment.ts';
 import type { BillReceipt } from '../bill-payment.ts';
@@ -15,8 +14,11 @@ import type { StaffState } from '../api.ts';
 import type { MenuItem, Order, Staff as Identity, Status } from '../domain.ts';
 import { money, orderLabel, statusNames } from '../domain.ts';
 import Ordering from './Ordering.tsx';
-import Dashboard from './Dashboard.tsx';
 import MenuEditor from './MenuEditor.tsx';
+// Charts (recharts) and QR drawing (qrcode) download only when their tab opens.
+const Dashboard = lazy(() => import('./Dashboard.tsx'));
+const QrCards = lazy(() => import('../staff/QrCards.tsx'));
+const tabLoading = <p role="status">กำลังโหลด…</p>;
 type Tab = 'pos' | 'kitchen' | 'dashboard' | 'delivery' | 'menu' | 'qr' | 'accounts' | 'usage';
 const tabs: [Tab, string][] = [
   ['pos', 'โต๊ะ / POS'],
@@ -538,14 +540,14 @@ export default function Staff({
             </div>
           </>
         )}
-        {tab === 'dashboard' && <Dashboard identity={identity} />}
+        {tab === 'dashboard' && <Suspense fallback={tabLoading}><Dashboard identity={identity} /></Suspense>}
         {tab === 'delivery' && (
           <Delivery identity={identity} summaries={state.summaries} refresh={() => refresh()} />
         )}
         {tab === 'menu' && identity.role === 'owner' && (
           <MenuEditor catalog={catalog} identity={identity} refresh={refreshMenu} />
         )}
-        {tab === 'qr' && <QrCards identity={identity} />}
+        {tab === 'qr' && <Suspense fallback={tabLoading}><QrCards identity={identity} /></Suspense>}
         {tab === 'accounts' && identity.role === 'owner' && <Accounts identity={identity} />}
         {tab === 'usage' && identity.role === 'owner' && <ServiceUsage key={identity.id} identity={identity} />}
       </main>

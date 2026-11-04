@@ -125,7 +125,9 @@ small { font-size: 1.0rem; }
 .danger-text { color: #812f25; }
 .kitchen-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .kitchen-columns > section > h2 { font-size: 1.375rem; margin-bottom: 20px; }
-.kitchen-columns .ticket { margin-bottom: 20px; }
+.kitchen-columns .ticket, .kitchen-list .ticket { margin-bottom: 20px; }
+.kitchen-list { max-width: 720px; }
+.kitchen-list > h2 { font-size: 1.375rem; margin-bottom: 20px; }
 .kitchen-columns .ticket-top { flex-direction: column; }
 .column-empty { border: 1px dashed #c8bfad; color: #645b4e; border-radius: 16px; padding: 32px; text-align: center; }
 .count-pill { display: inline-block; font-size: 1.25rem; background: #f0e2cf; padding: 4px 12px; border-radius: 12px; }

@@ -1,5 +1,7 @@
 .menu-editor-fields { border: 0; padding: 0; margin: 0; min-inline-size: 0; }
 .menu-editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+/* Keep space between the "เพิ่มเมนูใหม่" button and the search field below it. */
+.menu-editor > button + .menu-editor-grid, button + .menu-editor-grid { margin-top: 20px; }
 .menu-editor-group { border: 1px solid var(--line); border-radius: 14px; margin: 8px 0 24px; padding: 18px; min-inline-size: 0; }
 .menu-editor-group legend { padding: 0 8px; font-weight: 700; }
 .menu-variant-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: 16px; margin-bottom: 20px; }

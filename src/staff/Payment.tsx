@@ -50,14 +50,16 @@ export default function Payment({ identity, anchor, orders, onBack, onPaid }: { 
       </section>)}
       <div className="bill-total"><span>ยอดที่ต้องชำระทุกรอบ</span><strong>{money(total)}</strong></div>
       <p className="info-message">บันทึกหลังแคชเชียร์รับเงินหรือตรวจรายการโอนแล้ว การเลือกวิธีชำระไม่ได้ยืนยันเงินเข้าธนาคาร</p>
-      <div className="payment-methods" role="group" aria-label="ช่องทางชำระเงิน">
-        {['cash','promptpay','thai_chuay_thai'].map(value => <button key={value} disabled={busy || !!pending} aria-pressed={method===value} className={method===value?'active':''} onClick={() => { setMethod(value); setConfirmed(false); }}>{paymentMethodNames[value]}</button>)}
+      <div className="payment-controls">
+        <div className="payment-methods" role="group" aria-label="ช่องทางชำระเงิน">
+          {['cash','promptpay','thai_chuay_thai'].map(value => <button key={value} disabled={busy || !!pending} aria-pressed={method===value} className={method===value?'active':''} onClick={() => { setMethod(value); setConfirmed(false); }}>{paymentMethodNames[value]}</button>)}
+        </div>
+        {method !== 'cash' && <label className="inline-check"><input type="checkbox" checked={confirmed} disabled={busy || !!pending} onChange={e=>setConfirmed(e.target.checked)} />ตรวจยอด {paymentMethodNames[method]} เข้าจริงแล้ว</label>}
+        {pending && !busy && <p className="info-message" role="status">รายการนี้ยังรอยืนยัน กดลองยืนยันรายการเดิมเพื่อรับใบรับเงินโดยไม่ชำระซ้ำ</p>}
+        <button className="primary-action" disabled={busy || (!pending && (total<=0 || (method!=='cash'&&!confirmed)))} onClick={()=>void submit()}>{busy?'กำลังบันทึก…':pending?'ลองยืนยันรายการเดิมอีกครั้ง':method==='cash'?'รับเงินสดแล้ว':'ยืนยันรับชำระเงิน'}</button>
+        {error && <p role="alert" className="error-message">{error}</p>}
+        {!pending && <button disabled={busy} onClick={()=>void reload()}>โหลดบิลล่าสุด</button>}
       </div>
-      {method !== 'cash' && <label className="inline-check"><input type="checkbox" checked={confirmed} disabled={busy || !!pending} onChange={e=>setConfirmed(e.target.checked)} />ตรวจยอด {paymentMethodNames[method]} เข้าจริงแล้ว</label>}
-      {pending && !busy && <p className="info-message" role="status">รายการนี้ยังรอยืนยัน กดลองยืนยันรายการเดิมเพื่อรับใบรับเงินโดยไม่ชำระซ้ำ</p>}
-      <button className="primary-action" disabled={busy || (!pending && (total<=0 || (method!=='cash'&&!confirmed)))} onClick={()=>void submit()}>{busy?'กำลังบันทึก…':pending?'ลองยืนยันรายการเดิมอีกครั้ง':method==='cash'?'รับเงินสดแล้ว':'ยืนยันรับชำระเงิน'}</button>
-      {error && <p role="alert" className="error-message">{error}</p>}
-      {!pending && <button disabled={busy} onClick={()=>void reload()}>โหลดบิลล่าสุด</button>}
     </div>
   </main>;
 }

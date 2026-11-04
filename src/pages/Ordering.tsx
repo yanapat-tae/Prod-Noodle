@@ -66,7 +66,7 @@ export default function Ordering({ catalog, context, storageKey, onSubmit, onSub
     {isTakeaway && cart.length > 0 && <TakeawayForm value={takeaway} onChange={setTakeaway} disabled={busy || locked} />}
     {locked && !busy && <p className="info-message" role="status">รายการเดิมยังรอยืนยันจากร้าน กดลองส่งรายการเดิมอีกครั้งเพื่อยืนยันโดยไม่สร้างบิลซ้ำ</p>}
     {cart.length > 0 && <div className="bill-total"><span>ยอดรวม {count} รายการ</span><strong>{money(total)}</strong></div>}
-    {error && <div className="error-message" role="alert"><p>{error}</p>{!locked && error.includes('ราคา') && <button onClick={() => void recalculate()}>ตรวจราคาใหม่</button>}</div>}
+    {error && cart.length > 0 && <div className="error-message" role="alert"><p>{error}</p>{!locked && error.includes('ราคา') && <button onClick={() => void recalculate()}>ตรวจราคาใหม่</button>}</div>}
     {cart.length > 0 && <StickyAction><button className="primary-action" disabled={busy} onClick={() => void submit()}>{busy ? 'กำลังส่งออเดอร์…' : locked ? 'ลองส่งรายการเดิมอีกครั้ง · ' + money(total) : 'ยืนยันส่งออเดอร์ · ' + money(total)}</button></StickyAction>}
   </main>;
   return <main className={'customer-app customer-container' + (cart.length ? ' bottom-space' : '')}>

@@ -28,7 +28,7 @@ test('Bill shows all rounds at 390px; selecting Thai scan requires verification 
  await expect(page.locator('.bill-round')).toHaveCount(2);
  await expect(page.locator('.bill-total')).toContainText('35 บาท');
  await page.getByRole('button',{name:'สแกนไทยช่วยไทย',exact:true}).click();
- const submit=page.getByRole('button',{name:'ยืนยันรับชำระเงิน',exact:true});
+ const submit=page.getByRole('button',{name:'ชำระเงินแล้ว',exact:true});
  await expect(submit).toBeDisabled();expect(data.requests).toHaveLength(0);
  await page.getByRole('checkbox',{name:'ตรวจยอด สแกนไทยช่วยไทย เข้าจริงแล้ว',exact:true}).check();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -40,7 +40,7 @@ test('Bill shows all rounds at 390px; selecting Thai scan requires verification 
 });
 test('Lost bill response freezes request through reload and retries same key without another receipt',async({page})=>{
  const data=await open(page,{lose:true});
- await page.getByRole('button',{name:'รับเงินสดแล้ว',exact:true}).click();
+ await page.getByRole('button',{name:'ชำระเงินแล้ว',exact:true}).click();
  await expect(page.getByRole('button',{name:'ลองยืนยันรายการเดิมอีกครั้ง',exact:true})).toBeEnabled();
  const key=data.keys[0];await page.reload();
  // Pending receipt has paid the bill at the server; reopening must be available even when order is paid.

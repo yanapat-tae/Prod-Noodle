@@ -67,7 +67,7 @@ test('New orders ring once; reloads and reappearing orders stay silent; previews
   expect(await notes(page)).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
-for (const [label, method] of [['รับเงินสดแล้ว', 'cash'], ['ยืนยันรับชำระเงิน', 'promptpay']]) {
+for (const [label, method] of [['ชำระเงินแล้ว', 'cash'], ['ชำระเงินแล้ว', 'promptpay']]) {
   test(`${method} sound follows server success only, once, on the confirming device`, async ({ page }) => {
     const data = await setup(page);
     await page.getByRole('button', { name: 'ลองเสียงรับเงิน', exact: true }).click();
@@ -94,11 +94,11 @@ test('Failed payment remains unpaid and silent; retry sounds after success', asy
   await page.getByRole('button', { name: 'รับชำระเงิน', exact: true }).click();
   await page.getByRole('button',{name:'PromptPay',exact:true}).click();
   await page.getByRole('checkbox',{name:'ตรวจยอด PromptPay เข้าจริงแล้ว',exact:true}).check();
-  await page.getByRole('button', { name: 'ยืนยันรับชำระเงิน', exact: true }).click();
+  await page.getByRole('button', { name: 'ชำระเงินแล้ว', exact: true }).click();
   await expect(page.getByRole('alert')).toHaveText('บันทึกไม่สำเร็จ');
   expect(await notes(page)).toEqual([]);
   data.fail = false;
-  await page.getByRole('button', { name: 'ยืนยันรับชำระเงิน', exact: true }).click();
+  await page.getByRole('button', { name: 'ชำระเงินแล้ว', exact: true }).click();
   await expect(page.locator('.ticket')).toContainText('✓ ชำระแล้ว');
   expect((await notes(page)).length).toBeGreaterThan(1);
 });
@@ -112,7 +112,7 @@ test('Payments from another device and muted confirmations do not play a receipt
   data.orders.unshift(order('muted-payment'));
   await expect(page.locator('.ticket')).toHaveCount(2);
   await page.getByRole('button', { name: 'รับชำระเงิน', exact: true }).click();
-  await page.getByRole('button', { name: 'รับเงินสดแล้ว', exact: true }).click();
+  await page.getByRole('button', { name: 'ชำระเงินแล้ว', exact: true }).click();
   await expect(page.getByRole('button', { name: 'รับชำระเงิน', exact: true })).toHaveCount(0);
   expect(await notes(page)).toEqual([]);
 });
@@ -121,7 +121,7 @@ test('Audio failure cannot turn a successfully recorded payment into a failed pa
   await setup(page);
   await page.evaluate(() => { AudioContext.prototype.resume = () => Promise.reject(new Error('audio unavailable')); });
   await page.getByRole('button', { name: 'รับชำระเงิน', exact: true }).click();
-  await page.getByRole('button', { name: 'รับเงินสดแล้ว', exact: true }).click();
+  await page.getByRole('button', { name: 'ชำระเงินแล้ว', exact: true }).click();
   await expect(page.locator('.ticket')).toContainText('✓ ชำระแล้ว');
   await expect(page.getByRole('alert')).toContainText('เสียงหยุดทำงาน');
   await expect(page.getByRole('button', { name: 'เปิดเสียงแจ้งเตือน', exact: true })).toBeVisible();
